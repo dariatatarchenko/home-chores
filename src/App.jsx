@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { supabase } from "./supabaseClient";
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 const G = (o=0.1,b=20) => ({
@@ -182,7 +183,7 @@ function Avatar({person,size=30}){
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
-export default function App(){
+function MainApp({household, me:initialMe, onSignOut}){
   useEffect(()=>{
     const setVh=()=>{
       document.documentElement.style.setProperty("--app-height",`${window.innerHeight}px`);
@@ -195,13 +196,130 @@ export default function App(){
       window.removeEventListener("orientationchange",setVh);
     };
   },[]);
-  const [tasks,   setTasks]   = useState(INIT_TASKS_PATCHED);
-  const [people,  setPeople]  = useState(INIT_PEOPLE);
-  const [zones,   setZones]   = useState(ZONES_DEFAULT);
+  const [tasks,   setTasks]   = useState([]);
+  const [people,  setPeople]  = useState([]);
+  const [zones,   setZones]   = useState([]);
+  const [dataLoading,setDataLoading]=useState(true);
   const [tab,     setTab]     = useState("week");
   const [returnTab,setReturnTab]= useState("week");
   const [selDay,  setSelDay]  = useState(todayStr);
-  const [meId,    setMeId]    = useState("p1");
+  const [meId,    setMeId]    = useState(initialMe.id);
+
+  // ── Load data from Supabase + realtime sync ──────────────────────────────
+  const rowToPerson=r=>({id:r.id,name:r.name,color:r.color,avatarEmoji:r.avatar_emoji||""});
+  const rowToZone=r=>({id:r.id,label:r.label,emoji:r.emoji});
+  const rowToTask=r=>({
+    id:r.id,zone:r.zone_id,text:r.text,freq:r.freq,customDays:r.custom_days,
+    personIds:r.person_ids||[],personId:(r.person_ids||[])[0]||null,
+    scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
+    rescheduledFrom:r.rescheduled_from,
+  });
+
+  useEffect(()=>{
+    let active=true;
+    (async()=>{
+      const [{data:p},{data:z},{data:t}]=await Promise.all([
+        supabase.from("people").select("*").eq("household_id",household.id),
+        supabase.from("zones").select("*").eq("household_id",household.id),
+        supabase.from("tasks").select("*").eq("household_id",household.id),
+      ]);
+      if(!active) return;
+      setPeople((p||[]).map(rowToPerson));
+      setZones((z||[]).map(rowToZone));
+      setTasks((t||[]).map(rowToTask));
+      setDataLoading(false);
+    })();
+
+    const channel=supabase.channel(`household-${household.id}`)
+      .on("postgres_changes",{event:"*",schema:"public",table:"tasks",filter:`household_id=eq.${household.id}`},payload=>{
+        if(payload.eventType==="DELETE"){
+          setTasks(ts=>ts.filter(t=>t.id!==payload.old.id));
+        } else {
+          const row=rowToTask(payload.new);
+          setTasks(ts=>{
+            const exists=ts.some(t=>t.id===row.id);
+            return exists?ts.map(t=>t.id===row.id?row:t):[...ts,row];
+          });
+        }
+      })
+      .on("postgres_changes",{event:"*",schema:"public",table:"people",filter:`household_id=eq.${household.id}`},payload=>{
+        if(payload.eventType==="DELETE"){
+          setPeople(ps=>ps.filter(p=>p.id!==payload.old.id));
+        } else {
+          const row=rowToPerson(payload.new);
+          setPeople(ps=>{
+            const exists=ps.some(p=>p.id===row.id);
+            return exists?ps.map(p=>p.id===row.id?row:p):[...ps,row];
+          });
+        }
+      })
+      .on("postgres_changes",{event:"*",schema:"public",table:"zones",filter:`household_id=eq.${household.id}`},payload=>{
+        if(payload.eventType==="DELETE"){
+          setZones(zs=>zs.filter(z=>z.id!==payload.old.id));
+        } else {
+          const row=rowToZone(payload.new);
+          setZones(zs=>{
+            const exists=zs.some(z=>z.id===row.id);
+            return exists?zs.map(z=>z.id===row.id?row:z):[...zs,row];
+          });
+        }
+      })
+      .subscribe();
+
+    return ()=>{ active=false; supabase.removeChannel(channel); };
+  },[household.id]);
+
+  // Persist a task's current fields to Supabase (fire-and-forget, local state already updated)
+  const persistTask=(id,fields)=>{
+    const dbFields={};
+    if("zone" in fields) dbFields.zone_id=fields.zone;
+    if("text" in fields) dbFields.text=fields.text;
+    if("freq" in fields) dbFields.freq=fields.freq;
+    if("customDays" in fields) dbFields.custom_days=fields.customDays;
+    if("personIds" in fields) dbFields.person_ids=fields.personIds;
+    if("scheduledDates" in fields) dbFields.scheduled_dates=fields.scheduledDates;
+    if("doneOn" in fields) dbFields.done_on=fields.doneOn;
+    if("likes" in fields) dbFields.likes=fields.likes;
+    if("rescheduledFrom" in fields) dbFields.rescheduled_from=fields.rescheduledFrom;
+    dbFields.updated_at=new Date().toISOString();
+    supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistTask",error); });
+  };
+  const insertTask=row=>{
+    supabase.from("tasks").insert({
+      id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
+      custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
+      done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,
+    }).then(({error})=>{ if(error) console.error("insertTask",error); });
+  };
+  const deleteTaskRemote=id=>{
+    supabase.from("tasks").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteTask",error); });
+  };
+  const persistPerson=(id,fields)=>{
+    const dbFields={};
+    if("name" in fields) dbFields.name=fields.name;
+    if("color" in fields) dbFields.color=fields.color;
+    if("avatarEmoji" in fields) dbFields.avatar_emoji=fields.avatarEmoji;
+    supabase.from("people").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistPerson",error); });
+  };
+  const insertPerson=p=>{
+    supabase.from("people").insert({id:p.id,household_id:household.id,name:p.name,color:p.color,avatar_emoji:p.avatarEmoji}).then(({error})=>{ if(error) console.error("insertPerson",error); });
+  };
+  const deletePersonRemote=id=>{
+    supabase.from("people").delete().eq("id",id).then(({error})=>{ if(error) console.error("deletePerson",error); });
+  };
+  const persistZone=(id,fields)=>{
+    const dbFields={};
+    if("label" in fields) dbFields.label=fields.label;
+    if("emoji" in fields) dbFields.emoji=fields.emoji;
+    supabase.from("zones").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistZone",error); });
+  };
+  const insertZone=z=>{
+    supabase.from("zones").insert({id:z.id,household_id:household.id,label:z.label,emoji:z.emoji}).then(({error})=>{ if(error) console.error("insertZone",error); });
+  };
+  const deleteZoneRemote=id=>{
+    supabase.from("zones").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteZone",error); });
+  };
+
   const [myFilter,setMyFilter]= useState(false);
   const [weekZoneFilter,setWeekZoneFilter]= useState(null);
   const [weekOff, setWeekOff] = useState(0);
@@ -304,18 +422,22 @@ export default function App(){
       }
     }
     setActivityOrder(o=>[key,...o.filter(k=>k!==key)]);
-    setTasks(ts=>ts.map(t=>t.id!==id?t:{...t,doneOn:isDone(t,d)?t.doneOn.filter(x=>x!==d):[...t.doneOn,d]}));
+    const newDoneOn=isDone(t,d)?t.doneOn.filter(x=>x!==d):[...t.doneOn,d];
+    setTasks(ts=>ts.map(t=>t.id!==id?t:{...t,doneOn:newDoneOn}));
+    persistTask(id,{doneOn:newDoneOn});
   };
 
   const likeTask=(taskId,dateStr)=>{
     const t=tasks.find(x=>x.id===taskId); if(!t) return;
     const key=meId+dateStr;
     const wasLiked=(t.likes||[]).includes(key);
+    const newLikes=wasLiked?(t.likes||[]).filter(l=>l!==key):[...(t.likes||[]),key];
     setTasks(ts=>ts.map(x=>{
       if(x.id!==taskId) return x;
       const has=(x.likes||[]).includes(key); // re-check against the freshest state, not a stale snapshot
       return {...x, likes: has ? (x.likes||[]).filter(l=>l!==key) : [...(x.likes||[]), key]};
     }));
+    persistTask(taskId,{likes:newLikes});
     if(!wasLiked){
       setJustLiked(taskId+"|"+dateStr);
       setTimeout(()=>setJustLiked(null),400);
@@ -330,11 +452,14 @@ export default function App(){
 
   const moveTask=(id,from,to)=>{
     if(from===to) return;
+    let newFields=null;
     setTasks(ts=>ts.map(t=>{
       if(t.id!==id) return t;
       const dates=[...new Set([...t.scheduledDates.filter(x=>x!==from),to])].sort();
-      return{...t,scheduledDates:dates,doneOn:t.doneOn.filter(x=>x!==from),rescheduledFrom:from};
+      newFields={scheduledDates:dates,doneOn:t.doneOn.filter(x=>x!==from),rescheduledFrom:from};
+      return{...t,...newFields};
     }));
+    if(newFields) persistTask(id,newFields);
     setSelDay(to);
   };
 
@@ -349,13 +474,17 @@ export default function App(){
     let days=f?.days;
     if(form.freq==="custom") days=form.customDays;
     const startIdx=Math.max(0,_60.indexOf(form.startDate||todayStr));
-const base=_60.slice(startIdx);
-const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
+    const base=_60.slice(startIdx);
+    const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
     if(editTaskId){
-      setTasks(ts=>ts.map(t=>t.id!==editTaskId?t:{...t,...form,personId:form.personIds[0]||null,scheduledDates:dates}));
+      const updated={...form,personId:form.personIds[0]||null,scheduledDates:dates};
+      setTasks(ts=>ts.map(t=>t.id!==editTaskId?t:{...t,...updated}));
+      persistTask(editTaskId,updated);
       setEditTaskId(null);
     } else {
-      setTasks(ts=>[...ts,{id:uid(),...form,personId:form.personIds[0]||null,scheduledDates:dates,doneOn:[],likes:[],rescheduledFrom:null}]);
+      const newTask={id:uid(),...form,personId:form.personIds[0]||null,scheduledDates:dates,doneOn:[],likes:[],rescheduledFrom:null};
+      setTasks(ts=>[...ts,newTask]);
+      insertTask(newTask);
     }
     setForm(blankForm);
     if(dates[0]) setSelDay(dates[0]);
@@ -368,25 +497,40 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
       const newId=uid();
       const np={id:newId,name:pForm.name.trim(),color:pForm.color,avatarEmoji:pForm.avatarEmoji};
       setPeople(ps=>[...ps,np]);
+      insertPerson(np);
       if(pForm._tempMe) setMeId(newId);
     } else {
-      setPeople(ps=>ps.map(p=>p.id===personModal.id?{...p,...pForm,name:pForm.name.trim()}:p));
+      const updated={name:pForm.name.trim(),color:pForm.color,avatarEmoji:pForm.avatarEmoji};
+      setPeople(ps=>ps.map(p=>p.id===personModal.id?{...p,...updated}:p));
+      persistPerson(personModal.id,updated);
     }
     setPersonModal(null); setAvatarPicker(false);
   };
   const deletePerson=id=>{
     setPeople(ps=>ps.filter(p=>p.id!==id));
     setTasks(ts=>ts.map(t=>t.personId===id?{...t,personId:null}:t));
+    deletePersonRemote(id);
     if(meId===id) setMeId(people[0]?.id??"");
   };
 
   const saveZone=()=>{
     if(!zForm.label.trim()){setZoneNameError(true);return;}
-    if(zoneModal.mode==="new") setZones(zs=>[...zs,{id:uid(),label:zForm.label.trim(),emoji:zForm.emoji}]);
-    else setZones(zs=>zs.map(z=>z.id===zoneModal.id?{...z,...zForm,label:zForm.label.trim()}:z));
+    if(zoneModal.mode==="new"){
+      const nz={id:uid(),label:zForm.label.trim(),emoji:zForm.emoji};
+      setZones(zs=>[...zs,nz]);
+      insertZone(nz);
+    } else {
+      const updated={label:zForm.label.trim(),emoji:zForm.emoji};
+      setZones(zs=>zs.map(z=>z.id===zoneModal.id?{...z,...updated}:z));
+      persistZone(zoneModal.id,updated);
+    }
     setZoneModal(null); setEmojiPicker(false);
   };
-  const deleteZone=id=>{setZones(zs=>zs.filter(z=>z.id!==id));setTasks(ts=>ts.filter(t=>t.zone!==id));};
+  const deleteZone=id=>{
+    setZones(zs=>zs.filter(z=>z.id!==id));
+    setTasks(ts=>ts.filter(t=>t.zone!==id));
+    deleteZoneRemote(id);
+  };
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const visWeek=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
@@ -475,6 +619,14 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
     {id:"tasks",    emoji:"📋",label:"Tasks"},
     {id:"settings", emoji:"⚙️",label:"Settings"},
   ];
+
+  if(dataLoading){
+    return (
+      <div style={{height:"100%",background:"#08080f",display:"flex",alignItems:"center",justifyContent:"center",color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',system-ui,sans-serif"}}>
+        Loading your home…
+      </div>
+    );
+  }
 
   return (
     <div style={{height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
@@ -983,7 +1135,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
                             <div onClick={e=>e.stopPropagation()} style={{marginTop:12,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.07)"}}>
                               <span style={labelSt}>Assigned to</span>
                               <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:10}}>
-                                <button onClick={()=>setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,personIds:people.map(p=>p.id),personId:people[0]?.id??null}))} style={{
+                                <button onClick={()=>{const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{
                                   display:"flex",alignItems:"center",height:36,boxSizing:"border-box",
                                   background:(t.personIds||[t.personId]).filter(Boolean).length===people.length?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.05)",
                                   border:`2px solid ${(t.personIds||[t.personId]).filter(Boolean).length===people.length?"rgba(255,255,255,0.4)":"rgba(255,255,255,0.08)"}`,
@@ -994,7 +1146,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
                                 {people.map(p=>{
                                   const pIds=t.personIds||[t.personId].filter(Boolean);
                                   const sel=pIds.length===1&&pIds.includes(p.id);
-                                  return <button key={p.id} onClick={()=>setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,personIds:[p.id],personId:p.id}))} style={{display:"flex",alignItems:"center",gap:7,height:36,boxSizing:"border-box",background:sel?p.color+"28":"rgba(255,255,255,0.05)",border:`2px solid ${sel?p.color+"90":"rgba(255,255,255,0.08)"}`,borderRadius:20,padding:"0 12px 0 6px",cursor:"pointer",position:"relative"}}>
+                                  return <button key={p.id} onClick={()=>{const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{display:"flex",alignItems:"center",gap:7,height:36,boxSizing:"border-box",background:sel?p.color+"28":"rgba(255,255,255,0.05)",border:`2px solid ${sel?p.color+"90":"rgba(255,255,255,0.08)"}`,borderRadius:20,padding:"0 12px 0 6px",cursor:"pointer",position:"relative"}}>
                                     <Avatar person={p} size={20}/>
                                     <span style={{color:sel?p.color:"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>{p.name}</span>
                                   </button>;
@@ -1002,7 +1154,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
                               </div>
                               <div style={{display:"flex",gap:8}}>
                                 <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:4,startDate:todayStr,maxLen:22});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
-                                <button onClick={()=>{setTasks(ts=>ts.filter(x=>x.id!==t.id));setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                                <button onClick={()=>{setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>
                               </div>
                             </div>
                           )}
@@ -1070,6 +1222,17 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Invite / account */}
+              <div style={{marginTop:26}}>
+                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
+                <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                  <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
+                  <button onClick={()=>navigator.clipboard?.writeText(household.invite_code)} style={{background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer"}}>Copy</button>
+                </div>
+                <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:20}}>Share this code so your partner can join this home</div>
+                <button onClick={onSignOut} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"12px",color:"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer",width:"100%"}}>Sign out</button>
               </div>
               </div>
             </div>
@@ -1384,3 +1547,201 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Auth + household onboarding
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SHELL_STYLE={height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"};
+const CARD_BG="linear-gradient(160deg,#1a1035 0%,#0d1f3c 45%,#0a2a1f 100%)";
+const AUTH_INPUT={background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"13px 16px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:"none"};
+const AUTH_BTN={background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",width:"100%"};
+
+function LoginScreen(){
+  const [email,setEmail]=useState("");
+  const [sent,setSent]=useState(false);
+  const [error,setError]=useState("");
+  const [loading,setLoading]=useState(false);
+
+  const sendLink=async()=>{
+    if(!email.trim()||!email.includes("@")){setError("Enter a valid email");return;}
+    setError(""); setLoading(true);
+    const {error}=await supabase.auth.signInWithOtp({
+      email:email.trim(),
+      options:{emailRedirectTo:window.location.origin},
+    });
+    setLoading(false);
+    if(error){setError(error.message);return;}
+    setSent(true);
+  };
+
+  return (
+    <div style={SHELL_STYLE}>
+      <div style={{width:"100%",maxWidth:480,display:"flex",flexDirection:"column",justifyContent:"center",padding:"32px 28px",background:CARD_BG}}>
+        <div style={{fontSize:40,marginBottom:16,textAlign:"center"}}>🏠</div>
+        <div style={{color:"#fff",fontSize:24,fontWeight:700,textAlign:"center",marginBottom:8}}>Home Tasks</div>
+        <div style={{color:"rgba(255,255,255,0.4)",fontSize:14,textAlign:"center",marginBottom:32}}>Shared chores for your household</div>
+
+        {sent?(
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:32,marginBottom:12}}>📬</div>
+            <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,marginBottom:8}}>Check your email</div>
+            <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a login link to {email}</div>
+          </div>
+        ):(
+          <>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e=>{setEmail(e.target.value);setError("");}}
+              style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"2px solid transparent"}}
+            />
+            <div style={{height:16,marginBottom:8}}>
+              {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
+            </div>
+            <button onClick={sendLink} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
+              {loading?"Sending…":"Send login link"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HouseholdGate({session,onReady}){
+  const [mode,setMode]=useState(null); // null | "create" | "join"
+  const [name,setName]=useState("");
+  const [inviteCode,setInviteCode]=useState("");
+  const [color,setColor]=useState(PALETTE[0]);
+  const [avatarEmoji,setAvatarEmoji]=useState("");
+  const [error,setError]=useState("");
+  const [busy,setBusy]=useState(false);
+  const [checking,setChecking]=useState(true);
+
+  // If this auth user is already linked to a person, skip straight in
+  useEffect(()=>{
+    (async()=>{
+      const {data}=await supabase.from("people").select("*").eq("auth_user_id",session.user.id).maybeSingle();
+      if(data){
+        const {data:household}=await supabase.from("households").select("*").eq("id",data.household_id).single();
+        onReady({household,me:{id:data.id,name:data.name,color:data.color,avatarEmoji:data.avatar_emoji}});
+        return;
+      }
+      setChecking(false);
+    })();
+  },[]);
+
+  const createHousehold=async()=>{
+    if(!name.trim()){setError("Enter your name");return;}
+    setBusy(true); setError("");
+    const {data:household,error:hErr}=await supabase.from("households").insert({}).select().single();
+    if(hErr){setBusy(false);setError(hErr.message);return;}
+    const personId=String(Date.now());
+    const {error:pErr}=await supabase.from("people").insert({
+      id:personId,household_id:household.id,auth_user_id:session.user.id,
+      name:name.trim(),color,avatar_emoji:avatarEmoji,
+    });
+    if(pErr){setBusy(false);setError(pErr.message);return;}
+    // seed default zones
+    await supabase.from("zones").insert(
+      ZONES_DEFAULT.map(z=>({id:z.id+"-"+household.id.slice(0,6),household_id:household.id,label:z.label,emoji:z.emoji}))
+    );
+    onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
+  };
+
+  const joinHousehold=async()=>{
+    if(!name.trim()){setError("Enter your name");return;}
+    if(!inviteCode.trim()){setError("Enter the invite code");return;}
+    setBusy(true); setError("");
+    const {data:household,error:hErr}=await supabase.from("households").select("*").eq("invite_code",inviteCode.trim().toLowerCase()).maybeSingle();
+    if(hErr||!household){setBusy(false);setError("Invite code not found");return;}
+    const personId=String(Date.now());
+    const {error:pErr}=await supabase.from("people").insert({
+      id:personId,household_id:household.id,auth_user_id:session.user.id,
+      name:name.trim(),color,avatar_emoji:avatarEmoji,
+    });
+    if(pErr){setBusy(false);setError(pErr.message);return;}
+    onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
+  };
+
+  if(checking){
+    return <div style={SHELL_STYLE}><div style={{margin:"auto",color:"rgba(255,255,255,0.4)"}}>Loading…</div></div>;
+  }
+
+  if(!mode){
+    return (
+      <div style={SHELL_STYLE}>
+        <div style={{width:"100%",maxWidth:480,display:"flex",flexDirection:"column",justifyContent:"center",padding:"32px 28px",background:CARD_BG,gap:14}}>
+          <div style={{fontSize:40,marginBottom:8,textAlign:"center"}}>🏠</div>
+          <div style={{color:"#fff",fontSize:22,fontWeight:700,textAlign:"center",marginBottom:20}}>Set up your home</div>
+          <button onClick={()=>setMode("create")} style={AUTH_BTN}>Create a new home</button>
+          <button onClick={()=>setMode("join")} style={{...AUTH_BTN,background:"rgba(255,255,255,0.08)",boxShadow:"none",border:"1px solid rgba(255,255,255,0.15)"}}>Join with invite code</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={SHELL_STYLE}>
+      <div style={{width:"100%",maxWidth:480,display:"flex",flexDirection:"column",justifyContent:"center",padding:"32px 28px",background:CARD_BG,gap:12,overflowY:"auto"}}>
+        <button onClick={()=>{setMode(null);setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",fontSize:14,cursor:"pointer",textAlign:"left",padding:0,marginBottom:8}}>‹ Back</button>
+        <div style={{color:"#fff",fontSize:20,fontWeight:700,marginBottom:8}}>{mode==="create"?"Create your home":"Join a home"}</div>
+
+        {mode==="join"&&(
+          <input placeholder="Invite code" value={inviteCode} onChange={e=>setInviteCode(e.target.value)} style={AUTH_INPUT}/>
+        )}
+        <input placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} style={AUTH_INPUT}/>
+
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {PALETTE.map(c=>(
+            <button key={c} onClick={()=>setColor(c)} style={{width:32,height:32,borderRadius:"50%",background:c,border:color===c?"3px solid #fff":"3px solid transparent",cursor:"pointer"}}/>
+          ))}
+        </div>
+
+        <div style={{height:16}}>{error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}</div>
+
+        <button onClick={mode==="create"?createHousehold:joinHousehold} disabled={busy} style={{...AUTH_BTN,opacity:busy?0.6:1}}>
+          {busy?"One moment…":mode==="create"?"Create home":"Join home"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function Root(){
+  useEffect(()=>{
+    const setVh=()=>document.documentElement.style.setProperty("--app-height",`${window.innerHeight}px`);
+    setVh();
+    window.addEventListener("resize",setVh);
+    return ()=>window.removeEventListener("resize",setVh);
+  },[]);
+
+  const [session,setSession]=useState(null);
+  const [authLoading,setAuthLoading]=useState(true);
+  const [me,setMe]=useState(null);
+  const [household,setHousehold]=useState(null);
+
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthLoading(false);});
+    const {data:listener}=supabase.auth.onAuthStateChange((_event,newSession)=>setSession(newSession));
+    return ()=>listener.subscription.unsubscribe();
+  },[]);
+
+  if(authLoading){
+    return <div style={{height:"var(--app-height,100dvh)",...SHELL_STYLE}}><div style={{margin:"auto",color:"rgba(255,255,255,0.4)"}}>Loading…</div></div>;
+  }
+  if(!session){
+    return <div style={{height:"var(--app-height,100dvh)"}}><LoginScreen/></div>;
+  }
+  if(!household||!me){
+    return <div style={{height:"var(--app-height,100dvh)"}}><HouseholdGate session={session} onReady={({household,me})=>{setHousehold(household);setMe(me);}}/></div>;
+  }
+  return (
+    <div style={{height:"var(--app-height,100dvh)"}}>
+      <MainApp household={household} me={me} onSignOut={()=>supabase.auth.signOut()}/>
+    </div>
+  );
+}
+
