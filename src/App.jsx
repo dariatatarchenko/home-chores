@@ -183,6 +183,18 @@ function Avatar({person,size=30}){
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App(){
+  useEffect(()=>{
+    const setVh=()=>{
+      document.documentElement.style.setProperty("--app-height",`${window.innerHeight}px`);
+    };
+    setVh();
+    window.addEventListener("resize",setVh);
+    window.addEventListener("orientationchange",setVh);
+    return ()=>{
+      window.removeEventListener("resize",setVh);
+      window.removeEventListener("orientationchange",setVh);
+    };
+  },[]);
   const [tasks,   setTasks]   = useState(INIT_TASKS_PATCHED);
   const [people,  setPeople]  = useState(INIT_PEOPLE);
   const [zones,   setZones]   = useState(ZONES_DEFAULT);
@@ -465,7 +477,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
   ];
 
   return (
-    <div style={{height:"100dvh",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
+    <div style={{height:"var(--app-height, 100dvh)",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
       <style>{`
         html,body,#root{height:100%;margin:0;background:#08080f;}
         body{overflow:hidden;overscroll-behavior:none;}
