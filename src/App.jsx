@@ -465,7 +465,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
   ];
 
   return (
-    <div style={{minHeight:"100vh",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"flex-start",fontFamily:"'Inter',system-ui,sans-serif",padding:"24px 0 0"}}>
+    <div style={{height:"100dvh",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
       <style>{`
         @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(110px) rotate(720deg);opacity:0}}
@@ -480,17 +480,14 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
       `}</style>
 
       {/* Phone shell */}
-      <div style={{width:375,borderRadius:44,overflow:"hidden",boxShadow:"0 60px 160px #000e,0 0 0 1px rgba(255,255,255,0.06)",display:"flex",flexDirection:"column",height:812,position:"relative",background:BG}}>
+      <div style={{width:"100%",maxWidth:480,overflow:"hidden",display:"flex",flexDirection:"column",height:"100%",position:"relative",background:BG}}>
 
         {/* Glows */}
         <div style={{position:"absolute",top:-80,left:-60,width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,#6366f144,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
         <div style={{position:"absolute",top:120,right:-80,width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle,#34d39922,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
 
-        {/* Status bar */}
-        <div style={{display:"flex",justifyContent:"space-between",padding:"14px 28px 0",fontSize:12,color:"rgba(255,255,255,0.35)",fontWeight:600,flexShrink:0,position:"relative",zIndex:2}}>
-          <span>{TODAY.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:false})}</span>
-          <span style={{letterSpacing:3}}>•••</span>
-        </div>
+        {/* Safe area spacer for notch/status bar */}
+        <div style={{height:"env(safe-area-inset-top)",flexShrink:0}}/>
 
         {/* Toast */}
         {toast&&(
@@ -1065,7 +1062,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div style={{flexShrink:0,zIndex:10,...G(0.14,40),borderTop:"1px solid rgba(255,255,255,0.08)",padding:"10px 14px 22px",display:"flex",gap:3}}>
+        <div style={{flexShrink:0,zIndex:10,...G(0.14,40),borderTop:"1px solid rgba(255,255,255,0.08)",padding:"10px 14px calc(12px + env(safe-area-inset-bottom))",display:"flex",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             if(item.accent) return (
