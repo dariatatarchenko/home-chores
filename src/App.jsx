@@ -477,9 +477,11 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
   ];
 
   return (
-    <div style={{height:"var(--app-height, 100dvh)",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
+    <div style={{height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
       <style>{`
         html,body,#root{height:100%;margin:0;background:#08080f;}
+        html,body{position:fixed;inset:0;width:100%;}
+        #root{width:100%;overflow:hidden;}
         body{overflow:hidden;overscroll-behavior:none;}
         @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(110px) rotate(720deg);opacity:0}}
@@ -1076,7 +1078,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div style={{flexShrink:0,zIndex:10,...G(0.14,40),borderTop:"1px solid rgba(255,255,255,0.08)",padding:"8px 14px calc(4px + env(safe-area-inset-bottom))",display:"flex",gap:3}}>
+        <div style={{flexShrink:0,zIndex:10,...G(0.14,40),borderTop:"1px solid rgba(255,255,255,0.08)",padding:"6px 14px",display:"flex",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             if(item.accent) return (
@@ -1085,7 +1087,7 @@ const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
               </div>
             );
             return (
-              <button key={item.id} onClick={()=>setTab(item.id)} style={{flex:1,border:"none",borderRadius:16,padding:"9px 0",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:active?"rgba(255,255,255,0.1)":"transparent",transition:"all 0.15s"}}>
+              <button key={item.id} onClick={()=>setTab(item.id)} style={{flex:1,border:"none",borderRadius:16,padding:"5px 0",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:active?"rgba(255,255,255,0.1)":"transparent",transition:"all 0.15s"}}>
                 <span style={{fontSize:20,lineHeight:1}}>{item.emoji}</span>
                 <span style={{fontSize:11,fontWeight:700,letterSpacing:0.2,color:active?"rgba(255,255,255,0.88)":"rgba(255,255,255,0.3)"}}>{item.label}</span>
               </button>
