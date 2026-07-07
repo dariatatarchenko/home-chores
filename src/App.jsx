@@ -1636,18 +1636,12 @@ function HouseholdGate({session,onReady}){
   const createHousehold=async()=>{
     if(!name.trim()){setError("Enter your name");return;}
     setBusy(true); setError("");
-    const {data:household,error:hErr}=await supabase.from("households").insert({}).select().single();
-    if(hErr){setBusy(false);setError(hErr.message);return;}
     const personId=String(Date.now());
-    const {error:pErr}=await supabase.from("people").insert({
-      id:personId,household_id:household.id,auth_user_id:session.user.id,
-      name:name.trim(),color,avatar_emoji:avatarEmoji,
-    });
-    if(pErr){setBusy(false);setError(pErr.message);return;}
-    // seed default zones
-    await supabase.from("zones").insert(
-      ZONES_DEFAULT.map(z=>({id:z.id+"-"+household.id.slice(0,6),household_id:household.id,label:z.label,emoji:z.emoji}))
-    );
+    const {data:household,error:hErr}=await supabase.rpc("create_household_with_person",{
+      p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
+    }).single();
+    if(hErr){setBusy(false);setError(hErr.message);return;}
+    await supabase.rpc("seed_default_zones",{p_household_id:household.id});
     onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
   };
 
@@ -1655,14 +1649,11 @@ function HouseholdGate({session,onReady}){
     if(!name.trim()){setError("Enter your name");return;}
     if(!inviteCode.trim()){setError("Enter the invite code");return;}
     setBusy(true); setError("");
-    const {data:household,error:hErr}=await supabase.from("households").select("*").eq("invite_code",inviteCode.trim().toLowerCase()).maybeSingle();
-    if(hErr||!household){setBusy(false);setError("Invite code not found");return;}
     const personId=String(Date.now());
-    const {error:pErr}=await supabase.from("people").insert({
-      id:personId,household_id:household.id,auth_user_id:session.user.id,
-      name:name.trim(),color,avatar_emoji:avatarEmoji,
-    });
-    if(pErr){setBusy(false);setError(pErr.message);return;}
+    const {data:household,error:hErr}=await supabase.rpc("join_household_by_code",{
+      p_code:inviteCode.trim().toLowerCase(),p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
+    }).single();
+    if(hErr){setBusy(false);setError(hErr.message.includes("not found")?"Invite code not found":hErr.message);return;}
     onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
   };
 
