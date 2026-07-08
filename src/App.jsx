@@ -50,7 +50,7 @@ const ZONES_DEFAULT = [
   {id:"hall",     label:"Hallway",     emoji:"🚪"},
   {id:"pets",     label:"Pets",        emoji:"🐾"},
 ];
-const ZONE_EMOJIS = ["🍳","🚿","🛋️","🛏️","🚪","📦","🌿","🪟","🧹","🧺","🪣","🛁","🚽","🧴","🪴","🖥️","📚","🎮","🧸","🐾","🚗","🏋️","🎨","🎵"];
+const ZONE_EMOJIS = ["🍳","🚿","🛋️","🛏️","🚪","📦","🌿","🪟","🧹","🧺","🪣","🛁","🚽","🧴","🪴","🖥️","📚","🎮","🧸","🐾","🚗","🏋️","🎨","🎵","🏠","🏡","🚙","🍽️","☕","🧽","🧼","🗑️","🔌","💡","🪑","🚲","🧵","🎒","🧦","👕","🌱","🔧","🛠️","📮","🗄️","🖼️","🪞","🕯️","🧊","🌡️","📺","🎹","⚽"];
 const AVATAR_EMOJIS = ["😀","😎","🥳","🦊","🐱","🐶","🐼","🦁","🐰","🐨","🐯","🐸","🌟","🎯","🍀","🔥","💎","🎸","🚀","🌈","⚡","🌸","🍕","🦄"];
 const PALETTE = ["#f87171","#fb923c","#fbbf24","#34d399","#38bdf8","#818cf8","#e879f9","#94a3b8"];
 const CONFETTI = ["#f87171","#fbbf24","#34d399","#818cf8","#e879f9","#38bdf8"];
@@ -108,7 +108,7 @@ const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const todayStr = TODAY.toISOString().slice(0,10);
 const ds = d => (d instanceof Date ? d : new Date(d+"T00:00:00")).toISOString().slice(0,10);
 
-let _uid=300; const uid=()=>String(_uid++);
+const uid=()=>(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
 const initials = n => (n||"?").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
 
 // ─── Sample data ──────────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ function Avatar({person,size=30}){
   return (
     <div style={{width:size,height:size,flexShrink:0,
       display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <span style={{fontSize:person.avatarEmoji?size*.68:size*.46,fontWeight:700,color:person.avatarEmoji?undefined:person.color,lineHeight:1}}>
+      <span style={{fontSize:person.avatarEmoji?size*.85:size*.46,fontWeight:700,color:person.avatarEmoji?undefined:person.color,lineHeight:1}}>
         {person.avatarEmoji||initials(person.name)}
       </span>
     </div>
@@ -201,6 +201,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
   const [codeCopied,setCodeCopied]=useState(false);
+  const [zoneDragId,setZoneDragId]=useState(null);
+  const [zoneDragOverId,setZoneDragOverId]=useState(null);
   const [tab,     setTab]     = useState(()=>{
     try{
       const saved=localStorage.getItem("hometasks_tab");
@@ -220,7 +222,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   // ── Load data from Supabase + realtime sync ──────────────────────────────
   const rowToPerson=r=>({id:r.id,name:r.name,color:r.color,avatarEmoji:r.avatar_emoji||""});
-  const rowToZone=r=>({id:r.id,label:r.label,emoji:r.emoji});
+  const rowToZone=r=>({id:r.id,label:r.label,emoji:r.emoji,sortOrder:r.sort_order??0});
   const rowToTask=r=>({
     id:r.id,zone:r.zone_id,text:r.text,freq:r.freq,customDays:r.custom_days,
     personIds:r.person_ids||[],personId:(r.person_ids||[])[0]||null,
@@ -254,7 +256,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       }
       if(!active) return;
       setPeople(p.map(rowToPerson));
-      setZones(z.map(rowToZone));
+      setZones(z.map(rowToZone).sort((a,b)=>a.sortOrder-b.sortOrder));
       setTasks(t.map(rowToTask));
 
       const {data:n}=await supabase.from("notifications").select("*").eq("household_id",household.id).order("created_at",{ascending:false}).limit(30);
@@ -309,7 +311,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           const row=rowToZone(payload.new);
           setZones(zs=>{
             const exists=zs.some(z=>z.id===row.id);
-            return exists?zs.map(z=>z.id===row.id?row:z):[...zs,row];
+            const next=exists?zs.map(z=>z.id===row.id?row:z):[...zs,row];
+            return next.sort((a,b)=>a.sortOrder-b.sortOrder);
           });
         }
       })
@@ -375,10 +378,26 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     supabase.from("zones").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistZone",error); });
   };
   const insertZone=z=>{
-    supabase.from("zones").insert({id:z.id,household_id:household.id,label:z.label,emoji:z.emoji}).then(({error})=>{ if(error) console.error("insertZone",error); });
+    const nextOrder=zones.length?Math.max(...zones.map(x=>x.sortOrder||0))+1:1;
+    supabase.from("zones").insert({id:z.id,household_id:household.id,label:z.label,emoji:z.emoji,sort_order:nextOrder}).then(({error})=>{ if(error) console.error("insertZone",error); });
   };
   const deleteZoneRemote=id=>{
     supabase.from("zones").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteZone",error); });
+  };
+  const reorderZones=(fromId,toId)=>{
+    if(fromId===toId) return;
+    setZones(zs=>{
+      const arr=[...zs];
+      const fromIdx=arr.findIndex(z=>z.id===fromId);
+      const toIdx=arr.findIndex(z=>z.id===toId);
+      if(fromIdx===-1||toIdx===-1) return zs;
+      const [moved]=arr.splice(fromIdx,1);
+      arr.splice(toIdx,0,moved);
+      const reindexed=arr.map((z,i)=>({...z,sortOrder:i+1}));
+      Promise.all(reindexed.map(z=>supabase.from("zones").update({sort_order:z.sortOrder}).eq("id",z.id)))
+        .then(results=>{ results.forEach(({error})=>{ if(error) console.error("reorderZones",error); }); });
+      return reindexed;
+    });
   };
 
   const [myFilter,setMyFilter]= useState(false);
@@ -423,16 +442,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   // Celebration is now triggered directly inside toggleDone (only on the actual completing action)
 
-  // ── Scroll today to center ────────────────────────────────────────────────
+  // ── Scroll selected day to center ──────────────────────────────────────────
   useEffect(()=>{
     if(!stripRef.current) return;
+    if(tab!=="week") return;
     const el=stripRef.current;
     const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
-    const todayIdx=visWeekLocal.findIndex(d=>ds(d)===todayStr);
-    if(todayIdx<0) return;
+    const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
+    if(selIdx<0) return;
     const cellW=51;
-    el.scrollLeft=Math.max(0,todayIdx*cellW-(el.clientWidth/2)+(cellW/2));
-  },[dataLoading]);
+    el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth/2)+(cellW/2));
+  },[dataLoading,tab,selDay]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const isDone=(t,d)=>t.doneOn.includes(d);
@@ -795,7 +815,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Week strip */}
-              <div style={{flexShrink:0,margin:"0 0 22px",overflow:"hidden"}}>
+              <div style={{flexShrink:0,margin:"0 0 22px"}}>
                 <div ref={stripRef} style={{display:"flex",gap:5,paddingLeft:20,paddingRight:20,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",
                   WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)",
                   maskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)"}}>
@@ -814,9 +834,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         onDrop={()=>{if(dragInfo)moveTask(dragInfo.id,dragInfo.from,dStr);setDragInfo(null);setDragOver(null);}}
                         data-date={dStr}
                         style={{
-                          flex:"0 0 46px",borderRadius:18,
+                          flex:"0 0 46px",borderRadius:18,boxSizing:"border-box",
                           background:active?"linear-gradient(160deg,#818cf8,#6366f1)":isToday?"rgba(99,102,241,0.14)":"rgba(255,255,255,0.06)",
-                          border:active?"1px solid rgba(255,255,255,0.25)":isToday?"2px solid rgba(129,140,248,0.6)":"1px solid rgba(255,255,255,0.06)",
+                          border:active?"2px solid rgba(255,255,255,0.25)":isToday?"2px solid rgba(129,140,248,0.6)":"2px solid rgba(255,255,255,0.06)",
                           boxShadow:active?"0 4px 18px rgba(99,102,241,0.45)":isToday?"0 0 14px rgba(99,102,241,0.2)":"none",
                           padding:"8px 0",cursor:"pointer",
                           display:"flex",flexDirection:"column",alignItems:"center",gap:2,
@@ -898,6 +918,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       }}
                       onTouchMove={e=>{
                         if(!dragInfo) return;
+                        e.preventDefault();
                         const touch=e.touches[0];
                         const el=document.elementFromPoint(touch.clientX,touch.clientY);
                         const d=el?.closest("[data-date]")?.dataset?.date;
@@ -1283,10 +1304,44 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {zones.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"8px 0"}}>No zones yet — add one to get started</div>}
                   {zones.map(z=>(
-                    <div key={z.id} onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setZoneModal({mode:"edit",id:z.id});setEmojiPicker(false);}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
-                      <div style={{width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{z.emoji}</div>
-                      <span style={{flex:1,color:"rgba(255,255,255,0.82)",fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
-                      <span style={{color:"rgba(255,255,255,0.2)",fontSize:17}}>›</span>
+                    <div key={z.id}
+                      draggable
+                      onDragStart={()=>setZoneDragId(z.id)}
+                      onDragEnd={()=>{setZoneDragId(null);setZoneDragOverId(null);}}
+                      onDragOver={e=>{e.preventDefault();setZoneDragOverId(z.id);}}
+                      onDrop={()=>{if(zoneDragId)reorderZones(zoneDragId,z.id);setZoneDragId(null);setZoneDragOverId(null);}}
+                      onTouchStart={()=>setZoneDragId(z.id)}
+                      onTouchMove={e=>{
+                        if(!zoneDragId) return;
+                        e.preventDefault();
+                        const touch=e.touches[0];
+                        const el=document.elementFromPoint(touch.clientX,touch.clientY);
+                        const targetId=el?.closest("[data-zone-id]")?.dataset?.zoneId;
+                        if(targetId) setZoneDragOverId(targetId);
+                      }}
+                      onTouchEnd={e=>{
+                        if(!zoneDragId) return;
+                        const touch=e.changedTouches[0];
+                        const el=document.elementFromPoint(touch.clientX,touch.clientY);
+                        const targetId=el?.closest("[data-zone-id]")?.dataset?.zoneId;
+                        if(targetId) reorderZones(zoneDragId,targetId);
+                        setZoneDragId(null);setZoneDragOverId(null);
+                      }}
+                      data-zone-id={z.id}
+                      style={{...CARD,display:"flex",alignItems:"center",gap:8,cursor:"grab",touchAction:"none",
+                        opacity:zoneDragId===z.id?0.4:1,
+                        outline:zoneDragOverId===z.id&&zoneDragId&&zoneDragId!==z.id?"2px solid rgba(129,140,248,0.5)":"none",
+                        transition:"opacity 0.15s"}}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{flexShrink:0,opacity:0.3}}>
+                        <circle cx="9" cy="6" r="1.5" fill="white"/><circle cx="15" cy="6" r="1.5" fill="white"/>
+                        <circle cx="9" cy="12" r="1.5" fill="white"/><circle cx="15" cy="12" r="1.5" fill="white"/>
+                        <circle cx="9" cy="18" r="1.5" fill="white"/><circle cx="15" cy="18" r="1.5" fill="white"/>
+                      </svg>
+                      <div onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setZoneModal({mode:"edit",id:z.id});setEmojiPicker(false);}} style={{flex:1,display:"flex",alignItems:"center",gap:10,cursor:"pointer",minWidth:0}}>
+                        <div style={{width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{z.emoji}</div>
+                        <span style={{flex:1,color:"rgba(255,255,255,0.82)",fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
+                        <span style={{color:"rgba(255,255,255,0.2)",fontSize:17}}>›</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1323,11 +1378,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
-                  <button onClick={()=>{navigator.clipboard?.writeText(household.invite_code);setCodeCopied(true);setTimeout(()=>setCodeCopied(false),1800);}} style={{background:codeCopied?"rgba(52,211,153,0.18)":"rgba(129,140,248,0.15)",border:`1px solid ${codeCopied?"rgba(52,211,153,0.4)":"rgba(129,140,248,0.3)"}`,borderRadius:10,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all 0.15s",flexShrink:0}}>
+                  <button onClick={()=>{navigator.clipboard?.writeText(household.invite_code);setCodeCopied(true);setTimeout(()=>setCodeCopied(false),1800);}} style={{background:"none",border:"none",padding:8,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
                     {codeCopied?(
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     ):(
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="#818cf8" strokeWidth="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"/></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="#818cf8" strokeWidth="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"/></svg>
                     )}
                   </button>
                 </div>
