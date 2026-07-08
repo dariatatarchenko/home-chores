@@ -1044,7 +1044,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                         <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.15)"}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {done&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}
                           {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:11,fontWeight:700}}>✕</span>}
-                          {!done&&!missed&&isFutureDay&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round"/>            </svg>}
+                          {!done&&!missed&&isFutureDay&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2" strokeLinecap="round"/></svg>}
                         </button>
                         <div style={{flex:1}}>
                           <div style={{color:done?"rgba(255,255,255,0.38)":missed?"rgba(248,113,113,0.6)":"rgba(255,255,255,0.82)",fontSize:13}}>{t.text}</div>
