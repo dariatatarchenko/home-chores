@@ -429,7 +429,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if(todayIdx<0) return;
     const cellW=51;
     el.scrollLeft=Math.max(0,todayIdx*cellW-(el.clientWidth/2)+(cellW/2));
-  },[]);
+  },[dataLoading]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const isDone=(t,d)=>t.doneOn.includes(d);
