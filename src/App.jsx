@@ -200,11 +200,12 @@ function MainApp({household, me:initialMe, onSignOut}){
   const [people,  setPeople]  = useState([]);
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
-  const [showAccountSection,setShowAccountSection]=useState(false);
   const [tab,     setTab]     = useState("week");
   const [returnTab,setReturnTab]= useState("week");
   const [selDay,  setSelDay]  = useState(todayStr);
   const [meId,    setMeId]    = useState(initialMe.id);
+  const meIdRef=useRef(meId);
+  useEffect(()=>{ meIdRef.current=meId; },[meId]);
 
   // ── Load data from Supabase + realtime sync ──────────────────────────────
   const rowToPerson=r=>({id:r.id,name:r.name,color:r.color,avatarEmoji:r.avatar_emoji||""});
@@ -215,6 +216,7 @@ function MainApp({household, me:initialMe, onSignOut}){
     scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
     rescheduledFrom:r.rescheduled_from,
   });
+  const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body});
 
   useEffect(()=>{
     let active=true;
@@ -241,6 +243,10 @@ function MainApp({household, me:initialMe, onSignOut}){
       setPeople(p.map(rowToPerson));
       setZones(z.map(rowToZone));
       setTasks(t.map(rowToTask));
+
+      const {data:n}=await supabase.from("notifications").select("*").eq("household_id",household.id).order("created_at",{ascending:false}).limit(30);
+      if(active) setNotifs((n||[]).map(rowToNotif));
+
       setDataLoading(false);
     })();
 
@@ -276,6 +282,14 @@ function MainApp({household, me:initialMe, onSignOut}){
             const exists=zs.some(z=>z.id===row.id);
             return exists?zs.map(z=>z.id===row.id?row:z):[...zs,row];
           });
+        }
+      })
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:`household_id=eq.${household.id}`},payload=>{
+        const row=rowToNotif(payload.new);
+        setNotifs(ns=>ns.some(x=>x.id===row.id)?ns:[row,...ns]);
+        if(row.actorPersonId!==meIdRef.current){
+          setToast(row);
+          setTimeout(()=>setToast(null),3000);
         }
       })
       .subscribe();
@@ -349,10 +363,8 @@ function MainApp({household, me:initialMe, onSignOut}){
   const [showStats,setShowStats]= useState(false);
   const [celebration,setCelebration]= useState(null);
   const [showNotifs,setShowNotifs]= useState(false);
-  const [notifs,setNotifs]= useState([
-    {id:"n1",icon:"🎯",from:"Misha liked your task",text:"Wipe the stove — nailed it!",read:false},
-    {id:"n2",icon:"🏆",from:"Anya is on fire!",text:"3-day streak on Kitchen tasks",read:false},
-  ]);
+  const [notifs,setNotifs]= useState([]);
+  const [readIds,setReadIds]= useState(new Set());
   const [toast,setToast]= useState(null);
   const [personModal,setPersonModal]= useState(null);
   const [pForm,setPForm]= useState({name:"",color:PALETTE[0],avatarEmoji:""});
@@ -406,7 +418,7 @@ function MainApp({household, me:initialMe, onSignOut}){
   const dayTasks=d=>tasks.filter(t=>isScheduledOn(t,d));
   const getPerson=id=>people.find(p=>p.id===id);
   const getZone=id=>zones.find(z=>z.id===id);
-  const unread=notifs.filter(n=>!n.read).length;
+  const unread=notifs.filter(n=>!readIds.has(n.id)).length;
   const me=getPerson(meId);
 
   const toggleDone=(id,d)=>{
@@ -459,8 +471,10 @@ function MainApp({household, me:initialMe, onSignOut}){
       const liker=getPerson(meId);
       const isOwn=(t.personIds||[t.personId]).includes(meId);
       const from=isOwn?`${liker?.name||"Someone"} liked their own task`:`${liker?.name||"Someone"} liked your task`;
-      const newN={id:uid(),icon:m.icon,from,text:`${t.text} — ${m.text}`,read:false};
-      setNotifs(ns=>[newN,...ns]);
+      const bodyText=`${t.text} — ${m.text}`;
+      supabase.from("notifications").insert({
+        household_id:household.id,actor_person_id:meId,icon:m.icon,title:from,body:bodyText,
+      }).then(({error})=>{ if(error) console.error("insert notification",error); });
     }
   };
 
@@ -690,7 +704,7 @@ function MainApp({household, me:initialMe, onSignOut}){
               <div style={{color:"#fff",fontSize:14,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>All caught up!</div>}
               {notifs.map(n=>(
-                <div key={n.id} style={{display:"flex",gap:10,marginBottom:12,opacity:n.read?.5:1,cursor:"pointer"}} onClick={()=>{setNotifs(ns=>ns.map(x=>x.id===n.id?{...x,read:true}:x));setShowNotifs(false);}}>
+                <div key={n.id} style={{display:"flex",gap:10,marginBottom:12,opacity:readIds.has(n.id)?.5:1,cursor:"pointer"}} onClick={()=>{setReadIds(r=>new Set([...r,n.id]));setShowNotifs(false);}}>
                   <span style={{fontSize:22}}>{n.icon}</span>
                   <div>
                     <div style={{color:"rgba(255,255,255,0.9)",fontSize:12,fontWeight:600}}>{n.from}</div>
@@ -720,7 +734,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                     <Avatar person={me} size={24}/>
                     <span style={{color:myFilter?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>Mine</span>
                   </button>
-                  <button onClick={()=>{setShowNotifs(v=>!v);setNotifs(ns=>ns.map(n=>({...n,read:true})));}} style={{position:"relative",...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>
+                  <button onClick={()=>{setShowNotifs(v=>!v);setReadIds(r=>new Set([...r,...notifs.map(n=>n.id)]));}} style={{position:"relative",...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>
                     🔔
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
@@ -983,7 +997,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                     const isT=dStr===todayStr,iP=dStr<todayStr,iS=selDay===dStr;
                     const allD=cnt>0&&dCnt===cnt,hasMiss=iP&&cnt>0&&dCnt<cnt;
                     return (
-                      <div key={dStr} onClick={()=>setSelDay(dStr)} style={{borderRadius:10,padding:"10px 2px",minHeight:52,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,cursor:"pointer",transition:"all 0.15s",
+                      <div key={dStr} onClick={()=>setSelDay(dStr)} style={{borderRadius:10,aspectRatio:"1",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,cursor:"pointer",transition:"all 0.15s",
                         background:iS?"linear-gradient(135deg,#6366f1,#8b5cf6)":isT?"rgba(99,102,241,0.18)":"rgba(255,255,255,0.04)",
                         border:iS?"1px solid rgba(255,255,255,0.2)":isT?"1px solid rgba(99,102,241,0.4)":"1px solid transparent",
                         boxShadow:iS?"0 4px 16px rgba(99,102,241,0.35)":"none"}}>
@@ -1244,37 +1258,30 @@ function MainApp({household, me:initialMe, onSignOut}){
                 </div>
               </div>
 
-              {/* Account (tucked away) */}
+              {/* Invite / account */}
               <div style={{marginTop:26}}>
-                {!showAccountSection?(
-                  <button onClick={()=>setShowAccountSection(true)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.3)",fontSize:13,cursor:"pointer",padding:0}}>Account & invite code ›</button>
-                ):(
-                  <>
-                    <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
-                    <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                      <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
-                      <button onClick={()=>navigator.clipboard?.writeText(household.invite_code)} style={{background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer"}}>Copy</button>
-                    </div>
-                    <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:24}}>Share this code so your partner can join this home</div>
-
-                    <button onClick={onSignOut} style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"8px 0",display:"block"}}>Sign out</button>
-                    <button onClick={async()=>{
-                      if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
-                      deletePersonRemote(meId);
-                      const {data:{session}}=await supabase.auth.getSession();
-                      if(session?.access_token){
-                        try{
-                          await fetch("/api/delete-account",{
-                            method:"POST",
-                            headers:{"Content-Type":"application/json"},
-                            body:JSON.stringify({access_token:session.access_token}),
-                          });
-                        }catch(e){ console.error("delete-account request failed",e); }
-                      }
-                      onSignOut();
-                    }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.45)",fontSize:13,cursor:"pointer",padding:"8px 0",display:"block"}}>Delete account</button>
-                  </>
-                )}
+                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
+                <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                  <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
+                  <button onClick={()=>navigator.clipboard?.writeText(household.invite_code)} style={{background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer"}}>Copy</button>
+                </div>
+                <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:20}}>Share this code so your partner can join this home</div>
+                <button onClick={onSignOut} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"12px",color:"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer",width:"100%",marginBottom:14}}>Sign out</button>
+                <button onClick={async()=>{
+                  if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
+                  deletePersonRemote(meId);
+                  const {data:{session}}=await supabase.auth.getSession();
+                  if(session?.access_token){
+                    try{
+                      await fetch("/api/delete-account",{
+                        method:"POST",
+                        headers:{"Content-Type":"application/json"},
+                        body:JSON.stringify({access_token:session.access_token}),
+                      });
+                    }catch(e){ console.error("delete-account request failed",e); }
+                  }
+                  onSignOut();
+                }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.4)",fontSize:12,cursor:"pointer",padding:"4px 0",display:"block",width:"100%",textAlign:"center"}}>Delete account</button>
               </div>
               </div>
             </div>
