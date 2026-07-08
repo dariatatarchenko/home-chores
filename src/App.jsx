@@ -1569,7 +1569,7 @@ function LoginScreen(){
     setError(""); setLoading(true);
     const {error}=await supabase.auth.signInWithOtp({ email:email.trim() });
     setLoading(false);
-    if(error){setError(error.message);return;}
+    if(error){setError(error.message||error.error_description||JSON.stringify(error));return;}
     setSent(true);
   };
 
@@ -1578,7 +1578,7 @@ function LoginScreen(){
     setError(""); setLoading(true);
     const {error}=await supabase.auth.verifyOtp({ email:email.trim(), token:code.trim(), type:"email" });
     setLoading(false);
-    if(error){setError(error.message);return;}
+    if(error){setError(error.message||error.error_description||JSON.stringify(error));return;}
     // on success, the auth listener in Root picks up the new session automatically
   };
 
