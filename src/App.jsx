@@ -437,8 +437,10 @@ function MainApp({household, me:initialMe, onSignOut}){
       if(nowAllDone&&tab==="week"){
         const isToday=d===todayStr, isPast=d<todayStr;
         const dateLabel=isToday?"today":isPast?new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"this day";
-        setCelebration({title:"Day Complete! 🎉",subtitle:`All tasks done for ${dateLabel}!`,emoji:"🎉"});
-        setTimeout(()=>setCelebration(null),3500);
+        setTimeout(()=>{
+          setCelebration({title:"Day Complete! 🎉",subtitle:`All tasks done for ${dateLabel}!`,emoji:"🎉"});
+          setTimeout(()=>setCelebration(null),3500);
+        },500);
       }
     } else {
       const wasTopDone=d===selDay&&doneRawSorted.length>0&&doneRawSorted[0].id===id;
@@ -467,14 +469,16 @@ function MainApp({household, me:initialMe, onSignOut}){
     if(!wasLiked){
       setJustLiked(taskId+"|"+dateStr);
       setTimeout(()=>setJustLiked(null),400);
-      const m=MOTIV[Math.floor(Math.random()*MOTIV.length)];
-      const liker=getPerson(meId);
       const isOwn=(t.personIds||[t.personId]).includes(meId);
-      const from=isOwn?`${liker?.name||"Someone"} liked their own task`:`${liker?.name||"Someone"} liked your task`;
-      const bodyText=`${t.text} — ${m.text}`;
-      supabase.from("notifications").insert({
-        household_id:household.id,actor_person_id:meId,icon:m.icon,title:from,body:bodyText,
-      }).then(({error})=>{ if(error) console.error("insert notification",error); });
+      if(!isOwn){
+        const m=MOTIV[Math.floor(Math.random()*MOTIV.length)];
+        const liker=getPerson(meId);
+        const from=`${liker?.name||"Someone"} liked your task`;
+        const bodyText=`${t.text} — ${m.text}`;
+        supabase.from("notifications").insert({
+          household_id:household.id,actor_person_id:meId,icon:m.icon,title:from,body:bodyText,
+        }).then(({error})=>{ if(error) console.error("insert notification",error); });
+      }
     }
   };
 
@@ -730,14 +734,18 @@ function MainApp({household, me:initialMe, onSignOut}){
                   {myStreak===0&&<div style={{color:"rgba(255,255,255,0.2)",fontSize:12,marginTop:2}}>Start your streak today!</div>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  {people.length>1&&(
                   <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,background:myFilter?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.07)",border:`1px solid ${myFilter?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:17,padding:"8px 14px 8px 6px",cursor:"pointer",transition:"all 0.2s",boxSizing:"border-box"}}>
                     <Avatar person={me} size={24}/>
                     <span style={{color:myFilter?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>Mine</span>
                   </button>
+                  )}
+                  {people.length>1&&(
                   <button onClick={()=>{setShowNotifs(v=>!v);setReadIds(r=>new Set([...r,...notifs.map(n=>n.id)]));}} style={{position:"relative",...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>
                     🔔
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
+                  )}
                 </div>
               </div>
 
@@ -877,13 +885,13 @@ function MainApp({household, me:initialMe, onSignOut}){
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
                         <div style={{color:"rgba(255,255,255,0.9)",fontSize:15,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden"}}>{t.text}</div>
                         <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
-                          {(()=>{
+                          {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
                             if(pIds.length!==1) return <span style={{fontSize:12,color:"rgba(255,255,255,0.5)",background:"rgba(255,255,255,0.07)",borderRadius:20,padding:"2px 8px",whiteSpace:"nowrap",flexShrink:0}}>All</span>;
                             const p=getPerson(pIds[0]);
                             return <span style={{fontSize:12,color:p?.color||"rgba(255,255,255,0.55)",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
-                          <span style={{fontSize:14,color:"rgba(255,255,255,0.32)",flexShrink:0}}>·</span>
+                          {people.length>1&&<span style={{fontSize:14,color:"rgba(255,255,255,0.32)",flexShrink:0}}>·</span>}
                           <span style={{fontSize:12,color:"rgba(255,255,255,0.32)",...(streak>1||t.rescheduledFrom?{maxWidth:80}:{flex:1}),overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
                           {streak>1&&<>
                             <span style={{fontSize:13,color:"rgba(255,255,255,0.32)",flexShrink:0}}>·</span>
@@ -1090,6 +1098,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                     onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
                     style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light"}}/>
                 </div>
+                {people.length>1&&(
                 <div>
                   <span style={labelSt}>Assigned to</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
@@ -1110,6 +1119,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                     })}
                   </div>
                 </div>
+                )}
                 <button onClick={saveTask} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",marginTop:4}}>{editTaskId?"Save Changes":"Add Task"}</button>
                 <button onClick={()=>{setForm(blankForm);setEditTaskId(null);setTab(returnTab);}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.3)",fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
@@ -1166,6 +1176,8 @@ function MainApp({household, me:initialMe, onSignOut}){
                           </div>
                           {open&&(
                             <div onClick={e=>e.stopPropagation()} style={{marginTop:12,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+                              {people.length>1&&(
+                              <>
                               <span style={labelSt}>Assigned to</span>
                               <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:10}}>
                                 <button onClick={()=>{const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{
@@ -1185,6 +1197,8 @@ function MainApp({household, me:initialMe, onSignOut}){
                                   </button>;
                                 })}
                               </div>
+                              </>
+                              )}
                               <div style={{display:"flex",gap:8}}>
                                 <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:4,startDate:todayStr,maxLen:22});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                                 <button onClick={()=>{setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>
@@ -1822,4 +1836,3 @@ export default function Root(){
     </div>
   );
 }
-
