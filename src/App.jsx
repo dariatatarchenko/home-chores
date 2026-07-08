@@ -1714,10 +1714,15 @@ function HouseholdGate({session,onReady}){
         <div style={{color:"#fff",fontSize:20,fontWeight:700,marginBottom:8}}>{mode==="create"?"Create your home":"Join a home"}</div>
 
         {mode==="join"&&(
-          <input placeholder="Invite code" value={inviteCode} onChange={e=>setInviteCode(e.target.value)} style={AUTH_INPUT}/>
+          <>
+            <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>INVITE CODE</span>
+            <input placeholder="e.g. a1b2c3" value={inviteCode} onChange={e=>setInviteCode(e.target.value)} style={AUTH_INPUT}/>
+          </>
         )}
-        <input placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} style={AUTH_INPUT}/>
+        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>YOUR NAME (not the household's)</span>
+        <input placeholder="e.g. Anya" value={name} onChange={e=>setName(e.target.value)} style={AUTH_INPUT}/>
 
+        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>YOUR COLOR</span>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           {PALETTE.map(c=>(
             <button key={c} onClick={()=>setColor(c)} style={{width:32,height:32,borderRadius:"50%",background:c,border:color===c?"3px solid #fff":"3px solid transparent",cursor:"pointer"}}/>
