@@ -1567,19 +1567,29 @@ function LoginScreen(){
   const sendCode=async()=>{
     if(!email.trim()||!email.includes("@")){setError("Enter a valid email");return;}
     setError(""); setLoading(true);
-    const {error}=await supabase.auth.signInWithOtp({ email:email.trim() });
-    setLoading(false);
-    if(error){setError(error.message||error.error_description||JSON.stringify(error));return;}
-    setSent(true);
+    try{
+      const {error}=await supabase.auth.signInWithOtp({ email:email.trim() });
+      setLoading(false);
+      if(error){setError(`${error.status||""} ${error.message||error.error_description||String(error)}`.trim());return;}
+      setSent(true);
+    }catch(err){
+      setLoading(false);
+      setError("Network error: "+String(err?.message||err));
+    }
   };
 
   const verifyCode=async()=>{
     if(!code.trim()){setError("Enter the code from your email");return;}
     setError(""); setLoading(true);
-    const {error}=await supabase.auth.verifyOtp({ email:email.trim(), token:code.trim(), type:"email" });
-    setLoading(false);
-    if(error){setError(error.message||error.error_description||JSON.stringify(error));return;}
-    // on success, the auth listener in Root picks up the new session automatically
+    try{
+      const {error}=await supabase.auth.verifyOtp({ email:email.trim(), token:code.trim(), type:"email" });
+      setLoading(false);
+      if(error){setError(`${error.status||""} ${error.message||error.error_description||String(error)}`.trim());return;}
+      // on success, the auth listener in Root picks up the new session automatically
+    }catch(err){
+      setLoading(false);
+      setError("Network error: "+String(err?.message||err));
+    }
   };
 
   return (
@@ -1603,7 +1613,7 @@ function LoginScreen(){
               onChange={e=>{setCode(e.target.value.replace(/\D/g,""));setError("");}}
               style={{...AUTH_INPUT,marginBottom:8,textAlign:"center",letterSpacing:6,fontSize:20,border:error?"2px solid #f87171":"2px solid transparent"}}
             />
-            <div style={{height:16,marginBottom:8}}>
+            <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
             </div>
             <button onClick={verifyCode} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
@@ -1620,7 +1630,7 @@ function LoginScreen(){
               onChange={e=>{setEmail(e.target.value);setError("");}}
               style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"2px solid transparent"}}
             />
-            <div style={{height:16,marginBottom:8}}>
+            <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
             </div>
             <button onClick={sendCode} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
