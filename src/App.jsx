@@ -230,14 +230,16 @@ function MainApp({household, me:initialMe, onSignOut}){
     };
     (async()=>{
       let {p,z,t}=await loadOnce();
-      // First load right after auth sometimes races with the session becoming fully
-      // ready for RLS — if everything comes back empty, wait a beat and try once more
-      // automatically, so nobody ever has to manually pull-to-refresh (which isn't
-      // even available in standalone/PWA mode anyway).
-      if(active&&p.length===0&&z.length===0&&t.length===0){
-        await new Promise(r=>setTimeout(r,1200));
+      // Zones are seeded via a separate call right after household creation, so there's
+      // a real race window where this first load can catch the household before zones
+      // have finished writing. Retry a few times specifically when zones are empty,
+      // so nobody ever has to manually pull-to-refresh (not even available in PWA mode).
+      let attempts=0;
+      while(active&&z.length===0&&attempts<4){
+        await new Promise(r=>setTimeout(r,800));
         if(!active) return;
         ({p,z,t}=await loadOnce());
+        attempts++;
       }
       if(!active) return;
       setPeople(p.map(rowToPerson));
@@ -332,8 +334,10 @@ function MainApp({household, me:initialMe, onSignOut}){
   const insertPerson=p=>{
     supabase.from("people").insert({id:p.id,household_id:household.id,name:p.name,color:p.color,avatar_emoji:p.avatarEmoji}).then(({error})=>{ if(error) console.error("insertPerson",error); });
   };
-  const deletePersonRemote=id=>{
-    supabase.from("people").delete().eq("id",id).then(({error})=>{ if(error) console.error("deletePerson",error); });
+  const deletePersonRemote=async(id)=>{
+    const {error,count}=await supabase.from("people").delete({count:"exact"}).eq("id",id);
+    if(error) console.error("deletePerson",error);
+    return !error&&count>0;
   };
   const persistZone=(id,fields)=>{
     const dbFields={};
@@ -1283,16 +1287,22 @@ function MainApp({household, me:initialMe, onSignOut}){
                 <button onClick={onSignOut} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"12px",color:"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer",width:"100%",marginBottom:14}}>Sign out</button>
                 <button onClick={async()=>{
                   if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
-                  deletePersonRemote(meId);
+                  const personDeleted=await deletePersonRemote(meId);
                   const {data:{session}}=await supabase.auth.getSession();
+                  let authDeleted=false;
                   if(session?.access_token){
                     try{
-                      await fetch("/api/delete-account",{
+                      const res=await fetch("/api/delete-account",{
                         method:"POST",
                         headers:{"Content-Type":"application/json"},
                         body:JSON.stringify({access_token:session.access_token}),
                       });
+                      authDeleted=res.ok;
+                      if(!res.ok) console.error("delete-account failed",await res.text());
                     }catch(e){ console.error("delete-account request failed",e); }
+                  }
+                  if(!personDeleted||!authDeleted){
+                    window.alert("Something went wrong deleting your account fully. You've been signed out, but please try again or contact support.");
                   }
                   onSignOut();
                 }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.4)",fontSize:12,cursor:"pointer",padding:"4px 0",display:"block",width:"100%",textAlign:"center"}}>Delete account</button>
@@ -1737,7 +1747,7 @@ function HouseholdGate({session,onReady}){
       p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
     }).single();
     if(hErr){setBusy(false);setError(hErr.message);return;}
-    await supabase.rpc("seed_default_zones",{p_household_id:household.id});
+    // zones are now seeded atomically inside create_household_with_person itself
     onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
   };
 
