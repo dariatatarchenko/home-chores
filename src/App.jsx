@@ -200,12 +200,22 @@ function MainApp({household, me:initialMe, onSignOut}){
   const [people,  setPeople]  = useState([]);
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
-  const [tab,     setTab]     = useState("week");
+  const [tab,     setTab]     = useState(()=>{
+    try{
+      const saved=localStorage.getItem("hometasks_tab");
+      return (saved&&saved!=="add")?saved:"week";
+    }catch{ return "week"; }
+  });
   const [returnTab,setReturnTab]= useState("week");
   const [selDay,  setSelDay]  = useState(todayStr);
   const [meId,    setMeId]    = useState(initialMe.id);
   const meIdRef=useRef(meId);
   useEffect(()=>{ meIdRef.current=meId; },[meId]);
+
+  useEffect(()=>{
+    if(tab==="add") return; // transient screen — never resume directly into it after a reload
+    try{ localStorage.setItem("hometasks_tab",tab); }catch{}
+  },[tab]);
 
   // ── Load data from Supabase + realtime sync ──────────────────────────────
   const rowToPerson=r=>({id:r.id,name:r.name,color:r.color,avatarEmoji:r.avatar_emoji||""});
