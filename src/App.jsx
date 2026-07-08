@@ -183,7 +183,7 @@ function Avatar({person,size=30}){
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
-function MainApp({household, me:initialMe, onSignOut}){
+function MainApp({household, me:initialMe, email, onSignOut}){
   useEffect(()=>{
     const setVh=()=>{
       document.documentElement.style.setProperty("--app-height",`${window.innerHeight}px`);
@@ -1288,6 +1288,7 @@ function MainApp({household, me:initialMe, onSignOut}){
 
               {/* Invite / account */}
               <div style={{marginTop:26}}>
+                {email&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:12,marginBottom:16}}>Signed in as {email}</div>}
                 <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
@@ -1852,7 +1853,7 @@ export default function Root(){
   }
   return (
     <div style={{height:"var(--app-height,100dvh)"}}>
-      <MainApp household={household} me={me} onSignOut={()=>supabase.auth.signOut()}/>
+      <MainApp household={household} me={me} email={session?.user?.email} onSignOut={()=>supabase.auth.signOut()}/>
     </div>
   );
 }
