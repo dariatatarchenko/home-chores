@@ -51,7 +51,7 @@ const ZONES_DEFAULT = [
   {id:"pets",     label:"Pets",        emoji:"🐾"},
 ];
 const ZONE_EMOJIS = ["🍳","🚿","🛋️","🛏️","🚪","📦","🌿","🪟","🧹","🧺","🪣","🛁","🚽","🧴","🪴","🖥️","📚","🎮","🧸","🐾","🚗","🏋️","🎨","🎵"];
-const AVATAR_EMOJIS = ["😀","😎","🥳","🦊","🐱","🐶","🐼","🦁","🌟","🎯","🍀","🔥","💎","🎸","🚀","🌈"];
+const AVATAR_EMOJIS = ["😀","😎","🥳","🦊","🐱","🐶","🐼","🦁","🐰","🐨","🐯","🐸","🌟","🎯","🍀","🔥","💎","🎸","🚀","🌈","⚡","🌸","🍕","🦄"];
 const PALETTE = ["#f87171","#fb923c","#fbbf24","#34d399","#38bdf8","#818cf8","#e879f9","#94a3b8"];
 const CONFETTI = ["#f87171","#fbbf24","#34d399","#818cf8","#e879f9","#38bdf8"];
 
@@ -200,6 +200,7 @@ function MainApp({household, me:initialMe, onSignOut}){
   const [people,  setPeople]  = useState([]);
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
+  const [showAccountSection,setShowAccountSection]=useState(false);
   const [tab,     setTab]     = useState("week");
   const [returnTab,setReturnTab]= useState("week");
   const [selDay,  setSelDay]  = useState(todayStr);
@@ -982,7 +983,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                     const isT=dStr===todayStr,iP=dStr<todayStr,iS=selDay===dStr;
                     const allD=cnt>0&&dCnt===cnt,hasMiss=iP&&cnt>0&&dCnt<cnt;
                     return (
-                      <div key={dStr} onClick={()=>setSelDay(dStr)} style={{borderRadius:12,padding:"7px 2px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",transition:"all 0.15s",
+                      <div key={dStr} onClick={()=>setSelDay(dStr)} style={{borderRadius:10,padding:"10px 2px",minHeight:52,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,cursor:"pointer",transition:"all 0.15s",
                         background:iS?"linear-gradient(135deg,#6366f1,#8b5cf6)":isT?"rgba(99,102,241,0.18)":"rgba(255,255,255,0.04)",
                         border:iS?"1px solid rgba(255,255,255,0.2)":isT?"1px solid rgba(99,102,241,0.4)":"1px solid transparent",
                         boxShadow:iS?"0 4px 16px rgba(99,102,241,0.35)":"none"}}>
@@ -1115,7 +1116,12 @@ function MainApp({household, me:initialMe, onSignOut}){
               </div>
               </div>
               <div style={{flex:1,overflowY:"auto",padding:"0 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
-              {groupedZones.map(zone=>(
+              {groupedZones.length===0?(
+                <div style={{textAlign:"center",padding:"60px 0"}}>
+                  <div style={{fontSize:44}}>📋</div>
+                  <div style={{color:"rgba(255,255,255,0.38)",marginTop:10,fontSize:14}}>No tasks yet — tap + Add to create one</div>
+                </div>
+              ):groupedZones.map(zone=>(
                 <div key={zone.id} style={{marginBottom:22}}>
                   <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:9}}>{zone.emoji} {zone.label}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1202,6 +1208,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                   <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setZoneModal({mode:"new"});setEmojiPicker(false);}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:500,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                  {zones.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"8px 0"}}>No zones yet — add one to get started</div>}
                   {zones.map(z=>(
                     <div key={z.id} onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setZoneModal({mode:"edit",id:z.id});setEmojiPicker(false);}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
                       <div style={{width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{z.emoji}</div>
@@ -1237,15 +1244,37 @@ function MainApp({household, me:initialMe, onSignOut}){
                 </div>
               </div>
 
-              {/* Invite / account */}
+              {/* Account (tucked away) */}
               <div style={{marginTop:26}}>
-                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
-                <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                  <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
-                  <button onClick={()=>navigator.clipboard?.writeText(household.invite_code)} style={{background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer"}}>Copy</button>
-                </div>
-                <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:20}}>Share this code so your partner can join this home</div>
-                <button onClick={onSignOut} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"12px",color:"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer",width:"100%"}}>Sign out</button>
+                {!showAccountSection?(
+                  <button onClick={()=>setShowAccountSection(true)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.3)",fontSize:13,cursor:"pointer",padding:0}}>Account & invite code ›</button>
+                ):(
+                  <>
+                    <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
+                    <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                      <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
+                      <button onClick={()=>navigator.clipboard?.writeText(household.invite_code)} style={{background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer"}}>Copy</button>
+                    </div>
+                    <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:24}}>Share this code so your partner can join this home</div>
+
+                    <button onClick={onSignOut} style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"8px 0",display:"block"}}>Sign out</button>
+                    <button onClick={async()=>{
+                      if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
+                      deletePersonRemote(meId);
+                      const {data:{session}}=await supabase.auth.getSession();
+                      if(session?.access_token){
+                        try{
+                          await fetch("/api/delete-account",{
+                            method:"POST",
+                            headers:{"Content-Type":"application/json"},
+                            body:JSON.stringify({access_token:session.access_token}),
+                          });
+                        }catch(e){ console.error("delete-account request failed",e); }
+                      }
+                      onSignOut();
+                    }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.45)",fontSize:13,cursor:"pointer",padding:"8px 0",display:"block"}}>Delete account</button>
+                  </>
+                )}
               </div>
               </div>
             </div>
@@ -1485,7 +1514,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                     <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                       <div style={{position:"relative",display:"inline-block"}}><input maxLength={2} placeholder="Aa" value={pForm.avatarEmoji&&!AVATAR_EMOJIS.includes(pForm.avatarEmoji)?pForm.avatarEmoji:""} onChange={e=>{const v=e.target.value.toUpperCase();setPForm(f=>({...f,avatarEmoji:v}));if(v)setAvatarPicker(false);}} style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",color:"#fff",fontSize:14,fontWeight:700,textAlign:"center",cursor:"text",fontFamily:"inherit",outline:"none"}}/></div>
                       {AVATAR_EMOJIS.map(e=>(
-                        <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:38,height:38,fontSize:22,cursor:"pointer"}}>{e}</button>
+                        <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:38,height:38,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>
                       ))}
                     </div>
                   </div>
@@ -1545,7 +1574,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                   <div onClick={e=>e.stopPropagation()} style={{width:320,background:"#26262c",borderRadius:20,padding:18,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
                     <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
                     <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer"}}>{e}</button>)}
+                      {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
                     </div>
                   </div>
                 </div>
@@ -1728,14 +1757,14 @@ function HouseholdGate({session,onReady}){
 
         {mode==="join"&&(
           <>
-            <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>INVITE CODE</span>
+            <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>Invite code</span>
             <input placeholder="e.g. a1b2c3" value={inviteCode} onChange={e=>setInviteCode(e.target.value)} style={AUTH_INPUT}/>
           </>
         )}
-        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>YOUR NAME (not the household's)</span>
+        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>Your name</span>
         <input placeholder="e.g. Anya" value={name} onChange={e=>setName(e.target.value)} style={AUTH_INPUT}/>
 
-        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>YOUR COLOR</span>
+        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>Your color</span>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           {PALETTE.map(c=>(
             <button key={c} onClick={()=>setColor(c)} style={{width:32,height:32,borderRadius:"50%",background:c,border:color===c?"3px solid #fff":"3px solid transparent",cursor:"pointer"}}/>
