@@ -1560,19 +1560,26 @@ const AUTH_BTN={background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"non
 function LoginScreen(){
   const [email,setEmail]=useState("");
   const [sent,setSent]=useState(false);
+  const [code,setCode]=useState("");
   const [error,setError]=useState("");
   const [loading,setLoading]=useState(false);
 
-  const sendLink=async()=>{
+  const sendCode=async()=>{
     if(!email.trim()||!email.includes("@")){setError("Enter a valid email");return;}
     setError(""); setLoading(true);
-    const {error}=await supabase.auth.signInWithOtp({
-      email:email.trim(),
-      options:{emailRedirectTo:window.location.origin},
-    });
+    const {error}=await supabase.auth.signInWithOtp({ email:email.trim() });
     setLoading(false);
     if(error){setError(error.message);return;}
     setSent(true);
+  };
+
+  const verifyCode=async()=>{
+    if(!code.trim()){setError("Enter the code from your email");return;}
+    setError(""); setLoading(true);
+    const {error}=await supabase.auth.verifyOtp({ email:email.trim(), token:code.trim(), type:"email" });
+    setLoading(false);
+    if(error){setError(error.message);return;}
+    // on success, the auth listener in Root picks up the new session automatically
   };
 
   return (
@@ -1583,11 +1590,27 @@ function LoginScreen(){
         <div style={{color:"rgba(255,255,255,0.4)",fontSize:14,textAlign:"center",marginBottom:32}}>Shared chores for your household</div>
 
         {sent?(
-          <div style={{textAlign:"center"}}>
-            <div style={{fontSize:32,marginBottom:12}}>📬</div>
-            <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,marginBottom:8}}>Check your email</div>
-            <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a login link to {email}</div>
-          </div>
+          <>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:32,marginBottom:12}}>📬</div>
+              <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,marginBottom:8}}>Check your email</div>
+              <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a 6-digit code to {email}</div>
+            </div>
+            <input
+              type="text" inputMode="numeric" maxLength={6}
+              placeholder="123456"
+              value={code}
+              onChange={e=>{setCode(e.target.value.replace(/\D/g,""));setError("");}}
+              style={{...AUTH_INPUT,marginBottom:8,textAlign:"center",letterSpacing:6,fontSize:20,border:error?"2px solid #f87171":"2px solid transparent"}}
+            />
+            <div style={{height:16,marginBottom:8}}>
+              {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
+            </div>
+            <button onClick={verifyCode} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
+              {loading?"Checking…":"Confirm code"}
+            </button>
+            <button onClick={()=>{setSent(false);setCode("");setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"12px",width:"100%"}}>Use a different email</button>
+          </>
         ):(
           <>
             <input
@@ -1600,8 +1623,8 @@ function LoginScreen(){
             <div style={{height:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
             </div>
-            <button onClick={sendLink} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
-              {loading?"Sending…":"Send login link"}
+            <button onClick={sendCode} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
+              {loading?"Sending…":"Send login code"}
             </button>
           </>
         )}
