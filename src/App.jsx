@@ -260,6 +260,22 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       if(active) setNotifs((n||[]).map(rowToNotif));
 
       setDataLoading(false);
+
+      // Belt-and-suspenders: tasks can occasionally lag slightly behind on a fresh
+      // connection (read-replica/replication lag). Re-check shortly after and merge
+      // in anything that wasn't there on the very first read, so nothing looks missing
+      // without the user ever having to manually refresh.
+      await new Promise(r=>setTimeout(r,1500));
+      if(!active) return;
+      const {data:t2}=await supabase.from("tasks").select("*").eq("household_id",household.id);
+      if(active&&t2){
+        const mapped=t2.map(rowToTask);
+        setTasks(prev=>{
+          const byId=new Map(prev.map(x=>[x.id,x]));
+          mapped.forEach(x=>byId.set(x.id,x));
+          return [...byId.values()];
+        });
+      }
     })();
 
     const channel=supabase.channel(`household-${household.id}`)
@@ -408,7 +424,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   useEffect(()=>{
     if(!stripRef.current) return;
     const el=stripRef.current;
-    const visWeekLocal=Array.from({length:11},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-5+i);return d;});
+    const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
     const todayIdx=visWeekLocal.findIndex(d=>ds(d)===todayStr);
     if(todayIdx<0) return;
     const cellW=51;
@@ -445,14 +461,21 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         setFreeze({day:d,order:selTasks.map(x=>x.id)});
         setTimeout(()=>setFreeze(null),400);
       }
-      // Celebration: only when THIS action completes every task scheduled for that day
+      // Celebration: whole-household day complete takes priority; otherwise, celebrate
+      // when THIS person finishes all of their OWN tasks for the day, even if others
+      // in the household still have things left to do.
       const dayAll=tasks.filter(x=>x.scheduledDates.includes(d));
       const nowAllDone=dayAll.length>0&&dayAll.every(x=>x.id===id||x.doneOn.includes(d));
-      if(nowAllDone&&tab==="week"){
+      const myDayTasks=dayAll.filter(x=>(x.personIds||[x.personId]).includes(meId));
+      const myNowAllDone=myDayTasks.length>0&&myDayTasks.every(x=>x.id===id||x.doneOn.includes(d));
+      if((nowAllDone||myNowAllDone)&&tab==="week"){
         const isToday=d===todayStr, isPast=d<todayStr;
         const dateLabel=isToday?"today":isPast?new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"this day";
+        const celebrationData=nowAllDone
+          ?{title:"Day Complete! 🎉",subtitle:`All tasks done for ${dateLabel}!`,emoji:"🎉"}
+          :{title:"Nice work! ✨",subtitle:`You're all done for ${dateLabel}!`,emoji:"✨"};
         setTimeout(()=>{
-          setCelebration({title:"Day Complete! 🎉",subtitle:`All tasks done for ${dateLabel}!`,emoji:"🎉"});
+          setCelebration(celebrationData);
           setTimeout(()=>setCelebration(null),3500);
         },500);
       }
