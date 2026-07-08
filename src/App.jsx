@@ -879,7 +879,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                       }}>
                         {done&&<span style={{color:"#fff",fontSize:12,fontWeight:700,display:"inline-block",animation:"checkPop 0.35s ease"}}>✓</span>}
-                        {!done&&isFuture&&<span style={{color:"rgba(255,255,255,0.25)",fontSize:11}}>🔒</span>}
+                        {!done&&isFuture&&<span style={{color:"rgba(255,255,255,0.3)",fontSize:14}}>🔒</span>}
                       </button>
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
@@ -1044,7 +1044,7 @@ function MainApp({household, me:initialMe, onSignOut}){
                         <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.15)"}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {done&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}
                           {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:11,fontWeight:700}}>✕</span>}
-                          {!done&&!missed&&isFutureDay&&<span style={{color:"rgba(255,255,255,0.25)",fontSize:11}}>🔒</span>}
+                          {!done&&!missed&&isFutureDay&&<span style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>🔒</span>}
                         </button>
                         <div style={{flex:1}}>
                           <div style={{color:done?"rgba(255,255,255,0.38)":missed?"rgba(248,113,113,0.6)":"rgba(255,255,255,0.82)",fontSize:13}}>{t.text}</div>
