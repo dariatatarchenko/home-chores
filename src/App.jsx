@@ -217,16 +217,29 @@ function MainApp({household, me:initialMe, onSignOut}){
 
   useEffect(()=>{
     let active=true;
-    (async()=>{
+    const loadOnce=async()=>{
       const [{data:p},{data:z},{data:t}]=await Promise.all([
         supabase.from("people").select("*").eq("household_id",household.id),
         supabase.from("zones").select("*").eq("household_id",household.id),
         supabase.from("tasks").select("*").eq("household_id",household.id),
       ]);
+      return {p:p||[],z:z||[],t:t||[]};
+    };
+    (async()=>{
+      let {p,z,t}=await loadOnce();
+      // First load right after auth sometimes races with the session becoming fully
+      // ready for RLS — if everything comes back empty, wait a beat and try once more
+      // automatically, so nobody ever has to manually pull-to-refresh (which isn't
+      // even available in standalone/PWA mode anyway).
+      if(active&&p.length===0&&z.length===0&&t.length===0){
+        await new Promise(r=>setTimeout(r,1200));
+        if(!active) return;
+        ({p,z,t}=await loadOnce());
+      }
       if(!active) return;
-      setPeople((p||[]).map(rowToPerson));
-      setZones((z||[]).map(rowToZone));
-      setTasks((t||[]).map(rowToTask));
+      setPeople(p.map(rowToPerson));
+      setZones(z.map(rowToZone));
+      setTasks(t.map(rowToTask));
       setDataLoading(false);
     })();
 
@@ -1604,14 +1617,14 @@ function LoginScreen(){
             <div style={{textAlign:"center",marginBottom:20}}>
               <div style={{fontSize:32,marginBottom:12}}>📬</div>
               <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,marginBottom:8}}>Check your email</div>
-              <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a 6-digit code to {email}</div>
+              <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a code to {email}</div>
             </div>
             <input
-              type="text" inputMode="numeric" maxLength={6}
-              placeholder="123456"
+              type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={10}
+              placeholder="Enter the code"
               value={code}
               onChange={e=>{setCode(e.target.value.replace(/\D/g,""));setError("");}}
-              style={{...AUTH_INPUT,marginBottom:8,textAlign:"center",letterSpacing:6,fontSize:20,border:error?"2px solid #f87171":"2px solid transparent"}}
+              style={{...AUTH_INPUT,marginBottom:8,textAlign:"center",letterSpacing:3,fontSize:20,border:error?"2px solid #f87171":"2px solid transparent"}}
             />
             <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
