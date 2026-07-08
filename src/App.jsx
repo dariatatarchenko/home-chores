@@ -1835,10 +1835,25 @@ export default function Root(){
   const [authLoading,setAuthLoading]=useState(true);
   const [me,setMe]=useState(null);
   const [household,setHousehold]=useState(null);
+  const currentUserIdRef=useRef(null);
 
   useEffect(()=>{
-    supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthLoading(false);});
-    const {data:listener}=supabase.auth.onAuthStateChange((_event,newSession)=>setSession(newSession));
+    supabase.auth.getSession().then(({data})=>{
+      setSession(data.session);
+      currentUserIdRef.current=data.session?.user?.id||null;
+      setAuthLoading(false);
+    });
+    const {data:listener}=supabase.auth.onAuthStateChange((_event,newSession)=>{
+      const newUserId=newSession?.user?.id||null;
+      if(newUserId!==currentUserIdRef.current){
+        // a different person just signed in (or everyone signed out) — never
+        // carry over the previous person's household/profile into this session
+        setHousehold(null);
+        setMe(null);
+        currentUserIdRef.current=newUserId;
+      }
+      setSession(newSession);
+    });
     return ()=>listener.subscription.unsubscribe();
   },[]);
 
