@@ -872,7 +872,7 @@ function MainApp({household, me:initialMe, onSignOut}){
 }}>
                       {/* Check */}
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                        width:28,height:28,borderRadius:"50%",flexShrink:0,
+                        width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",
                         border:`2px solid ${done?"#34d399":isFuture?"rgba(255,255,255,0.07)":"rgba(255,255,255,0.2)"}`,
                         background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"rgba(255,255,255,0.04)",
                         cursor:isFuture?"not-allowed":"pointer",
@@ -1037,11 +1037,11 @@ function MainApp({household, me:initialMe, onSignOut}){
                     </div>
                   )}
                   {sDayTasks.length===0?<div style={{color:"rgba(255,255,255,0.2)",fontSize:13,textAlign:"center",padding:"10px 0"}}>No tasks</div>
-                  :sDayTasks.map(t=>{
+                  :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
-                      <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.15)"}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.15)"}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {done&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}
                           {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:11,fontWeight:700}}>✕</span>}
                           {!done&&!missed&&isFutureDay&&<span style={{color:"rgba(255,255,255,0.25)",fontSize:11}}>🔒</span>}
