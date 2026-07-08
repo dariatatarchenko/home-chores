@@ -200,6 +200,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [people,  setPeople]  = useState([]);
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
+  const [codeCopied,setCodeCopied]=useState(false);
   const [tab,     setTab]     = useState(()=>{
     try{
       const saved=localStorage.getItem("hometasks_tab");
@@ -340,12 +341,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     dbFields.updated_at=new Date().toISOString();
     supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistTask",error); });
   };
-  const insertTask=row=>{
-    supabase.from("tasks").insert({
+  const insertTask=async(row)=>{
+    const {error}=await supabase.from("tasks").insert({
       id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
       custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
       done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,
-    }).then(({error})=>{ if(error) console.error("insertTask",error); });
+    });
+    if(error) console.error("insertTask",error);
+    return error?error.message:null;
   };
   const deleteTaskRemote=id=>{
     supabase.from("tasks").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteTask",error); });
@@ -532,7 +535,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setSelDay(to);
   };
 
-  const saveTask=()=>{
+  const saveTask=async()=>{
     if(!form.text.trim()){
       setTaskNameError(true);
       taskNameRef.current?.scrollIntoView({behavior:"smooth",block:"center"});
@@ -553,7 +556,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     } else {
       const newTask={id:uid(),...form,personId:form.personIds[0]||null,scheduledDates:dates,doneOn:[],likes:[],rescheduledFrom:null};
       setTasks(ts=>[...ts,newTask]);
-      insertTask(newTask);
+      const errMsg=await insertTask(newTask);
+      if(errMsg){
+        window.alert("This task couldn't be saved to the server: "+errMsg+"\n\nIt will disappear when you reload — please try adding it again.");
+        setTasks(ts=>ts.filter(t=>t.id!==newTask.id));
+        return;
+      }
     }
     setForm(blankForm);
     if(dates[0]) setSelDay(dates[0]);
@@ -1315,7 +1323,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
-                  <button onClick={()=>navigator.clipboard?.writeText(household.invite_code)} style={{background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:600,cursor:"pointer"}}>Copy</button>
+                  <button onClick={()=>{navigator.clipboard?.writeText(household.invite_code);setCodeCopied(true);setTimeout(()=>setCodeCopied(false),1800);}} style={{background:codeCopied?"rgba(52,211,153,0.18)":"rgba(129,140,248,0.15)",border:`1px solid ${codeCopied?"rgba(52,211,153,0.4)":"rgba(129,140,248,0.3)"}`,borderRadius:10,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all 0.15s",flexShrink:0}}>
+                    {codeCopied?(
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    ):(
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="#818cf8" strokeWidth="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"/></svg>
+                    )}
+                  </button>
                 </div>
                 <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:20}}>Share this code so your partner can join this home</div>
                 <button onClick={onSignOut} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"12px",color:"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer",width:"100%",marginBottom:14}}>Sign out</button>
