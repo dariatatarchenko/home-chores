@@ -946,7 +946,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     const doneCnt=dayTasks(dStr).filter(t=>isDone(t,dStr)).length;
                     const active=selDay===dStr,over=dragOver===dStr;
                     const pDay=cnt===0?0:Math.round(doneCnt/cnt*100);
-                    const R=13,C=2*Math.PI*R,DA=C*(pDay/100);
+                    const R=13,CIRC=2*Math.PI*R,DA=CIRC*(pDay/100);
                     return (
                       <div key={dStr} onClick={()=>setSelDay(dStr)}
                         onDragOver={e=>{e.preventDefault();setDragOver(dStr);}}
@@ -969,7 +969,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <div style={{position:"relative",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             <svg width="32" height="32" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?C(0.9):pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${C}`} strokeLinecap="round"/>
+                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?C(0.9):pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round"/>
                             </svg>
                             <span style={{fontSize:12,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":pDay===100?"#34d399":C(0.55)}}>{d.getDate()}</span>
                           </div>
