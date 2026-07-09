@@ -283,6 +283,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   });
   const CARD={...G(0.08,24),borderRadius:20,padding:"13px 15px"};
   const [codeCopied,setCodeCopied]=useState(false);
+  const [settingsView,setSettingsView]=useState("main");
   const [zoneExpandId,setZoneExpandId]=useState(null);
   const [tab,     setTab]     = useState("week");
   const [returnTab,setReturnTab]= useState("week");
@@ -1441,8 +1442,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ SETTINGS ══════════════════════════════════════════ */}
           {tab==="settings"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"16px 20px 8px",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_settings")}</div>
+              <div style={{flexShrink:0,padding:"16px 20px 8px",display:"flex",alignItems:"center",gap:10}}>
+                {settingsView==="account"&&(
+                  <button onClick={()=>setSettingsView("main")} style={{background:"none",border:"none",color:"#818cf8",fontSize:22,cursor:"pointer",padding:0,lineHeight:1}}>‹</button>
+                )}
+                <span style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
+              </div>
               <div style={{flex:1,overflowY:"auto",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
+              {settingsView==="main"&&(<>
               {myStreak>0&&(
                 <div style={{marginBottom:22,display:"flex",alignItems:"center",gap:12}}>
                   <span style={{fontSize:28}}>🔥</span>
@@ -1469,7 +1476,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
                       }} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",minHeight:44}}>
                         <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0}}>{z.emoji}</div>
-                        <span style={{flex:1,color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                          <div style={{color:C(0.38),fontSize:11,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
+                        </div>
                         <span style={{color:C(0.2),fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
                       </div>
                       {open&&(
@@ -1528,16 +1538,26 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Preferences */}
-              <div style={{marginBottom:24}}>
-                <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>{tr("theme")}</div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setThemePersisted("dark")} style={{flex:1,height:38,boxSizing:"border-box",background:theme==="dark"?C(0.15):C(0.06),border:`1px solid ${theme==="dark"?C(0.35):C(0.1)}`,borderRadius:12,color:theme==="dark"?C(0.9):C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>🌙 {tr("dark")}</button>
-                  <button onClick={()=>setThemePersisted("light")} style={{flex:1,height:38,boxSizing:"border-box",background:theme==="light"?C(0.15):C(0.06),border:`1px solid ${theme==="light"?C(0.35):C(0.1)}`,borderRadius:12,color:theme==="light"?C(0.9):C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>☀️ {tr("light")}</button>
+              <div style={{marginTop:24,marginBottom:24}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("theme")}</span>
+                  <button onClick={()=>setThemePersisted(theme==="dark"?"light":"dark")} style={{position:"relative",width:56,height:32,borderRadius:16,border:"none",background:C(0.1),cursor:"pointer",flexShrink:0,padding:0}}>
+                    <div style={{position:"absolute",top:3,left:theme==="dark"?3:27,width:26,height:26,borderRadius:"50%",background:theme==="dark"?"#3730a3":"#fbbf24",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,transition:"left 0.2s"}}>
+                      {theme==="dark"?"🌙":"☀️"}
+                    </div>
+                  </button>
                 </div>
               </div>
 
-              {/* Invite / account */}
-              <div style={{marginTop:24}}>
+              {/* Account entry point */}
+              <div onClick={()=>setSettingsView("account")} style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}>
+                <span style={{color:C(0.82),fontSize:14,fontWeight:500}}>Account</span>
+                <span style={{color:C(0.2),fontSize:17}}>›</span>
+              </div>
+              </>)}
+
+              {settingsView==="account"&&(
+              <div>
                 {email&&<div style={{color:C(0.3),fontSize:12,marginBottom:20}}>{tr("signed_in_as")} {email}</div>}
                 <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>{tr("invite_code")}</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
@@ -1574,6 +1594,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   onSignOut();
                 }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.4)",fontSize:12,cursor:"pointer",padding:"4px 0",display:"block",width:"100%",textAlign:"center"}}>{tr("delete_account")}</button>
               </div>
+              )}
               </div>
             </div>
           )}
@@ -1581,7 +1602,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div style={{flexShrink:0,zIndex:10,...G(0.14,40),borderTop:`1px solid ${C(0.08)}`,padding:"6px 14px",display:"flex",gap:3}}>
+        <div key={theme} style={{flexShrink:0,zIndex:10,...G(0.14,40),borderTop:`1px solid ${C(0.08)}`,padding:"6px 14px",display:"flex",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             if(item.accent) return (
