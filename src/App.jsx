@@ -219,6 +219,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
   const [codeCopied,setCodeCopied]=useState(false);
+  const [zoneExpandId,setZoneExpandId]=useState(null);
   const [tab,     setTab]     = useState(()=>{
     try{
       const saved=localStorage.getItem("hometasks_tab");
@@ -458,7 +459,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
     if(selIdx<0) return;
     const cellW=51;
-    el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth/2)+(cellW/2));
+    el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth*0.42)+(cellW/2));
   },[dataLoading,tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -562,6 +563,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setSelDay(to);
   };
 
+  const moveIncompleteToNextDay=(fromDay)=>{
+    const nextDate=new Date(fromDay+"T00:00:00"); nextDate.setDate(nextDate.getDate()+1);
+    const toDay=ds(nextDate);
+    const incomplete=dayTasks(fromDay).filter(t=>!isDone(t,fromDay));
+    incomplete.forEach(t=>{
+      let newFields=null;
+      setTasks(ts=>ts.map(x=>{
+        if(x.id!==t.id) return x;
+        const dates=[...new Set([...x.scheduledDates.filter(d=>d!==fromDay),toDay])].sort();
+        newFields={scheduledDates:dates,doneOn:x.doneOn.filter(d=>d!==fromDay),rescheduledFrom:fromDay};
+        return{...x,...newFields};
+      }));
+      if(newFields) persistTask(t.id,newFields);
+    });
+    setSelDay(toDay);
+  };
+
   const [savingTask,setSavingTask]= useState(false);
   const saveTask=async()=>{
     if(savingTask) return; // guard against double-tap creating the same task twice
@@ -626,16 +644,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   const saveZone=()=>{
     if(!zForm.label.trim()){setZoneNameError(true);return;}
-    if(zoneModal.mode==="new"){
+    if(zoneModal?.mode==="new"){
       const nz={id:uid(),label:zForm.label.trim(),emoji:zForm.emoji};
       setZones(zs=>[...zs,nz]);
       insertZone(nz);
-    } else {
+      setZoneModal(null);
+    } else if(zoneExpandId){
       const updated={label:zForm.label.trim(),emoji:zForm.emoji};
-      setZones(zs=>zs.map(z=>z.id===zoneModal.id?{...z,...updated}:z));
-      persistZone(zoneModal.id,updated);
+      setZones(zs=>zs.map(z=>z.id===zoneExpandId?{...z,...updated}:z));
+      persistZone(zoneExpandId,updated);
     }
-    setZoneModal(null); setEmojiPicker(false);
+    setEmojiPicker(false);
   };
   const deleteZone=id=>{
     const zone=zones.find(z=>z.id===id);
@@ -777,7 +796,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Toast */}
         {toast&&(
-          <div onClick={()=>setToast(null)} style={{position:"fixed",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 20px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 48px)",maxWidth:380,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
+          <div onClick={()=>setToast(null)} style={{position:"fixed",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 20px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
             <span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>
             <div style={{minWidth:0,flex:1}}>
               <div style={{color:"#fff",fontSize:14,fontWeight:700}}>{toast.from}</div>
@@ -790,7 +809,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {showNotifs&&(
           <>
             <div style={{position:"fixed",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
-            <div style={{position:"absolute",top:44,right:12,zIndex:50,...G(0.2,30),borderRadius:20,padding:16,width:280,boxShadow:"0 16px 48px rgba(0,0,0,0.5)"}}>
+            <div style={{position:"absolute",top:44,right:12,zIndex:50,...G(0.2,30),borderRadius:20,padding:16,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.5)"}}>
               <div style={{color:"#fff",fontSize:14,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>All caught up!</div>}
               {notifs.map(n=>(
@@ -821,7 +840,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {people.length>1&&(
-                  <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:myFilter?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.07)",border:`1px solid ${myFilter?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:17,padding:"0 14px 0 6px",cursor:"pointer",transition:"all 0.2s"}}>
+                  <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:myFilter?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.1)",border:`1px solid ${myFilter?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:17,padding:"0 14px 0 6px",cursor:"pointer",transition:"all 0.2s"}}>
                     <Avatar person={me} size={24}/>
                     <span style={{color:myFilter?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>Mine</span>
                   </button>
@@ -897,6 +916,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{background:"rgba(255,255,255,0.07)",borderRadius:4,height:3,overflow:"hidden"}}>
                     <div style={{height:"100%",width:`${pct}%`,borderRadius:4,transition:"width 0.4s",background:pct===100?"linear-gradient(90deg,#34d399,#6ee7b7)":"linear-gradient(90deg,#6366f1,#a78bfa)"}}/>
                   </div>
+                </div>
+              )}
+
+              {/* Move incomplete tasks forward */}
+              {selDay<todayStr&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
+                <div style={{flexShrink:0,margin:"0 20px 14px",...G(0.08,20),border:"1px solid rgba(251,191,36,0.25)",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{fontSize:18}}>⏭️</span>
+                  <div style={{flex:1,color:"rgba(255,255,255,0.7)",fontSize:12,lineHeight:1.4}}>
+                    {dayAllTasks.length-dayAllDone} unfinished task{dayAllTasks.length-dayAllDone!==1?"s":""} from this day — move to the next day?
+                  </div>
+                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(251,191,36,0.15)",border:"1px solid rgba(251,191,36,0.35)",borderRadius:12,padding:"8px 12px",color:"#fbbf24",fontSize:12,fontWeight:700,cursor:"pointer"}}>Move</button>
                 </div>
               )}
 
@@ -1312,7 +1342,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:4,startDate:todayStr,maxLen:32});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                                 {(!t.createdBy||t.createdBy===meId)&&<button onClick={()=>{setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:"rgba(255,255,255,0.28)",fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name} — only they can delete it</div>:null;})()}
@@ -1350,13 +1380,45 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {zones.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"8px 0"}}>No zones yet — add one to get started</div>}
-                  {zones.map(z=>(
-                    <div key={z.id} onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setZoneModal({mode:"edit",id:z.id});setEmojiPicker(false);}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
-                      <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{z.emoji}</div>
-                      <span style={{flex:1,color:"rgba(255,255,255,0.82)",fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
-                      <span style={{color:"rgba(255,255,255,0.2)",fontSize:17}}>›</span>
+                  {zones.map(z=>{
+                    const open=zoneExpandId===z.id;
+                    return (
+                    <div key={z.id} style={{...CARD,overflow:"hidden"}}>
+                      <div onClick={()=>{
+                        if(open){ setZoneExpandId(null); return; }
+                        setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
+                      }} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
+                        <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0}}>{z.emoji}</div>
+                        <span style={{flex:1,color:"rgba(255,255,255,0.82)",fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
+                        <span style={{color:"rgba(255,255,255,0.2)",fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
+                      </div>
+                      {open&&(
+                        <div onClick={e=>e.stopPropagation()} style={{marginTop:14,paddingTop:14,borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+                            <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,width:48,height:48,fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                            <div style={{flex:1}}>
+                              <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"12px 14px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":"2px solid transparent"}}/>
+                            </div>
+                          </div>
+                          {emojiPicker&&(
+                            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+                              <div onClick={e=>e.stopPropagation()} style={{width:320,background:"#26262c",borderRadius:20,padding:18,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
+                                <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
+                                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                                  {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          <div style={{display:"flex",gap:8}}>
+                            <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
+                            <button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"11px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               {/* People */}
@@ -1369,7 +1431,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {people.map(p=>{
                     const count=tasks.filter(t=>t.personId===p.id).length;
                     return (
-                      <div key={p.id} onClick={()=>{setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
+                      <div key={p.id} onClick={()=>{if(p.id!==meId)return;setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:p.id===meId?"pointer":"default"}}>
                         <Avatar person={p} size={40}/>
                         <div style={{flex:1}}>
                           <div style={{color:"rgba(255,255,255,0.88)",fontSize:15,fontWeight:600,display:"flex",alignItems:"center",gap:7}}>
@@ -1378,7 +1440,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           </div>
                           <div style={{color:"rgba(255,255,255,0.38)",fontSize:11,marginTop:1}}>{count} task{count!==1?"s":""}</div>
                         </div>
-                        <span style={{color:"rgba(255,255,255,0.2)",fontSize:17}}>›</span>
+                        {p.id===meId&&<span style={{color:"rgba(255,255,255,0.2)",fontSize:17}}>›</span>}
                       </div>
                     );
                   })}
@@ -1702,7 +1764,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200}} onClick={()=>{setZoneModal(null);setEmojiPicker(false);}}>
             <div onClick={e=>e.stopPropagation()} style={{width:375,...G(0.18,40),borderRadius:"30px 30px 0 0",padding:"22px 22px 42px",display:"flex",flexDirection:"column",gap:16,boxShadow:"0 -20px 60px rgba(0,0,0,0.5)"}}>
               <div style={{width:34,height:4,background:"rgba(255,255,255,0.18)",borderRadius:2,margin:"0 auto"}}/>
-              <div style={{color:"#fff",fontSize:18,fontWeight:700}}>{zoneModal.mode==="new"?"New Zone":"Edit Zone"}</div>
+              <div style={{color:"#fff",fontSize:18,fontWeight:700}}>New Zone</div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <div style={{flex:1}}>
@@ -1719,8 +1781,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </div>
                 </div>
               )}
-              <button onClick={saveZone} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>{zoneModal.mode==="new"?"Add":"Save"}</button>
-              {zoneModal.mode==="edit"&&<button onClick={()=>{deleteZone(zoneModal.id);setZoneModal(null);}} style={{...G(0.06,20),border:"1px solid rgba(248,113,113,0.2)",borderRadius:15,padding:"12px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete Zone</button>}
+              <button onClick={saveZone} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>Add</button>
             </div>
           </div>
         )}
