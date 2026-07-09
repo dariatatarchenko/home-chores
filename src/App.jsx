@@ -1303,7 +1303,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     {zone.tasks.map(t=>{
                       const pIds=(t.personIds||[t.personId]).filter(Boolean),open=expandId===t.id,streak=computeStreak(t);
                       return (
-                        <div key={t.id} style={{...CARD,cursor:"pointer",overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"center"}} onClick={()=>setExpandId(open?null:t.id)}>
+                        <div key={t.id} style={{...CARD,cursor:"pointer",overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"flex-start"}} onClick={()=>setExpandId(open?null:t.id)}>
                           <div style={{display:"flex",alignItems:"center",gap:10}}>
                             {pIds.length===1?(
                               <Avatar person={getPerson(pIds[0])} size={32}/>
@@ -1397,7 +1397,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {zones.map(z=>{
                     const open=zoneExpandId===z.id;
                     return (
-                    <div key={z.id} style={{...CARD,overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                    <div key={z.id} style={{...CARD,overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"flex-start"}}>
                       <div onClick={()=>{
                         if(open){ setZoneExpandId(null); return; }
                         setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
