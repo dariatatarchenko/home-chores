@@ -1338,11 +1338,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
                 <div style={{width:"100%",maxWidth:"100%",overflow:"hidden",boxSizing:"border-box"}}>
                   <span style={labelSt}>{tr("start_date")}</span>
-                  <div style={{display:"flex",justifyContent:"center"}}>
-                    <input type="date" value={form.startDate} min={todayStr}
-                      onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
-                      style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"inline-block"}}/>
-                  </div>
+                  <input type="date" value={form.startDate} min={todayStr}
+                    onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
+                    style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center"}}/>
                 </div>
                 {people.length>1&&(
                 <div>
@@ -1381,7 +1379,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_alltasks")}</div>
                 <div style={{display:"flex",gap:12,alignItems:"center"}}>
                   <button onClick={()=>setShowStats(true)} style={{background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:12,padding:"8px 14px",color:"#fbbf24",fontSize:13,fontWeight:500,cursor:"pointer"}}>🏆 Stats</button>
-                  <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setTab("add");}} style={{background:"none",border:"none",color:"#818cf8",fontSize:14,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
+                  <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setTab("add");}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
               </div>
               </div>
@@ -1491,7 +1489,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{marginBottom:24}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                   <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("zones")}</span>
-                  <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setZoneModal({mode:"new"});setEmojiPicker(false);}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:500,cursor:"pointer",padding:0}}>＋ Add</button>
+                  <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setZoneModal({mode:"new"});setEmojiPicker(false);}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {zones.length===0&&<div style={{color:C(0.3),fontSize:13,padding:"8px 0"}}>{tr("no_zones_yet")}</div>}
@@ -1543,7 +1541,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                   <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("people")}</span>
-                  <button onClick={()=>{setPersonNameError(false);setPForm({name:"",color:PALETTE[0],avatarEmoji:""});setAvatarPicker(false);setPersonModal({mode:"new"});}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:500,cursor:"pointer",padding:0}}>＋ Add</button>
+                  <button onClick={()=>{setPersonNameError(false);setPForm({name:"",color:PALETTE[0],avatarEmoji:""});setAvatarPicker(false);setPersonModal({mode:"new"});}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {people.map(p=>{
