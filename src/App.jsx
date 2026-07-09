@@ -236,7 +236,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
     rescheduledFrom:r.rescheduled_from,createdBy:r.created_by,
   });
-  const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body});
+  const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body,readBy:r.read_by||[]});
 
   useEffect(()=>{
     let active=true;
@@ -411,14 +411,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [celebration,setCelebration]= useState(null);
   const [showNotifs,setShowNotifs]= useState(false);
   const [notifs,setNotifs]= useState([]);
-  const [readIds,setReadIds]= useState(()=>{
-    try{ return new Set(JSON.parse(localStorage.getItem("hometasks_read_notifs")||"[]")); }catch{ return new Set(); }
-  });
-  const setReadIdsPersisted=updater=>{
-    setReadIds(prev=>{
-      const next=typeof updater==="function"?updater(prev):updater;
-      try{ localStorage.setItem("hometasks_read_notifs",JSON.stringify([...next])); }catch{}
-      return next;
+  const markNotifsRead=ids=>{
+    const toMark=ids.filter(id=>{
+      const n=notifs.find(x=>x.id===id);
+      return n&&!n.readBy.includes(meId);
+    });
+    if(toMark.length===0) return;
+    setNotifs(ns=>ns.map(n=>toMark.includes(n.id)?{...n,readBy:[...n.readBy,meId]}:n));
+    toMark.forEach(id=>{
+      const n=notifs.find(x=>x.id===id);
+      const newReadBy=[...n.readBy,meId];
+      supabase.from("notifications").update({read_by:newReadBy}).eq("id",id).then(({error})=>{ if(error) console.error("markNotifRead",error); });
     });
   };
   const [toast,setToast]= useState(null);
@@ -483,7 +486,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const dayTasks=d=>tasks.filter(t=>isScheduledOn(t,d));
   const getPerson=id=>people.find(p=>p.id===id);
   const getZone=id=>zones.find(z=>z.id===id);
-  const unread=notifs.filter(n=>!readIds.has(n.id)).length;
+  const unread=notifs.filter(n=>!n.readBy.includes(meId)).length;
   const me=getPerson(meId);
 
   const toggleDone=(id,d)=>{
@@ -826,7 +829,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{color:"#fff",fontSize:14,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>All caught up!</div>}
               {notifs.map(n=>(
-                <div key={n.id} style={{display:"flex",gap:10,marginBottom:12,opacity:readIds.has(n.id)?.5:1,cursor:"pointer"}} onClick={()=>{setReadIdsPersisted(r=>new Set([...r,n.id]));setShowNotifs(false);}}>
+                <div key={n.id} style={{display:"flex",gap:10,marginBottom:12,opacity:n.readBy.includes(meId)?.5:1,cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);setShowNotifs(false);}}>
                   <span style={{fontSize:22}}>{n.icon}</span>
                   <div>
                     <div style={{color:"rgba(255,255,255,0.9)",fontSize:12,fontWeight:600}}>{n.from}</div>
@@ -859,7 +862,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </button>
                   )}
                   {people.length>1&&(
-                  <button onClick={()=>{setShowNotifs(v=>!v);setReadIdsPersisted(r=>new Set([...r,...notifs.map(n=>n.id)]));}} style={{position:"relative",...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>
+                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>
                     🔔
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
@@ -1424,11 +1427,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   })}
                 </div>
                 {emojiPicker&&zoneExpandId&&(
-                  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+                  <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
                     <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
                       <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                        {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
+                        {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>)}
                       </div>
                     </div>
                   </div>
@@ -1764,13 +1767,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           </div>
         )}
         {personModal&&avatarPicker&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setAvatarPicker(false)}>
+          <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setAvatarPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
               <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                 <div style={{position:"relative",display:"inline-block"}}><input maxLength={2} placeholder="Aa" value={pForm.avatarEmoji&&!AVATAR_EMOJIS.includes(pForm.avatarEmoji)?pForm.avatarEmoji:""} onChange={e=>{const v=e.target.value.toUpperCase();setPForm(f=>({...f,avatarEmoji:v}));if(v)setAvatarPicker(false);}} style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",color:"#fff",fontSize:14,fontWeight:700,textAlign:"center",cursor:"text",fontFamily:"inherit",outline:"none"}}/></div>
                 {AVATAR_EMOJIS.map(e=>(
-                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:38,height:38,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>
+                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:38,height:38,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
                 ))}
               </div>
             </div>
@@ -1794,11 +1797,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           </div>
         )}
         {zoneModal&&emojiPicker&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+          <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
               <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
+                {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>)}
               </div>
             </div>
           </div>
