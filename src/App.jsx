@@ -1425,7 +1425,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 {emojiPicker&&zoneExpandId&&(
                   <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
-                    <div onClick={e=>e.stopPropagation()} style={{width:320,background:"#26262c",borderRadius:20,padding:18,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
+                    <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
                       <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
@@ -1734,19 +1734,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <Avatar person={{name:pForm.name||"?",color:pForm.color,avatarEmoji:pForm.avatarEmoji}} size={72}/>
                 </div>
               </div>
-              {avatarPicker&&(
-                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setAvatarPicker(false)}>
-                  <div onClick={e=>e.stopPropagation()} style={{width:320,background:"#26262c",borderRadius:20,padding:18,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
-                    <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      <div style={{position:"relative",display:"inline-block"}}><input maxLength={2} placeholder="Aa" value={pForm.avatarEmoji&&!AVATAR_EMOJIS.includes(pForm.avatarEmoji)?pForm.avatarEmoji:""} onChange={e=>{const v=e.target.value.toUpperCase();setPForm(f=>({...f,avatarEmoji:v}));if(v)setAvatarPicker(false);}} style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",color:"#fff",fontSize:14,fontWeight:700,textAlign:"center",cursor:"text",fontFamily:"inherit",outline:"none"}}/></div>
-                      {AVATAR_EMOJIS.map(e=>(
-                        <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:38,height:38,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
               <div>
                 <span style={labelSt}>NAME</span>
                 <input value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",border:personNameError?"2px solid #f87171":"2px solid rgba(255,255,255,0.1)"}}/>
@@ -1776,6 +1763,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             </div>
           </div>
         )}
+        {personModal&&avatarPicker&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setAvatarPicker(false)}>
+            <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
+              <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                <div style={{position:"relative",display:"inline-block"}}><input maxLength={2} placeholder="Aa" value={pForm.avatarEmoji&&!AVATAR_EMOJIS.includes(pForm.avatarEmoji)?pForm.avatarEmoji:""} onChange={e=>{const v=e.target.value.toUpperCase();setPForm(f=>({...f,avatarEmoji:v}));if(v)setAvatarPicker(false);}} style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",color:"#fff",fontSize:14,fontWeight:700,textAlign:"center",cursor:"text",fontFamily:"inherit",outline:"none"}}/></div>
+                {AVATAR_EMOJIS.map(e=>(
+                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:38,height:38,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── ZONE MODAL ────────────────────────────────────────── */}
         {zoneModal&&(
@@ -1789,17 +1789,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"12px 14px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":"2px solid transparent"}}/>
                 </div>
               </div>
-              {emojiPicker&&(
-                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
-                  <div onClick={e=>e.stopPropagation()} style={{width:320,background:"#26262c",borderRadius:20,padding:18,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
-                    <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
-                    </div>
-                  </div>
-                </div>
-              )}
               <button onClick={saveZone} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>Add</button>
+            </div>
+          </div>
+        )}
+        {zoneModal&&emojiPicker&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+            <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
+              <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
+              </div>
             </div>
           </div>
         )}
