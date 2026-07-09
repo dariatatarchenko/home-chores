@@ -64,7 +64,25 @@ const FREQ_OPTIONS = [
   {id:"monthly", label:"Monthly",      days:30},
   {id:"custom",  label:"Custom...",    days:null},
 ];
-const FREQ_COLOR = {once:"#cbd5e1",daily:"#818cf8",every2:"#a78bfa",every3:"#c084fc",weekly:"#e879f9",monthly:"#cbd5e1",custom:"#38bdf8"};
+const FREQ_COLOR = {once:"#94a3b8",daily:"#34d399",every2:"#a3e635",every3:"#facc15",weekly:"#fb923c",monthly:"#f87171",custom:"#38bdf8"};
+// Color scaled by actual day-interval (more frequent = green, rarer = red), so a
+// custom interval lines up logically with the fixed presets instead of using an
+// arbitrary fixed color regardless of how many days it actually spans.
+function freqColorFor(t){
+  if(t.freq==="once") return FREQ_COLOR.once;
+  const days=t.freq==="custom"?t.customDays:FREQ_OPTIONS.find(f=>f.id===t.freq)?.days;
+  if(days==null) return FREQ_COLOR.once;
+  if(days<=1) return "#34d399";
+  if(days<=3) return "#a3e635";
+  if(days<=6) return "#facc15";
+  if(days<=13) return "#fb923c";
+  if(days<=29) return "#f97316";
+  return "#f87171";
+}
+function freqLabelFor(t){
+  if(t.freq==="custom") return `Every ${t.customDays} day${t.customDays!==1?"s":""}`;
+  return FREQ_OPTIONS.find(f=>f.id===t.freq)?.label||t.freq;
+}
 
 const FREQ_PTS={once:3,daily:1,every2:2,every3:2,weekly:5,monthly:20,custom:3};
 
@@ -201,8 +219,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
   const [codeCopied,setCodeCopied]=useState(false);
-  const [zoneDragId,setZoneDragId]=useState(null);
-  const [zoneDragOverId,setZoneDragOverId]=useState(null);
   const [tab,     setTab]     = useState(()=>{
     try{
       const saved=localStorage.getItem("hometasks_tab");
@@ -227,7 +243,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     id:r.id,zone:r.zone_id,text:r.text,freq:r.freq,customDays:r.custom_days,
     personIds:r.person_ids||[],personId:(r.person_ids||[])[0]||null,
     scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
-    rescheduledFrom:r.rescheduled_from,
+    rescheduledFrom:r.rescheduled_from,createdBy:r.created_by,
   });
   const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body});
 
@@ -348,7 +364,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const {error}=await supabase.from("tasks").insert({
       id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
       custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
-      done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,
+      done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,
     });
     if(error) console.error("insertTask",error);
     return error?error.message:null;
@@ -384,21 +400,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const deleteZoneRemote=id=>{
     supabase.from("zones").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteZone",error); });
   };
-  const reorderZones=(fromId,toId)=>{
-    if(fromId===toId) return;
-    setZones(zs=>{
-      const arr=[...zs];
-      const fromIdx=arr.findIndex(z=>z.id===fromId);
-      const toIdx=arr.findIndex(z=>z.id===toId);
-      if(fromIdx===-1||toIdx===-1) return zs;
-      const [moved]=arr.splice(fromIdx,1);
-      arr.splice(toIdx,0,moved);
-      const reindexed=arr.map((z,i)=>({...z,sortOrder:i+1}));
-      Promise.all(reindexed.map(z=>supabase.from("zones").update({sort_order:z.sortOrder}).eq("id",z.id)))
-        .then(results=>{ results.forEach(({error})=>{ if(error) console.error("reorderZones",error); }); });
-      return reindexed;
-    });
-  };
 
   const [myFilter,setMyFilter]= useState(false);
   const [weekZoneFilter,setWeekZoneFilter]= useState(null);
@@ -406,6 +407,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [calYear, setCalYear] = useState(TODAY.getFullYear());
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
   const [dragInfo,setDragInfo]= useState(null);
+  const [dragActive,setDragActive]= useState(false);
+  const longPressTimerRef=useRef(null);
+  const touchStartPosRef=useRef(null);
   const [dragOver,setDragOver]= useState(null);
   const [expandId,setExpandId]= useState(null);
   const [editTaskId,setEditTaskId]= useState(null);
@@ -430,7 +434,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [assigneeError,setAssigneeError]= useState(false);
   const [assigneePopover,setAssigneePopover]= useState(null);
 
-  const blankForm = {zone:"kitchen",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:22};
+  const blankForm = {zone:"kitchen",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32};
   const [form,setForm]= useState(blankForm);
 
   const prevPct = useRef(0);
@@ -442,17 +446,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   // Celebration is now triggered directly inside toggleDone (only on the actual completing action)
 
-  // ── Scroll selected day to center ──────────────────────────────────────────
+  // ── Scroll selected day to center (only when entering the Week tab) ────────
+  const prevTabRef=useRef(null);
   useEffect(()=>{
+    const enteringWeek=tab==="week"&&prevTabRef.current!=="week";
+    prevTabRef.current=tab;
+    if(!enteringWeek) return;
     if(!stripRef.current) return;
-    if(tab!=="week") return;
     const el=stripRef.current;
     const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
     const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
     if(selIdx<0) return;
     const cellW=51;
     el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth/2)+(cellW/2));
-  },[dataLoading,tab,selDay]);
+  },[dataLoading,tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const isDone=(t,d)=>t.doneOn.includes(d);
@@ -555,37 +562,45 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setSelDay(to);
   };
 
+  const [savingTask,setSavingTask]= useState(false);
   const saveTask=async()=>{
+    if(savingTask) return; // guard against double-tap creating the same task twice
     if(!form.text.trim()){
       setTaskNameError(true);
       taskNameRef.current?.scrollIntoView({behavior:"smooth",block:"center"});
       taskNameRef.current?.focus();
       return;
     }
+    setSavingTask(true);
     const f=FREQ_OPTIONS.find(x=>x.id===form.freq);
     let days=f?.days;
     if(form.freq==="custom") days=form.customDays;
     const startIdx=Math.max(0,_60.indexOf(form.startDate||todayStr));
     const base=_60.slice(startIdx);
     const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
+    const wasEditing=!!editTaskId;
     if(editTaskId){
       const updated={...form,personId:form.personIds[0]||null,scheduledDates:dates};
       setTasks(ts=>ts.map(t=>t.id!==editTaskId?t:{...t,...updated}));
       persistTask(editTaskId,updated);
       setEditTaskId(null);
     } else {
-      const newTask={id:uid(),...form,personId:form.personIds[0]||null,scheduledDates:dates,doneOn:[],likes:[],rescheduledFrom:null};
+      const newTask={id:uid(),...form,personId:form.personIds[0]||null,scheduledDates:dates,doneOn:[],likes:[],rescheduledFrom:null,createdBy:meId};
       setTasks(ts=>[...ts,newTask]);
       const errMsg=await insertTask(newTask);
       if(errMsg){
         window.alert("This task couldn't be saved to the server: "+errMsg+"\n\nIt will disappear when you reload — please try adding it again.");
         setTasks(ts=>ts.filter(t=>t.id!==newTask.id));
+        setSavingTask(false);
         return;
       }
     }
     setForm(blankForm);
-    if(dates[0]) setSelDay(dates[0]);
-    setTab("week");
+    setSavingTask(false);
+    setToast({icon:wasEditing?"✏️":"✅",from:wasEditing?"Task updated":"Task added",text:form.text.trim()});
+    setTimeout(()=>setToast(null),2800);
+    if(returnTab==="week"&&dates[0]) setSelDay(dates[0]);
+    setTab(returnTab);
   };
 
   const savePerson=()=>{
@@ -595,7 +610,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const np={id:newId,name:pForm.name.trim(),color:pForm.color,avatarEmoji:pForm.avatarEmoji};
       setPeople(ps=>[...ps,np]);
       insertPerson(np);
-      if(pForm._tempMe) setMeId(newId);
     } else {
       const updated={name:pForm.name.trim(),color:pForm.color,avatarEmoji:pForm.avatarEmoji};
       setPeople(ps=>ps.map(p=>p.id===personModal.id?{...p,...updated}:p));
@@ -624,9 +638,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setZoneModal(null); setEmojiPicker(false);
   };
   const deleteZone=id=>{
+    const zone=zones.find(z=>z.id===id);
+    const affectedTasks=tasks.filter(t=>t.zone===id);
+    const msg=affectedTasks.length>0
+      ?`Delete "${zone?.label}"? This will also permanently delete ${affectedTasks.length} task${affectedTasks.length!==1?"s":""} in this zone.`
+      :`Delete "${zone?.label}"?`;
+    if(!window.confirm(msg)) return;
     setZones(zs=>zs.filter(z=>z.id!==id));
     setTasks(ts=>ts.filter(t=>t.zone!==id));
     deleteZoneRemote(id);
+    affectedTasks.forEach(t=>deleteTaskRemote(t.id));
   };
 
   // ── Computed ──────────────────────────────────────────────────────────────
@@ -756,11 +777,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Toast */}
         {toast&&(
-          <div onClick={()=>setToast(null)} style={{position:"fixed",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"12px 18px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:10,maxWidth:320,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
-            <span style={{fontSize:22}}>{toast.icon}</span>
-            <div>
-              <div style={{color:"#fff",fontSize:13,fontWeight:700}}>{toast.from}</div>
-              <div style={{color:"rgba(255,255,255,0.6)",fontSize:12}}>{toast.text}</div>
+          <div onClick={()=>setToast(null)} style={{position:"fixed",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 20px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 48px)",maxWidth:380,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
+            <span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>
+            <div style={{minWidth:0,flex:1}}>
+              <div style={{color:"#fff",fontSize:14,fontWeight:700}}>{toast.from}</div>
+              <div style={{color:"rgba(255,255,255,0.6)",fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{toast.text}</div>
             </div>
           </div>
         )}
@@ -800,7 +821,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {people.length>1&&(
-                  <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,background:myFilter?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.07)",border:`1px solid ${myFilter?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:17,padding:"8px 14px 8px 6px",cursor:"pointer",transition:"all 0.2s",boxSizing:"border-box"}}>
+                  <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:myFilter?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.07)",border:`1px solid ${myFilter?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:17,padding:"0 14px 0 6px",cursor:"pointer",transition:"all 0.2s"}}>
                     <Avatar person={me} size={24}/>
                     <span style={{color:myFilter?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>Mine</span>
                   </button>
@@ -882,13 +903,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:"0 20px 18px",display:"flex",gap:8,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setWeekZoneFilter(null)} style={{
-                  flexShrink:0,borderRadius:17,padding:"8px 14px",border:"none",cursor:"pointer",fontSize:13,fontWeight:500,boxSizing:"border-box",
+                  flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:"none",cursor:"pointer",fontSize:13,fontWeight:500,
                   background:weekZoneFilter===null?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.06)",
                   color:weekZoneFilter===null?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.4)",
                 }}>All</button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
                   <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{
-                    flexShrink:0,borderRadius:17,padding:"8px 14px",border:"none",cursor:"pointer",fontSize:13,fontWeight:500,boxSizing:"border-box",
+                    flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:"none",cursor:"pointer",fontSize:13,fontWeight:500,
                     background:weekZoneFilter===z.id?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.06)",
                     color:weekZoneFilter===z.id?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.4)",
                   }}>{z.label}</button>
@@ -914,10 +935,26 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       onDragEnd={()=>{setDragInfo(null);setDragOver(null);}}
                       onTouchStart={e=>{
                         const touch=e.touches[0];
-                        setDragInfo({id:t.id,from:selDay,startX:touch.clientX,startY:touch.clientY});
+                        touchStartPosRef.current={x:touch.clientX,y:touch.clientY};
+                        clearTimeout(longPressTimerRef.current);
+                        longPressTimerRef.current=setTimeout(()=>{
+                          setDragInfo({id:t.id,from:selDay});
+                          setDragActive(true);
+                          if(navigator.vibrate) navigator.vibrate(10);
+                        },380);
                       }}
                       onTouchMove={e=>{
-                        if(!dragInfo) return;
+                        if(!dragActive){
+                          // not in drag mode yet — if the finger has moved noticeably,
+                          // this is a normal scroll gesture, so cancel the pending long-press
+                          const touch=e.touches[0];
+                          const start=touchStartPosRef.current;
+                          if(start){
+                            const dx=Math.abs(touch.clientX-start.x), dy=Math.abs(touch.clientY-start.y);
+                            if(dx>8||dy>8) clearTimeout(longPressTimerRef.current);
+                          }
+                          return;
+                        }
                         e.preventDefault();
                         const touch=e.touches[0];
                         const el=document.elementFromPoint(touch.clientX,touch.clientY);
@@ -925,16 +962,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(d) setDragOver(d);
                       }}
                       onTouchEnd={e=>{
-                        if(!dragInfo) return;
+                        clearTimeout(longPressTimerRef.current);
+                        if(!dragActive){ setDragInfo(null); return; }
                         const touch=e.changedTouches[0];
                         const el=document.elementFromPoint(touch.clientX,touch.clientY);
                         const toDate=el?.closest("[data-date]")?.dataset?.date;
-                        if(toDate) moveTask(dragInfo.id,dragInfo.from,toDate);
-                        setDragInfo(null);setDragOver(null);
+                        if(toDate&&dragInfo) moveTask(dragInfo.id,dragInfo.from,toDate);
+                        setDragInfo(null);setDragOver(null);setDragActive(false);
                       }}
-                      style={{...CARD,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s",cursor:"grab",touchAction:"pan-y",position:"relative",
+                      style={{...CARD,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",
                         border:"1px solid rgba(255,255,255,0.08)",
                         animation:"fadeInUp 0.2s ease",
+                        transform:dragActive&&dragInfo?.id===t.id?"scale(1.03)":"scale(1)",
+                        boxShadow:dragActive&&dragInfo?.id===t.id?"0 8px 24px rgba(0,0,0,0.4)":"none",
+                        zIndex:dragActive&&dragInfo?.id===t.id?10:1,
 }}>
                       {/* Check */}
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
@@ -949,7 +990,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       </button>
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
-                        <div style={{color:"rgba(255,255,255,0.9)",fontSize:15,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden"}}>{t.text}</div>
+                        <div style={{color:"rgba(255,255,255,0.9)",fontSize:15,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
                         <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
@@ -1113,7 +1154,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           {!done&&!missed&&isFutureDay&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.2" strokeLinecap="round"/></svg>}
                         </button>
                         <div style={{flex:1}}>
-                          <div style={{color:done?"rgba(255,255,255,0.38)":missed?"rgba(248,113,113,0.6)":"rgba(255,255,255,0.82)",fontSize:13}}>{t.text}</div>
+                          <div style={{color:done?"rgba(255,255,255,0.38)":missed?"rgba(248,113,113,0.6)":"rgba(255,255,255,0.82)",fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
                           <div style={{color:"rgba(255,255,255,0.38)",fontSize:11,marginTop:1}}>{zone?.label}</div>
                         </div>
                         <Avatar person={person} size={22}/>
@@ -1169,7 +1210,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={labelSt}>Assigned to</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
                     <button onClick={()=>setForm(f=>({...f,personIds:people.map(p=>p.id)}))} style={{
-                      display:"flex",alignItems:"center",height:38,boxSizing:"border-box",
+                      display:"flex",alignItems:"center",height:34,boxSizing:"border-box",
                       background:(form.personIds||[]).length===people.length?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.05)",
                       border:`2px solid ${(form.personIds||[]).length===people.length?"rgba(255,255,255,0.4)":"rgba(255,255,255,0.08)"}`,
                       borderRadius:20,padding:"0 16px",cursor:"pointer",
@@ -1178,15 +1219,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     </button>
                     {people.map(p=>{
                       const sel=(form.personIds||[]).length===1&&(form.personIds||[]).includes(p.id);
-                      return <button key={p.id} onClick={()=>setForm(f=>({...f,personIds:[p.id]}))} style={{display:"flex",alignItems:"center",gap:7,height:38,boxSizing:"border-box",background:sel?p.color+"28":"rgba(255,255,255,0.05)",border:`2px solid ${sel?p.color+"90":"rgba(255,255,255,0.08)"}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",position:"relative"}}>
-                        <Avatar person={p} size={22}/>
+                      return <button key={p.id} onClick={()=>setForm(f=>({...f,personIds:[p.id]}))} style={{display:"flex",alignItems:"center",gap:7,height:34,boxSizing:"border-box",background:sel?p.color+"28":"rgba(255,255,255,0.05)",border:`2px solid ${sel?p.color+"90":"rgba(255,255,255,0.08)"}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",position:"relative"}}>
+                        <Avatar person={p} size={20}/>
                         <span style={{color:sel?p.color:"rgba(255,255,255,0.45)",fontSize:13,fontWeight:500}}>{p.name}</span>
                       </button>;
                     })}
                   </div>
                 </div>
                 )}
-                <button onClick={saveTask} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",marginTop:4}}>{editTaskId?"Save Changes":"Add Task"}</button>
+                <button onClick={saveTask} disabled={savingTask} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:savingTask?"default":"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?"Saving…":editTaskId?"Save Changes":"Add Task"}</button>
                 <button onClick={()=>{setForm(blankForm);setEditTaskId(null);setTab(returnTab);}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.3)",fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
               </div>
@@ -1235,7 +1276,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <div style={{flex:1}}>
                               <div style={{color:"rgba(255,255,255,0.9)",fontSize:15,fontWeight:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{t.text}</div>
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
-                                <span style={{color:FREQ_COLOR[t.freq]||"#94a3b8",fontSize:11}}>{FREQ_OPTIONS.find(f=>f.id===t.freq)?.label}</span>
+                                <span style={{color:freqColorFor(t),fontSize:11}}>{freqLabelFor(t)}</span>
+                                {people.length>1&&(()=>{
+                                  if(pIds.length!==1) return <span style={{color:"rgba(255,255,255,0.32)",fontSize:11}}>· All</span>;
+                                  const p=getPerson(pIds[0]);
+                                  return <span style={{color:"rgba(255,255,255,0.32)",fontSize:11}}>· <span style={{color:p?.color}}>{p?.name}</span></span>;
+                                })()}
                               </div>
                             </div>
                             <span style={{color:"rgba(255,255,255,0.18)",fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
@@ -1247,7 +1293,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <span style={labelSt}>Assigned to</span>
                               <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:10}}>
                                 <button onClick={()=>{const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{
-                                  display:"flex",alignItems:"center",height:36,boxSizing:"border-box",
+                                  display:"flex",alignItems:"center",height:34,boxSizing:"border-box",
                                   background:(t.personIds||[t.personId]).filter(Boolean).length===people.length?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.05)",
                                   border:`2px solid ${(t.personIds||[t.personId]).filter(Boolean).length===people.length?"rgba(255,255,255,0.4)":"rgba(255,255,255,0.08)"}`,
                                   borderRadius:20,padding:"0 14px",cursor:"pointer",
@@ -1257,7 +1303,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 {people.map(p=>{
                                   const pIds=t.personIds||[t.personId].filter(Boolean);
                                   const sel=pIds.length===1&&pIds.includes(p.id);
-                                  return <button key={p.id} onClick={()=>{const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{display:"flex",alignItems:"center",gap:7,height:36,boxSizing:"border-box",background:sel?p.color+"28":"rgba(255,255,255,0.05)",border:`2px solid ${sel?p.color+"90":"rgba(255,255,255,0.08)"}`,borderRadius:20,padding:"0 12px 0 6px",cursor:"pointer",position:"relative"}}>
+                                  return <button key={p.id} onClick={()=>{const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{display:"flex",alignItems:"center",gap:7,height:34,boxSizing:"border-box",background:sel?p.color+"28":"rgba(255,255,255,0.05)",border:`2px solid ${sel?p.color+"90":"rgba(255,255,255,0.08)"}`,borderRadius:20,padding:"0 12px 0 6px",cursor:"pointer",position:"relative"}}>
                                     <Avatar person={p} size={20}/>
                                     <span style={{color:sel?p.color:"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>{p.name}</span>
                                   </button>;
@@ -1266,9 +1312,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:4,startDate:todayStr,maxLen:22});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
-                                <button onClick={()=>{setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:4,startDate:todayStr,maxLen:32});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                {(!t.createdBy||t.createdBy===meId)&&<button onClick={()=>{setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
                               </div>
+                              {t.createdBy&&t.createdBy!==meId&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:"rgba(255,255,255,0.28)",fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name} — only they can delete it</div>:null;})()}
                             </div>
                           )}
                         </div>
@@ -1304,44 +1351,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"flex",flexDirection:"column",gap:7}}>
                   {zones.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"8px 0"}}>No zones yet — add one to get started</div>}
                   {zones.map(z=>(
-                    <div key={z.id}
-                      draggable
-                      onDragStart={()=>setZoneDragId(z.id)}
-                      onDragEnd={()=>{setZoneDragId(null);setZoneDragOverId(null);}}
-                      onDragOver={e=>{e.preventDefault();setZoneDragOverId(z.id);}}
-                      onDrop={()=>{if(zoneDragId)reorderZones(zoneDragId,z.id);setZoneDragId(null);setZoneDragOverId(null);}}
-                      onTouchStart={()=>setZoneDragId(z.id)}
-                      onTouchMove={e=>{
-                        if(!zoneDragId) return;
-                        e.preventDefault();
-                        const touch=e.touches[0];
-                        const el=document.elementFromPoint(touch.clientX,touch.clientY);
-                        const targetId=el?.closest("[data-zone-id]")?.dataset?.zoneId;
-                        if(targetId) setZoneDragOverId(targetId);
-                      }}
-                      onTouchEnd={e=>{
-                        if(!zoneDragId) return;
-                        const touch=e.changedTouches[0];
-                        const el=document.elementFromPoint(touch.clientX,touch.clientY);
-                        const targetId=el?.closest("[data-zone-id]")?.dataset?.zoneId;
-                        if(targetId) reorderZones(zoneDragId,targetId);
-                        setZoneDragId(null);setZoneDragOverId(null);
-                      }}
-                      data-zone-id={z.id}
-                      style={{...CARD,display:"flex",alignItems:"center",gap:8,cursor:"grab",touchAction:"none",
-                        opacity:zoneDragId===z.id?0.4:1,
-                        outline:zoneDragOverId===z.id&&zoneDragId&&zoneDragId!==z.id?"2px solid rgba(129,140,248,0.5)":"none",
-                        transition:"opacity 0.15s"}}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{flexShrink:0,opacity:0.3}}>
-                        <circle cx="9" cy="6" r="1.5" fill="white"/><circle cx="15" cy="6" r="1.5" fill="white"/>
-                        <circle cx="9" cy="12" r="1.5" fill="white"/><circle cx="15" cy="12" r="1.5" fill="white"/>
-                        <circle cx="9" cy="18" r="1.5" fill="white"/><circle cx="15" cy="18" r="1.5" fill="white"/>
-                      </svg>
-                      <div onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setZoneModal({mode:"edit",id:z.id});setEmojiPicker(false);}} style={{flex:1,display:"flex",alignItems:"center",gap:10,cursor:"pointer",minWidth:0}}>
-                        <div style={{width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{z.emoji}</div>
-                        <span style={{flex:1,color:"rgba(255,255,255,0.82)",fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
-                        <span style={{color:"rgba(255,255,255,0.2)",fontSize:17}}>›</span>
-                      </div>
+                    <div key={z.id} onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setZoneModal({mode:"edit",id:z.id});setEmojiPicker(false);}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
+                      <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{z.emoji}</div>
+                      <span style={{flex:1,color:"rgba(255,255,255,0.82)",fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
+                      <span style={{color:"rgba(255,255,255,0.2)",fontSize:17}}>›</span>
                     </div>
                   ))}
                 </div>
@@ -1374,20 +1387,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Invite / account */}
               <div style={{marginTop:26}}>
-                {email&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:12,marginBottom:16}}>Signed in as {email}</div>}
+                {email&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:12,marginBottom:20}}>Signed in as {email}</div>}
                 <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
-                  <button onClick={()=>{navigator.clipboard?.writeText(household.invite_code);setCodeCopied(true);setTimeout(()=>setCodeCopied(false),1800);}} style={{background:"none",border:"none",padding:8,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                  <button onClick={()=>{navigator.clipboard?.writeText(household.invite_code);setCodeCopied(true);setTimeout(()=>setCodeCopied(false),1800);}} style={{background:"none",border:"none",width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
                     {codeCopied?(
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     ):(
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="#818cf8" strokeWidth="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="#818cf8" strokeWidth="2" strokeLinecap="round"/></svg>
                     )}
                   </button>
                 </div>
                 <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:20}}>Share this code so your partner can join this home</div>
-                <button onClick={onSignOut} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"12px",color:"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer",width:"100%",marginBottom:14}}>Sign out</button>
+                <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>Sign out</button>
                 <button onClick={async()=>{
                   if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
                   const personDeleted=await deletePersonRemote(meId);
@@ -1565,7 +1578,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       return(
                         <div key={p.id} style={{marginBottom:20}}>
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                            <Avatar person={p} size={22}/>
+                            <Avatar person={p} size={20}/>
                             <span style={{color:"rgba(255,255,255,0.7)",fontSize:13,fontWeight:600}}>{p.name}</span>
                           </div>
                           {achs.length===0
@@ -1678,13 +1691,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 </div>
               </div>
-              <button onClick={()=>{ if(personModal.mode==="new"){ setPForm(f=>({...f,_tempMe:!f._tempMe})); } else setMeId(meId===personModal.id?"":personModal.id); }} style={{display:"flex",alignItems:"center",gap:11,background:((personModal.mode==="edit"&&meId===personModal.id)||pForm._tempMe)?"rgba(99,102,241,0.12)":"rgba(255,255,255,0.04)",border:`1.5px solid ${((personModal.mode==="edit"&&meId===personModal.id)||pForm._tempMe)?"rgba(129,140,248,0.45)":"rgba(255,255,255,0.08)"}`,borderRadius:14,padding:"11px 14px",cursor:"pointer"}}>
-                <span style={{fontSize:18,width:18,textAlign:"center",display:"inline-block",flexShrink:0,color:((personModal.mode==="edit"&&meId===personModal.id)||pForm._tempMe)?"#818cf8":"rgba(255,255,255,0.2)"}}>{((personModal.mode==="edit"&&meId===personModal.id)||pForm._tempMe)?"✓":"○"}</span>
-                <div style={{flex:1,textAlign:"left"}}>
-                  <div style={{color:((personModal.mode==="edit"&&meId===personModal.id)||pForm._tempMe)?"#818cf8":"rgba(255,255,255,0.55)",fontSize:13,fontWeight:600}}>This is me</div>
-                  <div style={{color:"rgba(255,255,255,0.38)",fontSize:11,marginTop:1}}>"Mine" filter shows only my tasks</div>
-                </div>
-              </button>
               <button onClick={savePerson} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>{personModal.mode==="new"?"Add":"Save"}</button>
               {personModal.mode==="edit"&&<button onClick={()=>{deletePerson(personModal.id);setPersonModal(null);}} style={{...G(0.06,20),border:"1px solid rgba(248,113,113,0.2)",borderRadius:15,padding:"12px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Remove Person</button>}
             </div>
@@ -1858,11 +1864,15 @@ function HouseholdGate({session,onReady}){
     if(!name.trim()){setError("Enter your name");return;}
     if(!inviteCode.trim()){setError("Enter the invite code");return;}
     setBusy(true); setError("");
-    const personId=String(Date.now());
+    const personId=(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());
     const {data:household,error:hErr}=await supabase.rpc("join_household_by_code",{
       p_code:inviteCode.trim().toLowerCase(),p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
     }).single();
     if(hErr){setBusy(false);setError(hErr.message.includes("not found")?"Invite code not found":hErr.message);return;}
+    supabase.from("notifications").insert({
+      household_id:household.id,actor_person_id:personId,icon:"👋",
+      title:`${name.trim()} joined the home!`,body:"Say hi and split up the chores 🎉",
+    }).then(({error})=>{ if(error) console.error("insert join notification",error); });
     onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
   };
 
