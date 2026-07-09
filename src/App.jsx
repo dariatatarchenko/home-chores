@@ -435,17 +435,22 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [assigneeError,setAssigneeError]= useState(false);
   const [assigneePopover,setAssigneePopover]= useState(null);
 
-  const blankForm = {zone:"kitchen",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32};
+  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32};
   const [form,setForm]= useState(blankForm);
 
   const prevPct = useRef(0);
   const stripRef = useRef(null);
+  const taskListRef = useRef(null);
   const cardRefs = useRef({});
   const prevRects = useRef({});
   const taskNameRef = useRef(null);
   const assigneeRef = useRef(null);
 
   // Celebration is now triggered directly inside toggleDone (only on the actual completing action)
+
+  useEffect(()=>{
+    if(taskListRef.current) taskListRef.current.scrollTop=0;
+  },[selDay]);
 
   // ── Scroll selected day to center (only when entering the Week tab) ────────
   const prevTabRef=useRef(null);
@@ -589,6 +594,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       taskNameRef.current?.focus();
       return;
     }
+    if(!form.zone||!zones.some(z=>z.id===form.zone)){
+      window.alert("Please choose a zone for this task before saving.");
+      return;
+    }
     setSavingTask(true);
     const f=FREQ_OPTIONS.find(x=>x.id===form.freq);
     let days=f?.days;
@@ -721,7 +730,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const dayAllTasks=dayTasks(selDay);
   const dayAllDone=dayAllTasks.filter(t=>isDone(t,selDay)).length;
   const pct=dayAllTasks.length===0?100:Math.round(dayAllDone/dayAllTasks.length*100);
-  const groupedZones=zones.map(z=>({...z,tasks:tasks.filter(t=>t.zone===z.id)})).filter(z=>z.tasks.length>0);
+  const groupedZones=(()=>{
+    const grouped=zones.map(z=>({...z,tasks:tasks.filter(t=>t.zone===z.id)})).filter(z=>z.tasks.length>0);
+    const orphaned=tasks.filter(t=>!zones.some(z=>z.id===t.zone));
+    if(orphaned.length>0) grouped.push({id:"__orphaned__",label:"Unfiled",emoji:"❓",tasks:orphaned});
+    return grouped;
+  })();
 
   const myStreak=(()=>{
     let streak=0;
@@ -947,7 +961,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Task cards */}
-              <div style={{flex:1,overflowY:"auto",padding:"0 20px",display:"flex",flexDirection:"column",gap:9,paddingBottom:20}}>
+              <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 20px",display:"flex",flexDirection:"column",gap:9,paddingBottom:20}}>
                 {selTasks.length===0?(
                   <div style={{textAlign:"center",padding:"40px 0"}}>
                     <div style={{fontSize:44}}>✨</div>
@@ -1289,7 +1303,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     {zone.tasks.map(t=>{
                       const pIds=(t.personIds||[t.personId]).filter(Boolean),open=expandId===t.id,streak=computeStreak(t);
                       return (
-                        <div key={t.id} style={{...CARD,cursor:"pointer",overflow:"hidden"}} onClick={()=>setExpandId(open?null:t.id)}>
+                        <div key={t.id} style={{...CARD,cursor:"pointer",overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"center"}} onClick={()=>setExpandId(open?null:t.id)}>
                           <div style={{display:"flex",alignItems:"center",gap:10}}>
                             {pIds.length===1?(
                               <Avatar person={getPerson(pIds[0])} size={32}/>
@@ -1342,8 +1356,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                                 {(!t.createdBy||t.createdBy===meId)&&<button onClick={()=>{setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32});setExpandId(null);setTab("add");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"9px",color:"rgba(255,255,255,0.55)",fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:"rgba(255,255,255,0.28)",fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name} — only they can delete it</div>:null;})()}
                             </div>
@@ -1383,7 +1397,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {zones.map(z=>{
                     const open=zoneExpandId===z.id;
                     return (
-                    <div key={z.id} style={{...CARD,overflow:"hidden"}}>
+                    <div key={z.id} style={{...CARD,overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"center"}}>
                       <div onClick={()=>{
                         if(open){ setZoneExpandId(null); return; }
                         setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
@@ -1400,19 +1414,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"12px 14px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":"2px solid transparent"}}/>
                             </div>
                           </div>
-                          {emojiPicker&&(
-                            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
-                              <div onClick={e=>e.stopPropagation()} style={{width:320,background:"#26262c",borderRadius:20,padding:18,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
-                                <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-                                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                                  {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
-                                </div>
-                              </div>
-                            </div>
-                          )}
                           <div style={{display:"flex",gap:8}}>
-                            <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
                             <button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"11px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                            <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
                           </div>
                         </div>
                       )}
@@ -1420,6 +1424,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     );
                   })}
                 </div>
+                {emojiPicker&&zoneExpandId&&(
+                  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+                    <div onClick={e=>e.stopPropagation()} style={{width:320,background:"#26262c",borderRadius:20,padding:18,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.12)"}}>
+                      <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?"rgba(255,255,255,0.2)":"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>{e}</button>)}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               {/* People */}
               <div>
@@ -1549,7 +1563,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
                             <Avatar person={p} size={32}/>
                             <div style={{flex:1}}>
-                              <div style={{color:"rgba(255,255,255,0.88)",fontSize:14,fontWeight:600}}>{p.name}</div>
+                              <div style={{color:"rgba(255,255,255,0.88)",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
+                                {p.name}
+                                {meId===p.id&&<span style={{fontSize:11,color:"#818cf8",background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
+                              </div>
                               <div style={{color:rank.color,fontSize:11}}>{rank.label} · {computePts(tasks,p.id)} pts</div>
                             </div>
                             <div style={{textAlign:"right"}}>
@@ -1574,7 +1591,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       return(
                         <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"4px 0"}}>
                           <span style={{fontSize:22,width:26,textAlign:"center"}}>{["🥇","🥈","🥉"][i]||"·"}</span>
-                          <Avatar person={p} size={36}/>
+                          <Avatar person={p} size={32}/>
                           <div style={{flex:1}}>
                             <div style={{color:"rgba(255,255,255,0.88)",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
                               {p.name}
@@ -1599,8 +1616,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <div key={p.id} style={{marginBottom:pi<people.length-1?24:0}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                             <div style={{display:"flex",alignItems:"center",gap:8}}>
-                              <Avatar person={p} size={26}/>
+                              <Avatar person={p} size={32}/>
                               <span style={{color:"rgba(255,255,255,0.85)",fontSize:14,fontWeight:600}}>{p.name}</span>
+                              {meId===p.id&&<span style={{fontSize:11,color:"#818cf8",background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
                             </div>
                             <span style={{color:pStreak>0?"#fbbf24":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:700}}>
                               {pStreak>0?`🔥 ${pStreak} days`:"No streak yet"}
@@ -1640,8 +1658,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       return(
                         <div key={p.id} style={{marginBottom:20}}>
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                            <Avatar person={p} size={20}/>
+                            <Avatar person={p} size={32}/>
                             <span style={{color:"rgba(255,255,255,0.7)",fontSize:13,fontWeight:600}}>{p.name}</span>
+                            {meId===p.id&&<span style={{fontSize:11,color:"#818cf8",background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
                           </div>
                           {achs.length===0
                             ?<div style={{color:"rgba(255,255,255,0.3)",fontSize:12}}>Complete 10 tasks in any zone to unlock Bronze</div>
