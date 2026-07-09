@@ -1303,8 +1303,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     {zone.tasks.map(t=>{
                       const pIds=(t.personIds||[t.personId]).filter(Boolean),open=expandId===t.id,streak=computeStreak(t);
                       return (
-                        <div key={t.id} style={{...CARD,cursor:"pointer",overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"flex-start"}} onClick={()=>setExpandId(open?null:t.id)}>
-                          <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div key={t.id} style={{...CARD,cursor:"pointer",overflow:"hidden",boxSizing:"border-box"}} onClick={()=>setExpandId(open?null:t.id)}>
+                          <div style={{display:"flex",alignItems:"center",gap:10,minHeight:44}}>
                             {pIds.length===1?(
                               <Avatar person={getPerson(pIds[0])} size={32}/>
                             ):(
@@ -1397,11 +1397,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {zones.map(z=>{
                     const open=zoneExpandId===z.id;
                     return (
-                    <div key={z.id} style={{...CARD,overflow:"hidden",minHeight:70,boxSizing:"border-box",display:"flex",flexDirection:"column",justifyContent:"flex-start"}}>
+                    <div key={z.id} style={{...CARD,overflow:"hidden",boxSizing:"border-box"}}>
                       <div onClick={()=>{
                         if(open){ setZoneExpandId(null); return; }
                         setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
-                      }} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
+                      }} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",minHeight:44}}>
                         <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0}}>{z.emoji}</div>
                         <span style={{flex:1,color:"rgba(255,255,255,0.82)",fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{z.label}</span>
                         <span style={{color:"rgba(255,255,255,0.2)",fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
