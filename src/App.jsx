@@ -220,22 +220,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [dataLoading,setDataLoading]=useState(true);
   const [codeCopied,setCodeCopied]=useState(false);
   const [zoneExpandId,setZoneExpandId]=useState(null);
-  const [tab,     setTab]     = useState(()=>{
-    try{
-      const saved=localStorage.getItem("hometasks_tab");
-      return (saved&&saved!=="add")?saved:"week";
-    }catch{ return "week"; }
-  });
+  const [tab,     setTab]     = useState("week");
   const [returnTab,setReturnTab]= useState("week");
   const [selDay,  setSelDay]  = useState(todayStr);
   const [meId,    setMeId]    = useState(initialMe.id);
   const meIdRef=useRef(meId);
   useEffect(()=>{ meIdRef.current=meId; },[meId]);
-
-  useEffect(()=>{
-    if(tab==="add") return; // transient screen — never resume directly into it after a reload
-    try{ localStorage.setItem("hometasks_tab",tab); }catch{}
-  },[tab]);
 
   // ── Load data from Supabase + realtime sync ──────────────────────────────
   const rowToPerson=r=>({id:r.id,name:r.name,color:r.color,avatarEmoji:r.avatar_emoji||""});
@@ -961,7 +951,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Task cards */}
-              <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 20px",display:"flex",flexDirection:"column",gap:9,paddingBottom:20}}>
+              <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 20px",display:"flex",flexDirection:"column",gap:8,paddingBottom:20}}>
                 {selTasks.length===0?(
                   <div style={{textAlign:"center",padding:"40px 0"}}>
                     <div style={{fontSize:44}}>✨</div>
@@ -1297,8 +1287,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{color:"rgba(255,255,255,0.38)",marginTop:10,fontSize:14}}>No tasks yet — tap + Add to create one</div>
                 </div>
               ):groupedZones.map(zone=>(
-                <div key={zone.id} style={{marginBottom:22}}>
-                  <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:9}}>{zone.emoji} {zone.label}</div>
+                <div key={zone.id} style={{marginBottom:24}}>
+                  <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:12}}>{zone.emoji} {zone.label}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {zone.tasks.map(t=>{
                       const pIds=(t.personIds||[t.personId]).filter(Boolean),open=expandId===t.id,streak=computeStreak(t);
@@ -1387,12 +1377,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
               )}
               {/* Zones */}
-              <div style={{marginBottom:26}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div style={{marginBottom:24}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700}}>Zones</span>
                   <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setZoneModal({mode:"new"});setEmojiPicker(false);}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:500,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {zones.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"8px 0"}}>No zones yet — add one to get started</div>}
                   {zones.map(z=>{
                     const open=zoneExpandId===z.id;
@@ -1437,11 +1427,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               {/* People */}
               <div>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700}}>People</span>
                   <button onClick={()=>{setPersonNameError(false);setPForm({name:"",color:PALETTE[0],avatarEmoji:""});setAvatarPicker(false);setPersonModal({mode:"new"});}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:500,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {people.map(p=>{
                     const count=tasks.filter(t=>t.personId===p.id).length;
                     return (
@@ -1462,9 +1452,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Invite / account */}
-              <div style={{marginTop:26}}>
+              <div style={{marginTop:24}}>
                 {email&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:12,marginBottom:20}}>Signed in as {email}</div>}
-                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:10}}>Invite code</div>
+                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:12}}>Invite code</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
                   <button onClick={()=>{navigator.clipboard?.writeText(household.invite_code);setCodeCopied(true);setTimeout(()=>setCodeCopied(false),1800);}} style={{background:"none",border:"none",width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
@@ -1540,7 +1530,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 const mvp=getWeeklyMVP(tasks,people,weekDates);
                 const dreamTeam=getDreamTeam(tasks,people,weekDates);
                 const DIV=<div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"24px 0"}}/>;
-                const SL=t=><div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:14,marginTop:8}}>{t}</div>;
+                const SL=t=><div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:12}}>{t}</div>;
                 return(<>
 
                   {/* Weekly summary */}
