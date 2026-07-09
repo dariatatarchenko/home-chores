@@ -95,12 +95,12 @@ const STRINGS = {
 const THEME_COLORS = {
   dark: {
     bg:"linear-gradient(160deg,#1a1035,#0d1f3c,#0a2a1f)",
-    cardBg:C(0.08),
-    textPrimary:C(0.9),
-    textSecondary:C(0.55),
-    textTertiary:C(0.32),
-    border:C(0.1),
-    inputBg:C(0.9),
+    cardBg:"rgba(255,255,255,0.08)",
+    textPrimary:"rgba(255,255,255,0.9)",
+    textSecondary:"rgba(255,255,255,0.55)",
+    textTertiary:"rgba(255,255,255,0.32)",
+    border:"rgba(255,255,255,0.1)",
+    inputBg:"rgba(255,255,255,0.9)",
     inputText:"#111",
   },
   light: {
@@ -110,7 +110,7 @@ const THEME_COLORS = {
     textSecondary:"rgba(20,20,30,0.6)",
     textTertiary:"rgba(20,20,30,0.4)",
     border:"rgba(0,0,0,0.1)",
-    inputBg:C(1),
+    inputBg:"rgba(255,255,255,1)",
     inputText:"#111",
   },
 };
@@ -1934,14 +1934,14 @@ function LoginScreen(){
       <div style={{width:"100%",maxWidth:480,display:"flex",flexDirection:"column",justifyContent:"center",padding:"32px 28px",background:CARD_BG}}>
         <div style={{fontSize:40,marginBottom:16,textAlign:"center"}}>🏠</div>
         <div style={{color:"#fff",fontSize:24,fontWeight:700,textAlign:"center",marginBottom:8}}>Home Tasks</div>
-        <div style={{color:C(0.4),fontSize:14,textAlign:"center",marginBottom:32}}>Shared chores for your household</div>
+        <div style={{color:"rgba(255,255,255,0.4)",fontSize:14,textAlign:"center",marginBottom:32}}>Shared chores for your household</div>
 
         {sent?(
           <>
             <div style={{textAlign:"center",marginBottom:20}}>
               <div style={{fontSize:32,marginBottom:12}}>📬</div>
-              <div style={{color:C(0.85),fontSize:15,marginBottom:8}}>Check your email</div>
-              <div style={{color:C(0.4),fontSize:13}}>We sent a code to {email}</div>
+              <div style={{color:"rgba(255,255,255,0.85)",fontSize:15,marginBottom:8}}>Check your email</div>
+              <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a code to {email}</div>
             </div>
             <input
               type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={10}
@@ -1956,7 +1956,7 @@ function LoginScreen(){
             <button onClick={verifyCode} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
               {loading?"Checking…":"Confirm code"}
             </button>
-            <button onClick={()=>{setSent(false);setCode("");setError("");}} style={{background:"none",border:"none",color:C(0.35),fontSize:13,cursor:"pointer",padding:"12px",width:"100%"}}>Use a different email</button>
+            <button onClick={()=>{setSent(false);setCode("");setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"12px",width:"100%"}}>Use a different email</button>
           </>
         ):(
           <>
@@ -2032,7 +2032,7 @@ function HouseholdGate({session,onReady}){
   };
 
   if(checking){
-    return <div style={SHELL_STYLE}><div style={{margin:"auto",color:C(0.4)}}>Loading…</div></div>;
+    return <div style={SHELL_STYLE}><div style={{margin:"auto",color:"rgba(255,255,255,0.4)"}}>Loading…</div></div>;
   }
 
   if(!mode){
@@ -2042,7 +2042,7 @@ function HouseholdGate({session,onReady}){
           <div style={{fontSize:40,marginBottom:8,textAlign:"center"}}>🏠</div>
           <div style={{color:"#fff",fontSize:22,fontWeight:700,textAlign:"center",marginBottom:20}}>Set up your home</div>
           <button onClick={()=>setMode("create")} style={AUTH_BTN}>Create a new home</button>
-          <button onClick={()=>setMode("join")} style={{...AUTH_BTN,background:C(0.08),boxShadow:"none",border:`1px solid ${C(0.15)}`}}>Join with invite code</button>
+          <button onClick={()=>setMode("join")} style={{...AUTH_BTN,background:"rgba(255,255,255,0.08)",boxShadow:"none",border:`1px solid rgba(255,255,255,0.15)`}}>Join with invite code</button>
         </div>
       </div>
     );
@@ -2051,19 +2051,19 @@ function HouseholdGate({session,onReady}){
   return (
     <div style={SHELL_STYLE}>
       <div style={{width:"100%",maxWidth:480,display:"flex",flexDirection:"column",justifyContent:"center",padding:"32px 28px",background:CARD_BG,gap:12,overflowY:"auto"}}>
-        <button onClick={()=>{setMode(null);setError("");}} style={{background:"none",border:"none",color:C(0.4),fontSize:14,cursor:"pointer",textAlign:"left",padding:0,marginBottom:8}}>‹ Back</button>
+        <button onClick={()=>{setMode(null);setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",fontSize:14,cursor:"pointer",textAlign:"left",padding:0,marginBottom:8}}>‹ Back</button>
         <div style={{color:"#fff",fontSize:20,fontWeight:700,marginBottom:8}}>{mode==="create"?"Create your home":"Join a home"}</div>
 
         {mode==="join"&&(
           <>
-            <span style={{color:C(0.4),fontSize:12,fontWeight:600}}>Invite code</span>
+            <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>Invite code</span>
             <input placeholder="e.g. a1b2c3" value={inviteCode} onChange={e=>setInviteCode(e.target.value)} style={AUTH_INPUT}/>
           </>
         )}
-        <span style={{color:C(0.4),fontSize:12,fontWeight:600}}>Your name</span>
+        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>Your name</span>
         <input placeholder="e.g. Anya" value={name} onChange={e=>setName(e.target.value)} style={AUTH_INPUT}/>
 
-        <span style={{color:C(0.4),fontSize:12,fontWeight:600}}>Your color</span>
+        <span style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>Your color</span>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           {PALETTE.map(c=>(
             <button key={c} onClick={()=>setColor(c)} style={{width:32,height:32,borderRadius:"50%",background:c,border:color===c?"3px solid #fff":"3px solid transparent",cursor:"pointer"}}/>
@@ -2115,7 +2115,7 @@ export default function Root(){
   },[]);
 
   if(authLoading){
-    return <div style={{height:"var(--app-height,100dvh)",...SHELL_STYLE}}><div style={{margin:"auto",color:C(0.4)}}>Loading…</div></div>;
+    return <div style={{height:"var(--app-height,100dvh)",...SHELL_STYLE}}><div style={{margin:"auto",color:"rgba(255,255,255,0.4)"}}>Loading…</div></div>;
   }
   if(!session){
     return <div style={{height:"var(--app-height,100dvh)"}}><LoginScreen/></div>;
