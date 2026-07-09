@@ -65,6 +65,62 @@ const FREQ_OPTIONS = [
   {id:"custom",  label:"Custom...",    days:null},
 ];
 const FREQ_COLOR = {once:"#94a3b8",daily:"#34d399",every2:"#a3e635",every3:"#facc15",weekly:"#fb923c",monthly:"#f87171",custom:"#38bdf8"};
+
+const STRINGS = {
+  en: {
+    tab_week:"Week", tab_calendar:"Calendar", tab_tasks:"Tasks", tab_settings:"Settings",
+    header_hometasks:"Home Tasks", header_calendar:"Calendar", header_alltasks:"All Tasks", header_settings:"Settings",
+    today:"Today", no_tasks_day:"No tasks for this day", all_done:"All done!", mine:"Mine",
+    add_task:"Add Task", edit_task:"Edit Task", new_task:"New Task", save:"Save", save_changes:"Save Changes",
+    cancel:"Cancel", delete:"Delete", assigned_to:"Assigned to", all:"All", zone:"Zone",
+    frequency:"Frequency", start_date:"Start date", what_to_do:"What to do",
+    zones:"Zones", people:"People", invite_code:"Invite code",
+    share_code:"Share this code so your partner can join this home",
+    sign_out:"Sign out", delete_account:"Delete account", signed_in_as:"Signed in as",
+    stats:"Stats", this_week:"This week", all_time:"All time", streaks:"Streaks",
+    zone_achievements:"Zone achievements", no_tasks_yet:"No tasks yet — tap + Add to create one",
+    no_zones_yet:"No zones yet — add one to get started", language:"Language", theme:"Theme",
+    dark:"Dark", light:"Light",
+  },
+  ru: {
+    tab_week:"Неделя", tab_calendar:"Календарь", tab_tasks:"Задачи", tab_settings:"Настройки",
+    header_hometasks:"Мои задачи", header_calendar:"Календарь", header_alltasks:"Все задачи", header_settings:"Настройки",
+    today:"Сегодня", no_tasks_day:"На этот день задач нет", all_done:"Всё готово!", mine:"Мои",
+    add_task:"Добавить задачу", edit_task:"Изменить задачу", new_task:"Новая задача", save:"Сохранить", save_changes:"Сохранить изменения",
+    cancel:"Отмена", delete:"Удалить", assigned_to:"Исполнитель", all:"Все", zone:"Зона",
+    frequency:"Частота", start_date:"Дата начала", what_to_do:"Что нужно сделать",
+    zones:"Зоны", people:"Люди", invite_code:"Код приглашения",
+    share_code:"Поделись этим кодом, чтобы партнёр смог присоединиться к этому дому",
+    sign_out:"Выйти", delete_account:"Удалить аккаунт", signed_in_as:"Вход выполнен как",
+    stats:"Статистика", this_week:"На этой неделе", all_time:"За всё время", streaks:"Стрики",
+    zone_achievements:"Достижения по зонам", no_tasks_yet:"Задач пока нет — нажми + Добавить",
+    no_zones_yet:"Зон пока нет — добавь первую", language:"Язык", theme:"Тема",
+    dark:"Тёмная", light:"Светлая",
+  },
+};
+
+const THEME_COLORS = {
+  dark: {
+    bg:"linear-gradient(160deg,#1a1035,#0d1f3c,#0a2a1f)",
+    cardBg:"rgba(255,255,255,0.08)",
+    textPrimary:"rgba(255,255,255,0.9)",
+    textSecondary:"rgba(255,255,255,0.55)",
+    textTertiary:"rgba(255,255,255,0.32)",
+    border:"rgba(255,255,255,0.1)",
+    inputBg:"rgba(255,255,255,0.9)",
+    inputText:"#111",
+  },
+  light: {
+    bg:"linear-gradient(160deg,#f5f3ff,#eef2ff,#ecfdf5)",
+    cardBg:"rgba(0,0,0,0.05)",
+    textPrimary:"rgba(20,20,30,0.9)",
+    textSecondary:"rgba(20,20,30,0.6)",
+    textTertiary:"rgba(20,20,30,0.4)",
+    border:"rgba(0,0,0,0.1)",
+    inputBg:"rgba(255,255,255,1)",
+    inputText:"#111",
+  },
+};
 // Color scaled by actual day-interval (more frequent = green, rarer = red), so a
 // custom interval lines up logically with the fixed presets instead of using an
 // arbitrary fixed color regardless of how many days it actually spans.
@@ -218,6 +274,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [people,  setPeople]  = useState([]);
   const [zones,   setZones]   = useState([]);
   const [dataLoading,setDataLoading]=useState(true);
+  const [lang,setLang]=useState(()=>{ try{ return localStorage.getItem("hometasks_lang")||"en"; }catch{ return "en"; } });
+  const setLangPersisted=l=>{ setLang(l); try{ localStorage.setItem("hometasks_lang",l); }catch{} };
+  const [theme,setTheme]=useState(()=>{ try{ return localStorage.getItem("hometasks_theme")||"dark"; }catch{ return "dark"; } });
+  const setThemePersisted=th=>{ setTheme(th); try{ localStorage.setItem("hometasks_theme",th); }catch{} };
+  const t=key=>STRINGS[lang]?.[key]||STRINGS.en[key]||key;
+  const tc=THEME_COLORS[theme];
   const [codeCopied,setCodeCopied]=useState(false);
   const [zoneExpandId,setZoneExpandId]=useState(null);
   const [tab,     setTab]     = useState("week");
@@ -766,11 +828,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const labelSt={color:"rgba(255,255,255,0.6)",fontSize:13,fontWeight:600,marginBottom:8,display:"block"};
 
   const TABS=[
-    {id:"week",     emoji:"📅",label:"Week"},
-    {id:"calendar", emoji:"📆",label:"Calendar"},
+    {id:"week",     emoji:"📅",label:t("tab_week")},
+    {id:"calendar", emoji:"📆",label:t("tab_calendar")},
     {id:"add",      emoji:"＋",label:"",accent:true},
-    {id:"tasks",    emoji:"📋",label:"Tasks"},
-    {id:"settings", emoji:"⚙️",label:"Settings"},
+    {id:"tasks",    emoji:"📋",label:t("tab_tasks")},
+    {id:"settings", emoji:"⚙️",label:t("tab_settings")},
   ];
 
   if(dataLoading){
@@ -801,7 +863,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       `}</style>
 
       {/* Phone shell */}
-      <div style={{width:"100%",maxWidth:480,overflow:"hidden",display:"flex",flexDirection:"column",height:"100%",position:"relative",background:BG}}>
+      <div style={{width:"100%",maxWidth:480,overflow:"hidden",display:"flex",flexDirection:"column",height:"100%",position:"relative",background:tc.bg}}>
 
         {/* Glows */}
         <div style={{position:"absolute",top:-80,left:-60,width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,#6366f144,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
@@ -850,7 +912,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Header */}
               <div style={{flexShrink:0,padding:"18px 20px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
-                  <div style={{color:"rgba(255,255,255,0.88)",fontSize:22,fontWeight:650,letterSpacing:-0.4}}>Home Tasks</div>
+                  <div style={{color:"rgba(255,255,255,0.88)",fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{t("header_hometasks")}</div>
                   {myStreak>0&&<div style={{color:"#fbbf24",fontSize:12,marginTop:2}}>🔥 {myStreak}-day streak!</div>}
                   {myStreak===0&&<div style={{color:"rgba(255,255,255,0.2)",fontSize:12,marginTop:2}}>Start your streak today!</div>}
                 </div>
@@ -858,7 +920,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {people.length>1&&(
                   <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:myFilter?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.1)",border:`1px solid ${myFilter?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:17,padding:"0 14px 0 6px",cursor:"pointer",transition:"all 0.2s"}}>
                     <Avatar person={me} size={24}/>
-                    <span style={{color:myFilter?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>Mine</span>
+                    <span style={{color:myFilter?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.45)",fontSize:12,fontWeight:500}}>{t("mine")}</span>
                   </button>
                   )}
                   {people.length>1&&(
@@ -1139,7 +1201,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             return (
               <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
                 <div style={{flexShrink:0,padding:"16px 20px 8px"}}>
-                <div style={{color:"rgba(255,255,255,0.9)",fontSize:22,fontWeight:650,letterSpacing:-0.4,marginBottom:16}}>Calendar</div>
+                <div style={{color:"rgba(255,255,255,0.9)",fontSize:22,fontWeight:650,letterSpacing:-0.4,marginBottom:16}}>{t("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,width:36,height:36,cursor:"pointer",color:"rgba(255,255,255,0.6)",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
                   <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700}}>{mName}</div>
@@ -1285,7 +1347,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 20px 8px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                <div style={{color:"rgba(255,255,255,0.88)",fontSize:22,fontWeight:650,letterSpacing:-0.4}}>All Tasks</div>
+                <div style={{color:"rgba(255,255,255,0.88)",fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{t("header_alltasks")}</div>
                 <div style={{display:"flex",gap:12,alignItems:"center"}}>
                   <button onClick={()=>setShowStats(true)} style={{background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:12,padding:"8px 14px",color:"#fbbf24",fontSize:13,fontWeight:500,cursor:"pointer"}}>🏆 Stats</button>
                   <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setTab("add");}} style={{background:"none",border:"none",color:"#818cf8",fontSize:14,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
@@ -1296,7 +1358,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {groupedZones.length===0?(
                 <div style={{textAlign:"center",padding:"60px 0"}}>
                   <div style={{fontSize:44}}>📋</div>
-                  <div style={{color:"rgba(255,255,255,0.38)",marginTop:10,fontSize:14}}>No tasks yet — tap + Add to create one</div>
+                  <div style={{color:"rgba(255,255,255,0.38)",marginTop:10,fontSize:14}}>{t("no_tasks_yet")}</div>
                 </div>
               ):groupedZones.map(zone=>(
                 <div key={zone.id} style={{marginBottom:24}}>
@@ -1377,7 +1439,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ SETTINGS ══════════════════════════════════════════ */}
           {tab==="settings"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"16px 20px 8px",color:"rgba(255,255,255,0.88)",fontSize:22,fontWeight:650,letterSpacing:-0.4}}>Settings</div>
+              <div style={{flexShrink:0,padding:"16px 20px 8px",color:"rgba(255,255,255,0.88)",fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{t("header_settings")}</div>
               <div style={{flex:1,overflowY:"auto",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
               {myStreak>0&&(
                 <div style={{marginBottom:22,display:"flex",alignItems:"center",gap:12}}>
@@ -1391,11 +1453,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Zones */}
               <div style={{marginBottom:24}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <span style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700}}>Zones</span>
+                  <span style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700}}>{t("zones")}</span>
                   <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setZoneModal({mode:"new"});setEmojiPicker(false);}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:500,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {zones.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"8px 0"}}>No zones yet — add one to get started</div>}
+                  {zones.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"8px 0"}}>{t("no_zones_yet")}</div>}
                   {zones.map(z=>{
                     const open=zoneExpandId===z.id;
                     return (
@@ -1440,7 +1502,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* People */}
               <div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <span style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700}}>People</span>
+                  <span style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700}}>{t("people")}</span>
                   <button onClick={()=>{setPersonNameError(false);setPForm({name:"",color:PALETTE[0],avatarEmoji:""});setAvatarPicker(false);setPersonModal({mode:"new"});}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:500,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1463,10 +1525,24 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
               </div>
 
+              {/* Preferences */}
+              <div style={{marginBottom:24}}>
+                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:12}}>{t("language")}</div>
+                <div style={{display:"flex",gap:8,marginBottom:24}}>
+                  <button onClick={()=>setLangPersisted("en")} style={{flex:1,height:38,boxSizing:"border-box",background:lang==="en"?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.06)",border:`1px solid ${lang==="en"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:12,color:lang==="en"?"#fff":"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer"}}>English</button>
+                  <button onClick={()=>setLangPersisted("ru")} style={{flex:1,height:38,boxSizing:"border-box",background:lang==="ru"?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.06)",border:`1px solid ${lang==="ru"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:12,color:lang==="ru"?"#fff":"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer"}}>Русский</button>
+                </div>
+                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:12}}>{t("theme")}</div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setThemePersisted("dark")} style={{flex:1,height:38,boxSizing:"border-box",background:theme==="dark"?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.06)",border:`1px solid ${theme==="dark"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:12,color:theme==="dark"?"#fff":"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer"}}>🌙 {t("dark")}</button>
+                  <button onClick={()=>setThemePersisted("light")} style={{flex:1,height:38,boxSizing:"border-box",background:theme==="light"?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.06)",border:`1px solid ${theme==="light"?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.1)"}`,borderRadius:12,color:theme==="light"?"#fff":"rgba(255,255,255,0.5)",fontSize:13,fontWeight:600,cursor:"pointer"}}>☀️ {t("light")}</button>
+                </div>
+              </div>
+
               {/* Invite / account */}
               <div style={{marginTop:24}}>
-                {email&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:12,marginBottom:20}}>Signed in as {email}</div>}
-                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:12}}>Invite code</div>
+                {email&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:12,marginBottom:20}}>{t("signed_in_as")} {email}</div>}
+                <div style={{color:"rgba(255,255,255,0.85)",fontSize:16,fontWeight:700,marginBottom:12}}>{t("invite_code")}</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <span style={{color:"rgba(255,255,255,0.85)",fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
                   <button onClick={()=>{navigator.clipboard?.writeText(household.invite_code);setCodeCopied(true);setTimeout(()=>setCodeCopied(false),1800);}} style={{background:"none",border:"none",width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
@@ -1477,8 +1553,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     )}
                   </button>
                 </div>
-                <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:20}}>Share this code so your partner can join this home</div>
-                <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>Sign out</button>
+                <div style={{color:"rgba(255,255,255,0.3)",fontSize:11,marginBottom:20}}>{t("share_code")}</div>
+                <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>{t("sign_out")}</button>
                 <button onClick={async()=>{
                   if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
                   const personDeleted=await deletePersonRemote(meId);
@@ -1499,7 +1575,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     window.alert("Something went wrong deleting your account fully. You've been signed out, but please try again or contact support.");
                   }
                   onSignOut();
-                }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.4)",fontSize:12,cursor:"pointer",padding:"4px 0",display:"block",width:"100%",textAlign:"center"}}>Delete account</button>
+                }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.4)",fontSize:12,cursor:"pointer",padding:"4px 0",display:"block",width:"100%",textAlign:"center"}}>{t("delete_account")}</button>
               </div>
               </div>
             </div>
