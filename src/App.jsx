@@ -1338,9 +1338,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
                 <div style={{width:"100%",maxWidth:"100%",overflow:"hidden",boxSizing:"border-box"}}>
                   <span style={labelSt}>{tr("start_date")}</span>
-                  <input type="date" value={form.startDate} min={todayStr}
-                    onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
-                    style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"inline-block"}}/>
+                  <div style={{display:"flex",justifyContent:"center"}}>
+                    <input type="date" value={form.startDate} min={todayStr}
+                      onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
+                      style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"inline-block"}}/>
+                  </div>
                 </div>
                 {people.length>1&&(
                 <div>
