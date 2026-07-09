@@ -177,6 +177,22 @@ const ds = d => (d instanceof Date ? d : new Date(d+"T00:00:00")).toISOString().
 
 const uid=()=>(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
 const initials = n => (n||"?").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+// Wraps an async operation and retries it once after a short delay if it fails
+// with a transient network error (mobile Safari's "Load failed" / fetch failures),
+// so a momentary signal blip doesn't surface as a scary error to the user.
+const isNetworkError=err=>{
+  const msg=String(err?.message||err||"");
+  return /load failed|failed to fetch|network|networkerror/i.test(msg);
+};
+const withRetry=async(fn)=>{
+  try{
+    return await fn();
+  }catch(err){
+    if(!isNetworkError(err)) throw err;
+    await new Promise(r=>setTimeout(r,900));
+    return await fn();
+  }
+};
 
 // ─── Sample data ──────────────────────────────────────────────────────────────
 const _base=new Date(TODAY); _base.setDate(TODAY.getDate()-30);
@@ -422,13 +438,18 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistTask",error); });
   };
   const insertTask=async(row)=>{
-    const {error}=await supabase.from("tasks").insert({
-      id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
-      custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
-      done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,
-    });
-    if(error) console.error("insertTask",error);
-    return error?error.message:null;
+    try{
+      const {error}=await withRetry(()=>supabase.from("tasks").insert({
+        id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
+        custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
+        done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,
+      }));
+      if(error) console.error("insertTask",error);
+      return error?error.message:null;
+    }catch(err){
+      console.error("insertTask",err);
+      return String(err?.message||err);
+    }
   };
   const deleteTaskRemote=id=>{
     supabase.from("tasks").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteTask",error); });
@@ -1287,7 +1308,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {tab==="add"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 20px 8px",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
-              <div style={{flex:1,overflowY:"auto",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
+              <div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
               <div style={{display:"flex",flexDirection:"column",gap:22}}>
                 <div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
@@ -1315,11 +1336,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   )}
                 </div>
 
-                <div>
+                <div style={{width:"100%",maxWidth:"100%",overflow:"hidden",boxSizing:"border-box"}}>
                   <span style={labelSt}>{tr("start_date")}</span>
                   <input type="date" value={form.startDate} min={todayStr}
                     onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
-                    style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light"}}/>
+                    style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"inline-block"}}/>
                 </div>
                 {people.length>1&&(
                 <div>
@@ -1931,13 +1952,13 @@ function LoginScreen(){
     if(!email.trim()||!email.includes("@")){setError("Enter a valid email");return;}
     setError(""); setLoading(true);
     try{
-      const {error}=await supabase.auth.signInWithOtp({ email:email.trim() });
+      const {error}=await withRetry(()=>supabase.auth.signInWithOtp({ email:email.trim() }));
       setLoading(false);
       if(error){setError(`${error.status||""} ${error.message||error.error_description||String(error)}`.trim());return;}
       setSent(true);
     }catch(err){
       setLoading(false);
-      setError("Network error: "+String(err?.message||err));
+      setError("Network error: "+String(err?.message||err)+" — please try again.");
     }
   };
 
@@ -1945,13 +1966,13 @@ function LoginScreen(){
     if(!code.trim()){setError("Enter the code from your email");return;}
     setError(""); setLoading(true);
     try{
-      const {error}=await supabase.auth.verifyOtp({ email:email.trim(), token:code.trim(), type:"email" });
+      const {error}=await withRetry(()=>supabase.auth.verifyOtp({ email:email.trim(), token:code.trim(), type:"email" }));
       setLoading(false);
       if(error){setError(`${error.status||""} ${error.message||error.error_description||String(error)}`.trim());return;}
       // on success, the auth listener in Root picks up the new session automatically
     }catch(err){
       setLoading(false);
-      setError("Network error: "+String(err?.message||err));
+      setError("Network error: "+String(err?.message||err)+" — please try again.");
     }
   };
 
@@ -2033,12 +2054,17 @@ function HouseholdGate({session,onReady}){
     if(!name.trim()){setError("Enter your name");return;}
     setBusy(true); setError("");
     const personId=String(Date.now());
-    const {data:household,error:hErr}=await supabase.rpc("create_household_with_person",{
-      p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
-    }).single();
-    if(hErr){setBusy(false);setError(hErr.message);return;}
-    // zones are now seeded atomically inside create_household_with_person itself
-    onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
+    try{
+      const {data:household,error:hErr}=await withRetry(()=>supabase.rpc("create_household_with_person",{
+        p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
+      }).single());
+      if(hErr){setBusy(false);setError(hErr.message);return;}
+      // zones are now seeded atomically inside create_household_with_person itself
+      onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
+    }catch(err){
+      setBusy(false);
+      setError("Network error: "+String(err?.message||err)+" — please try again.");
+    }
   };
 
   const joinHousehold=async()=>{
@@ -2046,15 +2072,20 @@ function HouseholdGate({session,onReady}){
     if(!inviteCode.trim()){setError("Enter the invite code");return;}
     setBusy(true); setError("");
     const personId=(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());
-    const {data:household,error:hErr}=await supabase.rpc("join_household_by_code",{
-      p_code:inviteCode.trim().toLowerCase(),p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
-    }).single();
-    if(hErr){setBusy(false);setError(hErr.message.includes("not found")?"Invite code not found":hErr.message);return;}
-    supabase.from("notifications").insert({
-      household_id:household.id,actor_person_id:personId,icon:"👋",
-      title:`${name.trim()} joined the home!`,body:"Say hi and split up the chores 🎉",
-    }).then(({error})=>{ if(error) console.error("insert join notification",error); });
-    onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
+    try{
+      const {data:household,error:hErr}=await withRetry(()=>supabase.rpc("join_household_by_code",{
+        p_code:inviteCode.trim().toLowerCase(),p_person_id:personId,p_name:name.trim(),p_color:color,p_avatar:avatarEmoji,
+      }).single());
+      if(hErr){setBusy(false);setError(hErr.message.includes("not found")?"Invite code not found":hErr.message);return;}
+      supabase.from("notifications").insert({
+        household_id:household.id,actor_person_id:personId,icon:"👋",
+        title:`${name.trim()} joined the home!`,body:"Say hi and split up the chores 🎉",
+      }).then(({error})=>{ if(error) console.error("insert join notification",error); });
+      onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
+    }catch(err){
+      setBusy(false);
+      setError("Network error: "+String(err?.message||err)+" — please try again.");
+    }
   };
 
   if(checking){
