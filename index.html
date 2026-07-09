@@ -9,8 +9,24 @@
     <title>Home Chores</title>
     <style>
       html, body, #root { height: 100%; margin: 0; background: #08080f; }
-      body { overflow: hidden; overscroll-behavior: none; }
+      html, body { position: fixed; inset: 0; width: 100%; }
+      #root { width: 100%; overflow: hidden; }
+      body { overscroll-behavior: none; }
     </style>
+    <script>
+      window.addEventListener('error', function(e) {
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;inset:0;background:#1a0000;color:#ff8888;font-family:monospace;font-size:13px;padding:16px;overflow:auto;z-index:99999;white-space:pre-wrap;';
+        div.textContent = 'ERROR: ' + e.message + '\n\nFile: ' + e.filename + '\nLine: ' + e.lineno + ':' + e.colno + '\n\n' + (e.error && e.error.stack ? e.error.stack : '');
+        document.body.appendChild(div);
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var div = document.createElement('div');
+        div.style.cssText = 'position:fixed;inset:0;background:#1a0000;color:#ff8888;font-family:monospace;font-size:13px;padding:16px;overflow:auto;z-index:99999;white-space:pre-wrap;';
+        div.textContent = 'UNHANDLED PROMISE REJECTION:\n\n' + (e.reason && e.reason.stack ? e.reason.stack : e.reason);
+        document.body.appendChild(div);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
