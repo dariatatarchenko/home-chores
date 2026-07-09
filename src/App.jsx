@@ -193,7 +193,7 @@ function Avatar({person,size=30}){
   return (
     <div style={{width:size,height:size,flexShrink:0,
       display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <span style={{fontSize:person.avatarEmoji?size*.85:size*.46,fontWeight:700,color:person.avatarEmoji?undefined:person.color,lineHeight:1}}>
+      <span style={{fontSize:size*.85,fontWeight:700,color:person.avatarEmoji?undefined:person.color,lineHeight:1}}>
         {person.avatarEmoji||initials(person.name)}
       </span>
     </div>
