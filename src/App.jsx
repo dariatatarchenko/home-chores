@@ -411,7 +411,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [celebration,setCelebration]= useState(null);
   const [showNotifs,setShowNotifs]= useState(false);
   const [notifs,setNotifs]= useState([]);
-  const [readIds,setReadIds]= useState(new Set());
+  const [readIds,setReadIds]= useState(()=>{
+    try{ return new Set(JSON.parse(localStorage.getItem("hometasks_read_notifs")||"[]")); }catch{ return new Set(); }
+  });
+  const setReadIdsPersisted=updater=>{
+    setReadIds(prev=>{
+      const next=typeof updater==="function"?updater(prev):updater;
+      try{ localStorage.setItem("hometasks_read_notifs",JSON.stringify([...next])); }catch{}
+      return next;
+    });
+  };
   const [toast,setToast]= useState(null);
   const [personModal,setPersonModal]= useState(null);
   const [pForm,setPForm]= useState({name:"",color:PALETTE[0],avatarEmoji:""});
@@ -817,7 +826,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{color:"#fff",fontSize:14,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:13}}>All caught up!</div>}
               {notifs.map(n=>(
-                <div key={n.id} style={{display:"flex",gap:10,marginBottom:12,opacity:readIds.has(n.id)?.5:1,cursor:"pointer"}} onClick={()=>{setReadIds(r=>new Set([...r,n.id]));setShowNotifs(false);}}>
+                <div key={n.id} style={{display:"flex",gap:10,marginBottom:12,opacity:readIds.has(n.id)?.5:1,cursor:"pointer"}} onClick={()=>{setReadIdsPersisted(r=>new Set([...r,n.id]));setShowNotifs(false);}}>
                   <span style={{fontSize:22}}>{n.icon}</span>
                   <div>
                     <div style={{color:"rgba(255,255,255,0.9)",fontSize:12,fontWeight:600}}>{n.from}</div>
@@ -850,7 +859,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </button>
                   )}
                   {people.length>1&&(
-                  <button onClick={()=>{setShowNotifs(v=>!v);setReadIds(r=>new Set([...r,...notifs.map(n=>n.id)]));}} style={{position:"relative",...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>
+                  <button onClick={()=>{setShowNotifs(v=>!v);setReadIdsPersisted(r=>new Set([...r,...notifs.map(n=>n.id)]));}} style={{position:"relative",...G(0.1,20),border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>
                     🔔
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
