@@ -23,16 +23,49 @@ const ZONE_ACH = [
 const getRank = pts => [...RANKS].reverse().find(r=>pts>=r.min) || RANKS[0];
 const computePts = (tasks,pid) => tasks.reduce((s,t)=>s+(t.doneOn||[]).filter(e=>e.by===pid).length,0);
 const getWeekStats = (tasks,pid,dates) => {
-  const my=tasks.filter(t=>t.personId===pid);
   let done=0,total=0;
   dates.forEach(d=>{
-    const dt=my.filter(t=>t.scheduledDates.includes(d));
+    const dt=tasks.filter(t=>t.scheduledDates.includes(d));
     total+=dt.length;
-    done+=dt.filter(t=>doneOnDate(t.doneOn,d)).length;
+    done+=dt.filter(t=>doneOnDateBy(t.doneOn,d,pid)).length;
   });
   return {done,total,pct:total===0?0:Math.round(done/total*100)};
 };
 const getZoneAch=(tasks,pid)=>ZONE_ACH.map(za=>({...za,ach:getZoneAchLevel(tasks,pid,za.zone)})).filter(z=>z.ach);
+
+// Total completions (by anyone) across the household on a given set of dates
+const totalCompletionsOn=(tasks,dates)=>{
+  const dateSet=new Set(dates);
+  return tasks.reduce((s,t)=>s+(t.doneOn||[]).filter(e=>dateSet.has(e.date)).length,0);
+};
+// Household-wide streak: consecutive days (ending yesterday or today) where
+// every task scheduled that day was completed by someone.
+const getHouseholdStreak=(tasks,ds,TODAY)=>{
+  let streak=0;
+  for(let i=0;i<=90;i++){
+    const d=new Date(TODAY); d.setDate(TODAY.getDate()-i);
+    const dStr=ds(d);
+    const dayAll=tasks.filter(t=>t.scheduledDates.includes(dStr));
+    if(dayAll.length===0) continue; // no tasks scheduled — not a break, just skip
+    if(dayAll.every(t=>doneOnDate(t.doneOn,dStr))) streak++;
+    else break;
+  }
+  return streak;
+};
+const getMostLikedTask=tasks=>{
+  let best=null,bestCount=0;
+  tasks.forEach(t=>{
+    const c=(t.likes||[]).length;
+    if(c>bestCount){ bestCount=c; best=t; }
+  });
+  return bestCount>0?{task:best,count:bestCount}:null;
+};
+const getOnTimeRate=tasks=>{
+  const withDone=tasks.filter(t=>(t.doneOn||[]).length>0||t.rescheduledFrom);
+  if(withDone.length===0) return null;
+  const rescheduled=withDone.filter(t=>t.rescheduledFrom).length;
+  return {onTimePct:Math.round((withDone.length-rescheduled)/withDone.length*100),total:withDone.length,rescheduled};
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ZONES_DEFAULT = [
@@ -619,24 +652,44 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if(!enteringWeek) return;
     if(!stripRef.current) return; // strip not mounted yet (e.g. still loading) — don't mark as "entered" yet, so the next retry can still fire
     prevTabRef.current=tab;
-    const el0=stripRef.current;
-    el0.scrollLeft=0; // reset first — avoids inheriting whatever scroll/momentum state was left over from before, which was throwing the later calculation off
-    const doCenter=()=>{
-      const el=stripRef.current;
-      if(!el) return;
+    const computeTarget=(el)=>{
       const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
       const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
-      if(selIdx<0) return;
+      if(selIdx<0) return null;
       const cellW=51;
-      el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth*0.42)+(cellW/2));
+      return Math.max(0,selIdx*cellW-(el.clientWidth*0.42)+(cellW/2));
     };
-    // re-applied at several delays so the strip's layout has fully settled
-    // after a tab switch — on iOS Safari, reading clientWidth or setting
-    // scrollLeft too early after a tab switch can be overridden by the
-    // browser still "settling" scroll/layout, causing a rightward drift.
-    requestAnimationFrame(doCenter);
-    const timers=[60,150,300].map(ms=>setTimeout(doCenter,ms));
-    return ()=>timers.forEach(clearTimeout);
+    let cancelled=false;
+    // Verify-and-retry: some browsers (notably iOS Safari right after a fresh
+    // page load/tab switch) can silently override or ignore a scrollLeft set
+    // too early, snapping it back toward 0. Rather than guessing a fixed
+    // delay, we check the actual result after each attempt and keep retrying
+    // — with increasing delays — until it sticks or we give up.
+    const delays=[0,50,120,250,450,700,1000];
+    let attempt=0;
+    const tryCenter=()=>{
+      if(cancelled) return;
+      const el=stripRef.current;
+      if(!el) return;
+      const target=computeTarget(el);
+      if(target==null) return;
+      el.scrollLeft=target;
+      attempt++;
+      if(attempt>=delays.length) return;
+      setTimeout(()=>{
+        if(cancelled) return;
+        const el2=stripRef.current;
+        if(!el2) return;
+        // if it drifted from where we last set it, keep correcting
+        if(Math.abs(el2.scrollLeft-target)>3) tryCenter();
+        else {
+          // looks stable, but do one more confirmation pass a bit later just in case
+          if(attempt<delays.length) setTimeout(tryCenter,delays[attempt]);
+        }
+      },delays[attempt]);
+    };
+    tryCenter();
+    return ()=>{ cancelled=true; };
   },[dataLoading,tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -1542,10 +1595,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <span style={{color:C(0.18),fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
                           </div>
                           {open&&(
-                            <div onClick={e=>e.stopPropagation()} style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${C(0.07)}`}}>
+                            <div onClick={e=>e.stopPropagation()} style={{marginTop:12,paddingTop:12}}>
                               {people.length>1&&(
                               <>
-                              <span style={labelSt}>{tr("assigned_to")}</span>
                               <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:10}}>
                                 <button onClick={()=>{const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{
                                   display:"flex",alignItems:"center",height:34,boxSizing:"border-box",
@@ -1664,6 +1716,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
                               onClick={e=>e.stopPropagation()}
                               placeholder="Zone name"
+                              autoFocus
                               style={{background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:14,fontWeight:500,fontFamily:"inherit",outline:"none",width:"100%",padding:"8px 10px",boxSizing:"border-box",borderRadius:10}}
                             />
                           ):(
@@ -1736,8 +1789,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Account entry point */}
-              <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",minHeight:44}}>
-                <span style={{color:C(0.82),fontSize:14,fontWeight:500}}>Account</span>
+              <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:"pointer",minHeight:44}}>
+                <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>👤</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{color:C(0.82),fontSize:14,fontWeight:500}}>Account</div>
+                  <div style={{color:C(0.4),fontSize:11,marginTop:1}}>Invite code, sign out, delete account</div>
+                </div>
                 <span style={{color:C(0.2),fontSize:17}}>›</span>
               </div>
               </>)}
@@ -1819,6 +1876,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flex:1,overflowY:"auto",padding:"16px 20px 40px"}}>
               {(()=>{
                 const weekDates=Array.from({length:7},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()-((TODAY.getDay()+6)%7)+i);return ds(d);});
+                const lastWeekDates=Array.from({length:7},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()-((TODAY.getDay()+6)%7)-7+i);return ds(d);});
                 const mvp=getWeeklyMVP(tasks,people,weekDates);
                 const dreamTeam=getDreamTeam(tasks,people,weekDates);
                 const DIV=<div style={{height:1,background:"rgba(255,255,255,0.07)",margin:"24px 0"}}/>;
@@ -1836,7 +1894,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <span style={{fontSize:20}}>🤝</span>
                       <span style={{color:"#34d399",fontSize:13,fontWeight:500}}>Dream Team — everyone contributed!</span>
                     </div>}
-                    <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Progress on tasks assigned to each person, this week</div>
+                    <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Share of this week's household tasks each person has personally completed</div>
                     {[...people].sort((a,b)=>getWeekStats(tasks,b.id,weekDates).pct-getWeekStats(tasks,a.id,weekDates).pct).map(p=>{
                       const ws=getWeekStats(tasks,p.id,weekDates);
                       const rank=getRank(computePts(tasks,p.id));
@@ -1852,7 +1910,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <div style={{color:rank.color,fontSize:11}}>{rank.label}</div>
                             </div>
                             <div style={{textAlign:"right"}}>
-                              <div style={{color:"rgba(255,255,255,0.88)",fontSize:15,fontWeight:700}}>{ws.done} <span style={{color:"rgba(255,255,255,0.4)",fontSize:11,fontWeight:500}}>of {ws.total} tasks</span></div>
+                              <div style={{color:"rgba(255,255,255,0.88)",fontSize:15,fontWeight:700}}>{ws.done} <span style={{color:"rgba(255,255,255,0.4)",fontSize:11,fontWeight:500}}>of {ws.total} household tasks</span></div>
                               <div style={{color:ws.pct>=80?"#34d399":ws.pct>=50?"#fbbf24":"#f87171",fontSize:11,fontWeight:600}}>{ws.pct}% done this week</div>
                             </div>
                           </div>
@@ -1898,7 +1956,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       const next=STREAK_MILESTONES.find(m=>pStreak<m.days);
                       return(
                         <div key={p.id} style={{marginBottom:pi<people.length-1?24:0}}>
-                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                             <div style={{display:"flex",alignItems:"center",gap:8}}>
                               <Avatar person={p} size={32}/>
                               <span style={{color:"rgba(255,255,255,0.85)",fontSize:14,fontWeight:600}}>{p.name}</span>
@@ -1909,7 +1967,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             </span>
                           </div>
                           {earned.length>0&&(
-                            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:10}}>
+                            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:6}}>
                               {earned.map(m=>(
                                 <span key={m.days} style={{
                                   display:"inline-flex",alignItems:"center",
@@ -1941,7 +1999,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       const LEVELS=[{icon:"🥉",min:10,color:"#fb923c"},{icon:"🥈",min:50,color:"#94a3b8"},{icon:"🥇",min:100,color:"#fbbf24"}];
                       return(
                         <div key={p.id} style={{marginBottom:20}}>
-                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                             <Avatar person={p} size={32}/>
                             <span style={{color:"rgba(255,255,255,0.7)",fontSize:13,fontWeight:600}}>{p.name}</span>
                             {meId===p.id&&<span style={{fontSize:11,color:"#818cf8",background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
@@ -1980,6 +2038,195 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         </div>
                       );
                     })}
+                  </div>
+
+                  {DIV}
+                  {/* Busiest zones */}
+                  <div style={{marginBottom:4}}>
+                    {SL("Busiest zones")}
+                    {(()=>{
+                      const ZONE_RING_COLORS=["#818cf8","#f472b6","#34d399","#fbbf24","#38bdf8","#fb923c","#a78bfa","#2dd4bf"];
+                      const counts=zones.map((z,i)=>({z,count:tasks.filter(t=>t.zone===z.id).length,color:ZONE_RING_COLORS[i%ZONE_RING_COLORS.length]})).filter(x=>x.count>0);
+                      const total=counts.reduce((s,x)=>s+x.count,0);
+                      if(total===0) return <div style={{color:C(0.4),fontSize:12}}>No tasks yet to break down by zone</div>;
+                      const R=54,CIRC=2*Math.PI*R;
+                      let cumOffset=0;
+                      const arcs=counts.map(x=>{
+                        const frac=x.count/total;
+                        const dash=frac*CIRC;
+                        const arc={...x,frac,dashOffset:-cumOffset};
+                        cumOffset+=dash;
+                        return arc;
+                      });
+                      return (
+                        <div style={{display:"flex",alignItems:"center",gap:20}}>
+                          <svg width="132" height="132" viewBox="0 0 132 132" style={{flexShrink:0,transform:"rotate(-90deg)"}}>
+                            <circle cx="66" cy="66" r={R} fill="none" stroke={C(0.06)} strokeWidth="16"/>
+                            {arcs.map(a=>(
+                              <circle key={a.z.id} cx="66" cy="66" r={R} fill="none" stroke={a.color} strokeWidth="16"
+                                strokeDasharray={`${a.frac*CIRC} ${CIRC}`} strokeDashoffset={a.dashOffset} strokeLinecap="butt"/>
+                            ))}
+                          </svg>
+                          <div style={{flex:1,display:"flex",flexDirection:"column",gap:8,minWidth:0}}>
+                            {arcs.sort((a,b)=>b.count-a.count).map(a=>(
+                              <div key={a.z.id} style={{display:"flex",alignItems:"center",gap:8}}>
+                                <div style={{width:10,height:10,borderRadius:"50%",background:a.color,flexShrink:0}}/>
+                                <span style={{color:C(0.7),fontSize:13,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.z.emoji} {a.z.label}</span>
+                                <span style={{color:C(0.9),fontSize:13,fontWeight:700,flexShrink:0}}>{Math.round(a.frac*100)}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {DIV}
+                  {/* Week over week */}
+                  <div style={{marginBottom:4}}>
+                    {SL("This week vs last week")}
+                    {(()=>{
+                      const thisW=totalCompletionsOn(tasks,weekDates);
+                      const lastW=totalCompletionsOn(tasks,lastWeekDates);
+                      const diff=thisW-lastW;
+                      const up=diff>0,flat=diff===0;
+                      return (
+                        <div style={{display:"flex",alignItems:"center",gap:16}}>
+                          <div style={{textAlign:"center"}}>
+                            <div style={{color:C(0.4),fontSize:11}}>Last week</div>
+                            <div style={{color:C(0.6),fontSize:22,fontWeight:700}}>{lastW}</div>
+                          </div>
+                          <div style={{color:C(0.2),fontSize:20}}>→</div>
+                          <div style={{textAlign:"center"}}>
+                            <div style={{color:C(0.4),fontSize:11}}>This week</div>
+                            <div style={{color:"#fff",fontSize:22,fontWeight:700}}>{thisW}</div>
+                          </div>
+                          <div style={{flex:1,textAlign:"right",color:flat?C(0.4):up?"#34d399":"#f87171",fontSize:14,fontWeight:700}}>
+                            {flat?"No change":up?`▲ +${diff}`:`▼ ${diff}`}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {DIV}
+                  {/* Day of week pattern */}
+                  <div style={{marginBottom:4}}>
+                    {SL("Best & toughest days")}
+                    {(()=>{
+                      const dayLabels=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+                      const stats=dayLabels.map((label,dow)=>{
+                        let done=0,total=0;
+                        for(let i=0;i<84;i++){
+                          const d=new Date(TODAY); d.setDate(TODAY.getDate()-i);
+                          if((d.getDay()+6)%7!==dow) continue;
+                          const dStr=ds(d);
+                          const dayAll=tasks.filter(t=>t.scheduledDates.includes(dStr));
+                          total+=dayAll.length;
+                          done+=dayAll.filter(t=>doneOnDate(t.doneOn,dStr)).length;
+                        }
+                        return {label,pct:total===0?null:Math.round(done/total*100)};
+                      });
+                      const withData=stats.filter(s=>s.pct!==null);
+                      if(withData.length===0) return <div style={{color:C(0.4),fontSize:12}}>Not enough history yet</div>;
+                      const best=Math.max(...withData.map(s=>s.pct));
+                      return (
+                        <div style={{display:"flex",gap:6,alignItems:"flex-end",height:70}}>
+                          {stats.map(s=>(
+                            <div key={s.label} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                              <div style={{width:"100%",height:44,display:"flex",alignItems:"flex-end"}}>
+                                <div style={{width:"100%",borderRadius:4,height:`${s.pct??0}%`,minHeight:s.pct?3:0,background:s.pct===best?"linear-gradient(180deg,#34d399,#6ee7b7)":"rgba(255,255,255,0.15)"}}/>
+                              </div>
+                              <span style={{color:C(0.4),fontSize:10}}>{s.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {DIV}
+                  {/* Household streak + all-time total */}
+                  <div style={{marginBottom:4,display:"flex",gap:12}}>
+                    {(()=>{
+                      const hStreak=getHouseholdStreak(tasks,ds,TODAY);
+                      const allTime=tasks.reduce((s,t)=>s+(t.doneOn||[]).length,0);
+                      return (<>
+                        <div style={{flex:1,...G(0.08,20),borderRadius:16,padding:"14px",textAlign:"center"}}>
+                          <div style={{fontSize:22}}>{hStreak>0?"🔥":"💤"}</div>
+                          <div style={{color:"#fff",fontSize:20,fontWeight:700,marginTop:2}}>{hStreak}</div>
+                          <div style={{color:C(0.45),fontSize:11}}>day household streak</div>
+                        </div>
+                        <div style={{flex:1,...G(0.08,20),borderRadius:16,padding:"14px",textAlign:"center"}}>
+                          <div style={{fontSize:22}}>🏆</div>
+                          <div style={{color:"#fff",fontSize:20,fontWeight:700,marginTop:2}}>{allTime}</div>
+                          <div style={{color:C(0.45),fontSize:11}}>tasks done, all time</div>
+                        </div>
+                      </>);
+                    })()}
+                  </div>
+
+                  {DIV}
+                  {/* Most-liked task */}
+                  <div style={{marginBottom:4}}>
+                    {SL("Crowd favorite")}
+                    {(()=>{
+                      const ml=getMostLikedTask(tasks);
+                      if(!ml) return <div style={{color:C(0.4),fontSize:12}}>No likes yet — go appreciate someone's work!</div>;
+                      const z=getZone(ml.task.zone);
+                      return (
+                        <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <span style={{fontSize:26}}>❤️</span>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{color:"#fff",fontSize:14,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ml.task.text}</div>
+                            <div style={{color:C(0.4),fontSize:11}}>{z?.emoji} {z?.label}</div>
+                          </div>
+                          <div style={{color:"#f87171",fontSize:16,fontWeight:700}}>{ml.count} ❤️</div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {DIV}
+                  {/* Task creators */}
+                  <div style={{marginBottom:4}}>
+                    {SL("Who plans the chores")}
+                    {(()=>{
+                      const counts=people.map(p=>({p,count:tasks.filter(t=>t.createdBy===p.id).length})).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
+                      if(counts.length===0) return <div style={{color:C(0.4),fontSize:12}}>No task-creation history yet</div>;
+                      return (
+                        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                          {counts.map(({p,count})=>(
+                            <div key={p.id} style={{display:"flex",alignItems:"center",gap:8}}>
+                              <Avatar person={p} size={26}/>
+                              <span style={{color:C(0.75),fontSize:13,flex:1}}>{p.name}</span>
+                              <span style={{color:C(0.9),fontSize:13,fontWeight:700}}>{count} created</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {DIV}
+                  {/* On-time rate */}
+                  <div style={{marginBottom:4}}>
+                    {SL("On-time vs rescheduled")}
+                    {(()=>{
+                      const otr=getOnTimeRate(tasks);
+                      if(!otr) return <div style={{color:C(0.4),fontSize:12}}>Not enough history yet</div>;
+                      return (
+                        <div>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                            <span style={{color:C(0.6),fontSize:13}}>{otr.onTimePct}% completed without rescheduling</span>
+                            <span style={{color:C(0.4),fontSize:12}}>{otr.rescheduled} of {otr.total} moved</span>
+                          </div>
+                          <div style={{background:"rgba(255,255,255,0.07)",borderRadius:4,height:6,overflow:"hidden"}}>
+                            <div style={{height:"100%",width:`${otr.onTimePct}%`,borderRadius:4,background:otr.onTimePct>=80?"linear-gradient(90deg,#34d399,#6ee7b7)":otr.onTimePct>=50?"linear-gradient(90deg,#fbbf24,#fde68a)":"linear-gradient(90deg,#f87171,#fca5a5)"}}/>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                 </>);
