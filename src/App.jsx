@@ -619,6 +619,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if(!enteringWeek) return;
     if(!stripRef.current) return; // strip not mounted yet (e.g. still loading) — don't mark as "entered" yet, so the next retry can still fire
     prevTabRef.current=tab;
+    const el0=stripRef.current;
+    el0.scrollLeft=0; // reset first — avoids inheriting whatever scroll/momentum state was left over from before, which was throwing the later calculation off
     const doCenter=()=>{
       const el=stripRef.current;
       if(!el) return;
@@ -628,13 +630,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const cellW=51;
       el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth*0.42)+(cellW/2));
     };
-    // deferred (and re-applied after a short delay) so the strip's layout has
-    // fully settled after a tab switch — on iOS Safari, reading clientWidth or
-    // setting scrollLeft too early after a tab switch can be overridden by the
+    // re-applied at several delays so the strip's layout has fully settled
+    // after a tab switch — on iOS Safari, reading clientWidth or setting
+    // scrollLeft too early after a tab switch can be overridden by the
     // browser still "settling" scroll/layout, causing a rightward drift.
     requestAnimationFrame(doCenter);
-    const t=setTimeout(doCenter,60);
-    return ()=>clearTimeout(t);
+    const timers=[60,150,300].map(ms=>setTimeout(doCenter,ms));
+    return ()=>timers.forEach(clearTimeout);
   },[dataLoading,tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -1662,12 +1664,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
                               onClick={e=>e.stopPropagation()}
                               placeholder="Zone name"
-                              style={{background:"none",border:"none",borderBottom:`1.5px solid ${zoneNameError?"#f87171":C(0.25)}`,color:C(0.9),fontSize:14,fontWeight:500,fontFamily:"inherit",outline:"none",width:"100%",padding:"0 0 2px",boxSizing:"border-box"}}
+                              style={{background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:14,fontWeight:500,fontFamily:"inherit",outline:"none",width:"100%",padding:"8px 10px",boxSizing:"border-box",borderRadius:10}}
                             />
                           ):(
-                            <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                            <>
+                              <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                              <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
+                            </>
                           )}
-                          <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
                         </div>
                         <span style={{color:C(0.2),fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
                       </div>
@@ -1712,11 +1716,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           </div>
                           <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{count} task{count!==1?"s":""}</div>
                         </div>
-                        {p.id===meId?(
-                          <span style={{color:C(0.2),fontSize:17}}>›</span>
-                        ):(
-                          <button onClick={e=>{e.stopPropagation();deletePerson(p.id);}} style={{background:"none",border:"none",color:"rgba(248,113,113,0.5)",fontSize:18,cursor:"pointer",padding:6,lineHeight:1}}>🗑️</button>
-                        )}
+                        {p.id===meId&&<span style={{color:C(0.2),fontSize:17}}>›</span>}
                       </div>
                     );
                   })}
