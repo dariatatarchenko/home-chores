@@ -21,14 +21,14 @@ const ZONE_ACH = [
   {zone:"pets",     icon:"🐾", label:"Pet Champion"},
 ];
 const getRank = pts => [...RANKS].reverse().find(r=>pts>=r.min) || RANKS[0];
-const computePts = (tasks,pid) => tasks.filter(t=>t.personId===pid).reduce((s,t)=>s+t.doneOn.length,0);
+const computePts = (tasks,pid) => tasks.reduce((s,t)=>s+(t.doneOn||[]).filter(e=>e.by===pid).length,0);
 const getWeekStats = (tasks,pid,dates) => {
   const my=tasks.filter(t=>t.personId===pid);
   let done=0,total=0;
   dates.forEach(d=>{
     const dt=my.filter(t=>t.scheduledDates.includes(d));
     total+=dt.length;
-    done+=dt.filter(t=>t.doneOn.includes(d)).length;
+    done+=dt.filter(t=>doneOnDate(t.doneOn,d)).length;
   });
   return {done,total,pct:total===0?0:Math.round(done/total*100)};
 };
@@ -147,16 +147,16 @@ const getStreakMilestones=streak=>STREAK_MILESTONES.filter(m=>streak>=m.days);
 
 const getWeeklyMVP=(tasks,people,dates)=>{
   if(people.length<2) return null;
-  const scores=people.map(p=>({p,pts:tasks.filter(t=>t.personId===p.id).reduce((s,t)=>s+dates.filter(d=>t.doneOn.includes(d)).length*(FREQ_PTS[t.freq]||1),0)}));
+  const scores=people.map(p=>({p,pts:tasks.reduce((s,t)=>s+dates.filter(d=>doneOnDateBy(t.doneOn,d,p.id)).length*(FREQ_PTS[t.freq]||1),0)}));
   scores.sort((a,b)=>b.pts-a.pts);
   return scores[0].pts>0&&scores[0].pts>scores[1].pts?scores[0].p:null;
 };
 
 const getDreamTeam=(tasks,people,dates)=>
-  people.length>=2&&people.every(p=>tasks.filter(t=>t.personId===p.id).some(t=>dates.some(d=>t.doneOn.includes(d))));
+  people.length>=2&&people.every(p=>tasks.some(t=>dates.some(d=>doneOnDateBy(t.doneOn,d,p.id))));
 
 const getZoneAchLevel=(tasks,pid,zone)=>{
-  const cnt=tasks.filter(t=>(t.personIds&&t.personIds.length?t.personIds:[t.personId]).includes(pid)&&t.zone===zone).reduce((s,t)=>s+t.doneOn.length,0);
+  const cnt=tasks.filter(t=>t.zone===zone).reduce((s,t)=>s+(t.doneOn||[]).filter(e=>e.by===pid).length,0);
   if(cnt>=100) return {level:"Gold",  icon:"🥇",color:"#fbbf24",next:null,cnt};
   if(cnt>=50)  return {level:"Silver",icon:"🥈",color:"#94a3b8",next:100, cnt};
   if(cnt>=10)  return {level:"Bronze",icon:"🥉",color:"#fb923c",next:50,  cnt};
@@ -174,6 +174,11 @@ const MOTIV = [
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const todayStr = TODAY.toISOString().slice(0,10);
 const ds = d => (d instanceof Date ? d : new Date(d+"T00:00:00")).toISOString().slice(0,10);
+// doneOn entries are now {date, by} objects (not plain date strings) so we can
+// credit points/streaks to whoever ACTUALLY completed a task, not just whoever
+// it happened to be assigned to.
+const doneOnDate=(doneOn,d)=>(doneOn||[]).some(e=>e.date===d);
+const doneOnDateBy=(doneOn,d,pid)=>(doneOn||[]).some(e=>e.date===d&&e.by===pid);
 
 const uid=()=>(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
 const initials = n => (n||"?").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
@@ -246,7 +251,7 @@ const computeStreak = task => {
     const dStr=ds(d);
     const myT=task.scheduledDates.includes(dStr);
     if(!myT) continue;
-    if(task.doneOn.includes(dStr)) streak++;
+    if(doneOnDate(task.doneOn,dStr)) streak++;
     else break;
   }
   return streak;
@@ -563,7 +568,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   },[dataLoading,tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  const isDone=(t,d)=>t.doneOn.includes(d);
+  const isDone=(t,d)=>doneOnDate(t.doneOn,d);
   const isScheduledOn=(t,d)=>{
     if(t.scheduledDates.includes(d)) return true;
     // For repeating tasks, extrapolate beyond stored dates
@@ -596,9 +601,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       // when THIS person finishes all of their OWN tasks for the day, even if others
       // in the household still have things left to do.
       const dayAll=tasks.filter(x=>x.scheduledDates.includes(d));
-      const nowAllDone=dayAll.length>0&&dayAll.every(x=>x.id===id||x.doneOn.includes(d));
+      const nowAllDone=dayAll.length>0&&dayAll.every(x=>x.id===id||doneOnDate(x.doneOn,d));
       const myDayTasks=dayAll.filter(x=>(x.personIds||[x.personId]).includes(meId));
-      const myNowAllDone=myDayTasks.length>0&&myDayTasks.every(x=>x.id===id||x.doneOn.includes(d));
+      const myNowAllDone=myDayTasks.length>0&&myDayTasks.every(x=>x.id===id||doneOnDate(x.doneOn,d));
       if((nowAllDone||myNowAllDone)&&tab==="week"){
         const isToday=d===todayStr, isPast=d<todayStr;
         const dateLabel=isToday?"today":isPast?new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"this day";
@@ -618,7 +623,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       }
     }
     setActivityOrder(o=>[key,...o.filter(k=>k!==key)]);
-    const newDoneOn=isDone(t,d)?t.doneOn.filter(x=>x!==d):[...t.doneOn,d];
+    const newDoneOn=isDone(t,d)?(t.doneOn||[]).filter(e=>e.date!==d):[...(t.doneOn||[]),{date:d,by:meId}];
     setTasks(ts=>ts.map(t=>t.id!==id?t:{...t,doneOn:newDoneOn}));
     persistTask(id,{doneOn:newDoneOn});
   };
@@ -656,7 +661,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setTasks(ts=>ts.map(t=>{
       if(t.id!==id) return t;
       const dates=[...new Set([...t.scheduledDates.filter(x=>x!==from),to])].sort();
-      newFields={scheduledDates:dates,doneOn:t.doneOn.filter(x=>x!==from),rescheduledFrom:from};
+      newFields={scheduledDates:dates,doneOn:(t.doneOn||[]).filter(e=>e.date!==from),rescheduledFrom:from};
       return{...t,...newFields};
     }));
     if(newFields) persistTask(id,newFields);
@@ -672,7 +677,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       setTasks(ts=>ts.map(x=>{
         if(x.id!==t.id) return x;
         const dates=[...new Set([...x.scheduledDates.filter(d=>d!==fromDay),toDay])].sort();
-        newFields={scheduledDates:dates,doneOn:x.doneOn.filter(d=>d!==fromDay),rescheduledFrom:fromDay};
+        newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay};
         return{...x,...newFields};
       }));
       if(newFields) persistTask(t.id,newFields);
@@ -837,7 +842,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   // haven't acknowledged yet and haven't dismissed this session.
   const pendingConfirmTask=tasks.find(t=>{
     const pIds=t.personIds||[t.personId].filter(Boolean);
-    return pIds.length===1&&pIds[0]===meId&&!(t.confirmedBy||[]).includes(meId)&&!dismissedConfirms.has(t.id);
+    return pIds.length===1&&pIds[0]===meId
+      &&t.createdBy&&t.createdBy!==meId // only when someone ELSE created and assigned it — never your own tasks, and never old tasks with no recorded creator
+      &&!(t.confirmedBy||[]).includes(meId)&&!dismissedConfirms.has(t.id);
   });
   const confirmTaskAssignment=(taskId,accept)=>{
     setDismissedConfirms(s=>new Set([...s,taskId]));
@@ -867,7 +874,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         // no tasks this day — only skip if it's a gap in schedule, not a missed day
         continue;
       }
-      if(myT.every(t=>t.doneOn.includes(dStr))) streak++;
+      if(myT.every(t=>doneOnDateBy(t.doneOn,dStr,meId))) streak++;
       else break;
     }
     return streak;
@@ -1755,7 +1762,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{marginBottom:12}}>
                     {SL("Streaks")}
                     {people.map((p,pi)=>{
-                      const pStreak=(()=>{let s=0;for(let i=1;i<=90;i++){const d=new Date(TODAY);d.setDate(TODAY.getDate()-i);const dStr=ds(d);const myT=tasks.filter(t=>(t.personIds||[t.personId]).includes(p.id)&&t.scheduledDates.includes(dStr));if(myT.length===0)continue;if(myT.every(t=>t.doneOn.includes(dStr)))s++;else break;}return s;})();
+                      const pStreak=(()=>{let s=0;for(let i=1;i<=90;i++){const d=new Date(TODAY);d.setDate(TODAY.getDate()-i);const dStr=ds(d);const myT=tasks.filter(t=>(t.personIds||[t.personId]).includes(p.id)&&t.scheduledDates.includes(dStr));if(myT.length===0)continue;if(myT.every(t=>doneOnDateBy(t.doneOn,dStr,p.id)))s++;else break;}return s;})();
                       const earned=getStreakMilestones(pStreak);
                       const next=STREAK_MILESTONES.find(m=>pStreak<m.days);
                       return(
