@@ -327,6 +327,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     personIds:r.person_ids||[],personId:(r.person_ids||[])[0]||null,
     scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
     rescheduledFrom:r.rescheduled_from,createdBy:r.created_by,confirmedBy:r.confirmed_by||[],
+    excludedDates:r.excluded_dates||[],
   });
   const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body,readBy:r.read_by||[]});
 
@@ -359,7 +360,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       setTasks(t.map(rowToTask));
 
       const {data:n}=await supabase.from("notifications").select("*").eq("household_id",household.id).order("created_at",{ascending:false}).limit(30);
-      if(active) setNotifs((n||[]).map(rowToNotif));
+      if(active) setNotifs((n||[]).map(rowToNotif).filter(x=>x.actorPersonId!==meIdRef.current));
 
       setDataLoading(false);
 
@@ -417,11 +418,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       })
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:`household_id=eq.${household.id}`},payload=>{
         const row=rowToNotif(payload.new);
+        if(row.actorPersonId===meIdRef.current) return; // notifications about your own actions aren't meaningful to see yourself
         setNotifs(ns=>ns.some(x=>x.id===row.id)?ns:[row,...ns]);
-        if(row.actorPersonId!==meIdRef.current){
-          setToast(row);
-          setTimeout(()=>setToast(null),3000);
-        }
+        setToast(row);
+        setTimeout(()=>setToast(null),3000);
       })
       .subscribe();
 
@@ -441,6 +441,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if("likes" in fields) dbFields.likes=fields.likes;
     if("rescheduledFrom" in fields) dbFields.rescheduled_from=fields.rescheduledFrom;
     if("confirmedBy" in fields) dbFields.confirmed_by=fields.confirmedBy;
+    if("excludedDates" in fields) dbFields.excluded_dates=fields.excludedDates;
     dbFields.updated_at=new Date().toISOString();
     supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistTask",error); });
   };
@@ -449,7 +450,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const {error}=await withRetry(()=>supabase.from("tasks").insert({
         id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
         custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
-        done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,confirmed_by:row.confirmedBy||[],
+        done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,confirmed_by:row.confirmedBy||[],excluded_dates:row.excludedDates||[],
       }));
       if(error) console.error("insertTask",error);
       return error?error.message:null;
@@ -556,9 +557,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const prevTabRef=useRef(null);
   useEffect(()=>{
     const enteringWeek=tab==="week"&&prevTabRef.current!=="week";
-    prevTabRef.current=tab;
     if(!enteringWeek) return;
-    if(!stripRef.current) return;
+    if(!stripRef.current) return; // strip not mounted yet (e.g. still loading) — don't mark as "entered" yet, so the next retry can still fire
+    prevTabRef.current=tab;
     const el=stripRef.current;
     const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
     const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
@@ -570,6 +571,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   // ── Helpers ───────────────────────────────────────────────────────────────
   const isDone=(t,d)=>doneOnDate(t.doneOn,d);
   const isScheduledOn=(t,d)=>{
+    if((t.excludedDates||[]).includes(d)) return false; // explicitly rescheduled away — never re-derive it via extrapolation
     if(t.scheduledDates.includes(d)) return true;
     // For repeating tasks, extrapolate beyond stored dates
     if(!t.freq||t.freq==="once") return false;
@@ -661,7 +663,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setTasks(ts=>ts.map(t=>{
       if(t.id!==id) return t;
       const dates=[...new Set([...t.scheduledDates.filter(x=>x!==from),to])].sort();
-      newFields={scheduledDates:dates,doneOn:(t.doneOn||[]).filter(e=>e.date!==from),rescheduledFrom:from};
+      const excludedDates=[...new Set([...(t.excludedDates||[]),from])];
+      newFields={scheduledDates:dates,doneOn:(t.doneOn||[]).filter(e=>e.date!==from),rescheduledFrom:from,excludedDates};
       return{...t,...newFields};
     }));
     if(newFields) persistTask(id,newFields);
@@ -677,7 +680,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       setTasks(ts=>ts.map(x=>{
         if(x.id!==t.id) return x;
         const dates=[...new Set([...x.scheduledDates.filter(d=>d!==fromDay),toDay])].sort();
-        newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay};
+        const excludedDates=[...new Set([...(x.excludedDates||[]),fromDay])];
+        newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay,excludedDates};
         return{...x,...newFields};
       }));
       if(newFields) persistTask(t.id,newFields);
@@ -752,8 +756,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setPersonModal(null); setAvatarPicker(false);
   };
   const deletePerson=id=>{
+    const person=people.find(p=>p.id===id);
+    if(!window.confirm(`Remove ${person?.name||"this person"}? Tasks assigned only to them will become unassigned.`)) return;
     setPeople(ps=>ps.filter(p=>p.id!==id));
-    setTasks(ts=>ts.map(t=>t.personId===id?{...t,personId:null}:t));
+    const affectedTasks=tasks.filter(t=>t.personId===id||(t.personIds||[]).includes(id));
+    setTasks(ts=>ts.map(t=>({
+      ...t,
+      personId:t.personId===id?null:t.personId,
+      personIds:(t.personIds||[]).filter(pid=>pid!==id),
+    })));
+    affectedTasks.forEach(t=>{
+      const newPersonIds=(t.personIds||[]).filter(pid=>pid!==id);
+      persistTask(t.id,{personIds:newPersonIds});
+    });
     deletePersonRemote(id);
     if(meId===id) setMeId(people[0]?.id??"");
   };
@@ -987,8 +1002,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </button>
                   )}
                   {people.length>1&&(
-                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:22}}>
-                    🔔
+                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:34,height:34,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:22}}>
+                    <span style={{transform:"translateX(-1px)"}}>🔔</span>
                     {unread>0&&<div style={{position:"absolute",top:2,right:2,width:9,height:9,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -1141,7 +1156,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(toDate&&dragInfo) moveTask(dragInfo.id,dragInfo.from,toDate);
                         setDragInfo(null);setDragOver(null);setDragActive(false);
                       }}
-                      style={{...CARD,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",
+                      style={{...CARD,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",
                         border:`1px solid ${C(0.08)}`,
                         animation:"fadeInUp 0.2s ease",
                         transform:dragActive&&dragInfo?.id===t.id?"scale(1.03)":"scale(1)",
@@ -1165,7 +1180,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
-                            if(pIds.length!==1) return <span style={{fontSize:12,color:C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
+                            if(pIds.length!==1) return <span style={{fontSize:12,color:"#818cf8",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
                             const p=getPerson(pIds[0]);
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
@@ -1187,13 +1202,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Like */}
                       <button onClick={e=>{e.stopPropagation();likeTask(t.id,selDay);}} style={{
                         position:"relative",
-                        background:likeCount>0?"rgba(56,189,248,0.18)":"rgba(56,189,248,0.07)",
-                        border:`1px solid ${likeCount>0?"rgba(56,189,248,0.45)":"rgba(56,189,248,0.2)"}`,
+                        background:likeCount>0?"rgba(248,113,113,0.18)":"rgba(248,113,113,0.07)",
+                        border:`1px solid ${likeCount>0?"rgba(248,113,113,0.45)":"rgba(248,113,113,0.2)"}`,
                         borderRadius:"50%",width:34,height:34,cursor:"pointer",fontSize:15,
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",flexShrink:0,
                       }}>
-                        <span style={{display:"inline-block",fontSize:15,lineHeight:1,filter:likeCount>0?"none":"grayscale(1) opacity(0.5)",animation:justLiked===(t.id+"|"+selDay)?"heartPop 0.4s ease":"none"}}>👍</span>
-                        {likeCount>1&&<span style={{position:"absolute",top:-4,right:-4,background:"#38bdf8",borderRadius:"50%",minWidth:18,height:18,padding:"0 3px",fontSize:11,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{likeCount}</span>}
+                        <span style={{display:"inline-block",fontSize:15,lineHeight:1,animation:justLiked===(t.id+"|"+selDay)?"heartPop 0.4s ease":"none"}}>{likeCount>0?"❤️":"🤍"}</span>
+                        {likeCount>1&&<span style={{position:"absolute",top:-4,right:-4,background:"#f87171",borderRadius:"50%",minWidth:18,height:18,padding:"0 3px",fontSize:11,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{likeCount}</span>}
                       </button>
                       {/* Avatar(s) */}
                       {(()=>{
@@ -1449,7 +1464,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
                                 <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}</span>
                                 {people.length>1&&(()=>{
-                                  if(pIds.length!==1) return <span style={{color:C(0.5),fontSize:12}}>· {tr("all")}</span>;
+                                  if(pIds.length!==1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#818cf8",fontWeight:600}}>{tr("all")}</span></span>;
                                   const p=getPerson(pIds[0]);
                                   return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name}</span></span>;
                                 })()}
@@ -1535,7 +1550,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(open){ setZoneExpandId(null); return; }
                         setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
                       }} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",minHeight:44}}>
-                        <div onClick={e=>{if(open){e.stopPropagation();setEmojiPicker(v=>!v);}}} style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0,borderRadius:12,background:open?C(0.06):"transparent",cursor:open?"pointer":"inherit"}}>{open?zForm.emoji:z.emoji}</div>
+                        <div onClick={e=>{if(open){e.stopPropagation();setEmojiPicker(v=>!v);}}} style={{position:"relative",width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0,borderRadius:12,background:open?C(0.06):"transparent",border:open?`1px dashed ${C(0.25)}`:"1px solid transparent",cursor:open?"pointer":"inherit"}}>
+                          {open?zForm.emoji:z.emoji}
+                          {open&&<div style={{position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,border:"2px solid #1a1035"}}>✏️</div>}
+                        </div>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
                           <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
@@ -1570,9 +1588,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               {/* People */}
               <div>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                <div style={{marginBottom:12}}>
                   <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("people")}</span>
-                  <button onClick={()=>{setPersonNameError(false);setPForm({name:"",color:PALETTE[0],avatarEmoji:""});setAvatarPicker(false);setPersonModal({mode:"new"});}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {people.map(p=>{
@@ -1699,15 +1716,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {/* Weekly summary */}
                   <div style={{marginBottom:12}}>
                     {SL("This week")}
-                    {mvp&&<div style={{...G(0.12,20),borderRadius:14,padding:"9px 15px",marginBottom:12,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(251,191,36,0.3)"}}>
+                    {mvp&&<div style={{...G(0.12,20),borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(251,191,36,0.3)"}}>
                       <span style={{fontSize:20}}>⭐</span>
-                      <span style={{color:"#fbbf24",fontSize:13,fontWeight:500}}>MVP: {mvp.name}</span>
+                      <span style={{color:"#fbbf24",fontSize:13,fontWeight:500}}>Top performer this week: {mvp.name}</span>
                     </div>}
-                    {dreamTeam&&<div style={{...G(0.12,20),borderRadius:14,padding:"9px 15px",marginBottom:12,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(52,211,153,0.3)"}}>
+                    {dreamTeam&&<div style={{...G(0.12,20),borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(52,211,153,0.3)"}}>
                       <span style={{fontSize:20}}>🤝</span>
                       <span style={{color:"#34d399",fontSize:13,fontWeight:500}}>Dream Team — everyone contributed!</span>
                     </div>}
-                    {people.map(p=>{
+                    {[...people].sort((a,b)=>getWeekStats(tasks,b.id,weekDates).pct-getWeekStats(tasks,a.id,weekDates).pct).map(p=>{
                       const ws=getWeekStats(tasks,p.id,weekDates);
                       const rank=getRank(computePts(tasks,p.id));
                       const streak=myStreak; // approximate
@@ -1761,8 +1778,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {/* Streak milestones */}
                   <div style={{marginBottom:12}}>
                     {SL("Streaks")}
-                    {people.map((p,pi)=>{
+                    {people.map(p=>{
                       const pStreak=(()=>{let s=0;for(let i=1;i<=90;i++){const d=new Date(TODAY);d.setDate(TODAY.getDate()-i);const dStr=ds(d);const myT=tasks.filter(t=>(t.personIds||[t.personId]).includes(p.id)&&t.scheduledDates.includes(dStr));if(myT.length===0)continue;if(myT.every(t=>doneOnDateBy(t.doneOn,dStr,p.id)))s++;else break;}return s;})();
+                      return {p,pStreak};
+                    }).sort((a,b)=>b.pStreak-a.pStreak).map(({p,pStreak},pi)=>{
                       const earned=getStreakMilestones(pStreak);
                       const next=STREAK_MILESTONES.find(m=>pStreak<m.days);
                       return(
@@ -1791,11 +1810,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             </div>
                           )}
                           {next?(
-                            <div style={{color:"rgba(255,255,255,0.3)",fontSize:12,marginTop:2}}>
+                            <div style={{color:C(0.5),fontSize:12,marginTop:1}}>
                               {next.days-pStreak} more days to unlock {next.label}
                             </div>
                           ):(
-                            <div style={{color:"#e879f9",fontSize:12}}>All streak badges unlocked!</div>
+                            <div style={{color:"#e879f9",fontSize:12,marginTop:1}}>All streak badges unlocked!</div>
                           )}
                         </div>
                       );
@@ -1805,7 +1824,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {/* Zone achievements */}
                   <div style={{marginBottom:4}}>
                     {SL("Zone achievements")}
-                    {people.map(p=>{
+                    {[...people].sort((a,b)=>getZoneAch(tasks,b.id).length-getZoneAch(tasks,a.id).length).map(p=>{
                       const achs=getZoneAch(tasks,p.id);
                       const LEVELS=[{icon:"🥉",min:10,color:"#fb923c"},{icon:"🥈",min:50,color:"#94a3b8"},{icon:"🥇",min:100,color:"#fbbf24"}];
                       return(
@@ -1932,6 +1951,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               <button onClick={savePerson} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>{personModal.mode==="new"?"Add":"Save"}</button>
               {personModal.mode==="edit"&&<button onClick={()=>{deletePerson(personModal.id);setPersonModal(null);}} style={{...G(0.06,20),border:"1px solid rgba(248,113,113,0.2)",borderRadius:15,padding:"12px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Remove Person</button>}
+              {personModal.mode==="new"&&<button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",color:C(0.4),fontSize:13,cursor:"pointer",padding:"4px 0"}}>Cancel</button>}
             </div>
           </div>
         )}
