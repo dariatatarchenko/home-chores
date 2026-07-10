@@ -310,6 +310,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const CARD={...G(0.08,24),borderRadius:20,padding:"13px 15px"};
   const [codeCopied,setCodeCopied]=useState(false);
   const [settingsView,setSettingsView]=useState("main");
+  const settingsScrollRef=useRef(null);
+  const settingsMainScrollPos=useRef(0);
   const [dismissedConfirms,setDismissedConfirms]=useState(new Set());
   const [zoneExpandId,setZoneExpandId]=useState(null);
   const [tab,     setTab]     = useState("week");
@@ -490,6 +492,21 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const deleteZoneRemote=id=>{
     supabase.from("zones").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteZone",error); });
   };
+  const reorderZones=(fromId,toId)=>{
+    if(fromId===toId) return;
+    setZones(zs=>{
+      const arr=[...zs];
+      const fromIdx=arr.findIndex(z=>z.id===fromId);
+      const toIdx=arr.findIndex(z=>z.id===toId);
+      if(fromIdx===-1||toIdx===-1) return zs;
+      const [moved]=arr.splice(fromIdx,1);
+      arr.splice(toIdx,0,moved);
+      const reindexed=arr.map((z,i)=>({...z,sortOrder:i+1}));
+      Promise.all(reindexed.map(z=>supabase.from("zones").update({sort_order:z.sortOrder}).eq("id",z.id)))
+        .then(results=>{ results.forEach(({error})=>{ if(error) console.error("reorderZones",error); }); });
+      return reindexed;
+    });
+  };
 
   const [myFilter,setMyFilter]= useState(false);
   const [weekZoneFilter,setWeekZoneFilter]= useState(null);
@@ -500,6 +517,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [dragActive,setDragActive]= useState(false);
   const longPressTimerRef=useRef(null);
   const touchStartPosRef=useRef(null);
+  const [zoneDragId,setZoneDragId]=useState(null);
+  const [zoneDragOverId,setZoneDragOverId]=useState(null);
+  const [zoneDragActive,setZoneDragActive]=useState(false);
+  const zoneLongPressTimerRef=useRef(null);
+  const zoneTouchStartPosRef=useRef(null);
+  const zoneRefs=useRef({});
   const [dragOver,setDragOver]= useState(null);
   const [expandId,setExpandId]= useState(null);
   const [editTaskId,setEditTaskId]= useState(null);
@@ -545,6 +568,42 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const cardRefs = useRef({});
   const prevRects = useRef({});
   const taskNameRef = useRef(null);
+
+  // React's synthetic onTouchMove handler is registered as a passive listener,
+  // so calling e.preventDefault() inside it is silently ignored by the browser
+  // — the page scrolls anyway even while our drag logic runs. To actually stop
+  // the native scroll during an active drag, we attach a real, non-passive
+  // touchmove listener directly to the dragging card's DOM node.
+  useEffect(()=>{
+    if(!dragActive||!dragInfo?.id) return;
+    const el=cardRefs.current[dragInfo.id];
+    if(!el) return;
+    const handler=e=>{
+      e.preventDefault();
+      const touch=e.touches[0];
+      const target=document.elementFromPoint(touch.clientX,touch.clientY);
+      const d=target?.closest("[data-date]")?.dataset?.date;
+      if(d) setDragOver(d);
+    };
+    el.addEventListener("touchmove",handler,{passive:false});
+    return ()=>el.removeEventListener("touchmove",handler);
+  },[dragActive,dragInfo?.id]);
+
+  useEffect(()=>{
+    if(!zoneDragActive||!zoneDragId) return;
+    const el=zoneRefs.current[zoneDragId];
+    if(!el) return;
+    const handler=e=>{
+      e.preventDefault();
+      const touch=e.touches[0];
+      const target=document.elementFromPoint(touch.clientX,touch.clientY);
+      const zId=target?.closest("[data-zone-id]")?.dataset?.zoneId;
+      if(zId) setZoneDragOverId(zId);
+    };
+    el.addEventListener("touchmove",handler,{passive:false});
+    return ()=>el.removeEventListener("touchmove",handler);
+  },[zoneDragActive,zoneDragId]);
+
   const assigneeRef = useRef(null);
 
   // Celebration is now triggered directly inside toggleDone (only on the actual completing action)
@@ -560,12 +619,22 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if(!enteringWeek) return;
     if(!stripRef.current) return; // strip not mounted yet (e.g. still loading) — don't mark as "entered" yet, so the next retry can still fire
     prevTabRef.current=tab;
-    const el=stripRef.current;
-    const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
-    const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
-    if(selIdx<0) return;
-    const cellW=51;
-    el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth*0.42)+(cellW/2));
+    const doCenter=()=>{
+      const el=stripRef.current;
+      if(!el) return;
+      const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
+      const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
+      if(selIdx<0) return;
+      const cellW=51;
+      el.scrollLeft=Math.max(0,selIdx*cellW-(el.clientWidth*0.42)+(cellW/2));
+    };
+    // deferred (and re-applied after a short delay) so the strip's layout has
+    // fully settled after a tab switch — on iOS Safari, reading clientWidth or
+    // setting scrollLeft too early after a tab switch can be overridden by the
+    // browser still "settling" scroll/layout, causing a rightward drift.
+    requestAnimationFrame(doCenter);
+    const t=setTimeout(doCenter,60);
+    return ()=>clearTimeout(t);
   },[dataLoading,tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -1130,22 +1199,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         },380);
                       }}
                       onTouchMove={e=>{
-                        if(!dragActive){
-                          // not in drag mode yet — if the finger has moved noticeably,
-                          // this is a normal scroll gesture, so cancel the pending long-press
-                          const touch=e.touches[0];
-                          const start=touchStartPosRef.current;
-                          if(start){
-                            const dx=Math.abs(touch.clientX-start.x), dy=Math.abs(touch.clientY-start.y);
-                            if(dx>8||dy>8) clearTimeout(longPressTimerRef.current);
-                          }
-                          return;
-                        }
-                        e.preventDefault();
+                        if(dragActive) return; // handled by the native non-passive listener instead
+                        // not in drag mode yet — if the finger has moved noticeably,
+                        // this is a normal scroll gesture, so cancel the pending long-press
                         const touch=e.touches[0];
-                        const el=document.elementFromPoint(touch.clientX,touch.clientY);
-                        const d=el?.closest("[data-date]")?.dataset?.date;
-                        if(d) setDragOver(d);
+                        const start=touchStartPosRef.current;
+                        if(start){
+                          const dx=Math.abs(touch.clientX-start.x), dy=Math.abs(touch.clientY-start.y);
+                          if(dx>8||dy>8) clearTimeout(longPressTimerRef.current);
+                        }
                       }}
                       onTouchEnd={e=>{
                         clearTimeout(longPressTimerRef.current);
@@ -1180,7 +1242,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
-                            if(pIds.length!==1) return <span style={{fontSize:12,color:"#818cf8",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
+                            if(pIds.length!==1) return <span style={{fontSize:12,color:"#2dd4bf",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
                             const p=getPerson(pIds[0]);
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
@@ -1357,6 +1419,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {tab==="add"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 20px 8px",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
+              {editTaskId&&(()=>{const et=tasks.find(x=>x.id===editTaskId);return et?.rescheduledFrom?(
+                <div style={{margin:"0 20px 8px",color:"#fbbf24",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
+                  <span>⏭️</span><span>Moved from {new Date(et.rescheduledFrom+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
+                </div>
+              ):null;})()}
               <div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
               <div style={{display:"flex",flexDirection:"column",gap:22}}>
                 <div>
@@ -1464,7 +1531,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
                                 <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}</span>
                                 {people.length>1&&(()=>{
-                                  if(pIds.length!==1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#818cf8",fontWeight:600}}>{tr("all")}</span></span>;
+                                  if(pIds.length!==1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#2dd4bf",fontWeight:600}}>{tr("all")}</span></span>;
                                   const p=getPerson(pIds[0]);
                                   return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name}</span></span>;
                                 })()}
@@ -1519,11 +1586,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 20px 8px",display:"flex",alignItems:"center",gap:10}}>
                 {settingsView==="account"&&(
-                  <button onClick={()=>setSettingsView("main")} style={{background:"none",border:"none",color:"#818cf8",fontSize:22,cursor:"pointer",padding:0,lineHeight:1}}>‹</button>
+                  <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",color:"#818cf8",fontSize:22,cursor:"pointer",padding:0,lineHeight:1}}>‹</button>
                 )}
                 <span style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
               </div>
-              <div style={{flex:1,overflowY:"auto",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
+              <div ref={settingsScrollRef} style={{flex:1,overflowY:"auto",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
               {settingsView==="main"&&(<>
               {myStreak>0&&(
                 <div style={{marginBottom:22,display:"flex",alignItems:"center",gap:12}}>
@@ -1545,7 +1612,41 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {zones.map(z=>{
                     const open=zoneExpandId===z.id;
                     return (
-                    <div key={z.id} style={{...CARD,overflow:"hidden",boxSizing:"border-box"}}>
+                    <div key={z.id} ref={el=>{if(el)zoneRefs.current[z.id]=el;}} data-zone-id={z.id}
+                      draggable
+                      onDragStart={()=>setZoneDragId(z.id)}
+                      onDragEnd={()=>{setZoneDragId(null);setZoneDragOverId(null);}}
+                      onDragOver={e=>{e.preventDefault();setZoneDragOverId(z.id);}}
+                      onDrop={()=>{if(zoneDragId)reorderZones(zoneDragId,z.id);setZoneDragId(null);setZoneDragOverId(null);}}
+                      onTouchStart={()=>{
+                        zoneTouchStartPosRef.current=null;
+                        clearTimeout(zoneLongPressTimerRef.current);
+                        zoneLongPressTimerRef.current=setTimeout(()=>{
+                          setZoneDragId(z.id);
+                          setZoneDragActive(true);
+                          if(navigator.vibrate) navigator.vibrate(10);
+                        },380);
+                      }}
+                      onTouchMoveCapture={e=>{
+                        if(zoneDragActive) return;
+                        const touch=e.touches[0];
+                        if(!zoneTouchStartPosRef.current){ zoneTouchStartPosRef.current={x:touch.clientX,y:touch.clientY}; return; }
+                        const dx=Math.abs(touch.clientX-zoneTouchStartPosRef.current.x), dy=Math.abs(touch.clientY-zoneTouchStartPosRef.current.y);
+                        if(dx>8||dy>8) clearTimeout(zoneLongPressTimerRef.current);
+                      }}
+                      onTouchEnd={e=>{
+                        clearTimeout(zoneLongPressTimerRef.current);
+                        if(!zoneDragActive) return;
+                        const touch=e.changedTouches[0];
+                        const target=document.elementFromPoint(touch.clientX,touch.clientY);
+                        const targetId=target?.closest("[data-zone-id]")?.dataset?.zoneId;
+                        if(targetId) reorderZones(zoneDragId,targetId);
+                        setZoneDragId(null);setZoneDragOverId(null);setZoneDragActive(false);
+                      }}
+                      style={{...CARD,overflow:"hidden",boxSizing:"border-box",cursor:"grab",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",touchAction:zoneDragActive&&zoneDragId===z.id?"none":"pan-y",
+                        opacity:zoneDragId===z.id&&zoneDragActive?0.5:1,
+                        outline:zoneDragOverId===z.id&&zoneDragId&&zoneDragId!==z.id?"2px solid rgba(129,140,248,0.5)":"none",
+                        transition:"opacity 0.15s"}}>
                       <div onClick={()=>{
                         if(open){ setZoneExpandId(null); return; }
                         setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
@@ -1555,16 +1656,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           {open&&<div style={{position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,border:"2px solid #1a1035"}}>✏️</div>}
                         </div>
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                          {open?(
+                            <input
+                              value={zForm.label}
+                              onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
+                              onClick={e=>e.stopPropagation()}
+                              placeholder="Zone name"
+                              style={{background:"none",border:"none",borderBottom:`1.5px solid ${zoneNameError?"#f87171":C(0.25)}`,color:C(0.9),fontSize:14,fontWeight:500,fontFamily:"inherit",outline:"none",width:"100%",padding:"0 0 2px",boxSizing:"border-box"}}
+                            />
+                          ):(
+                            <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                          )}
                           <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
                         </div>
                         <span style={{color:C(0.2),fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
                       </div>
                       {open&&(
                         <div onClick={e=>e.stopPropagation()} style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C(0.07)}`}}>
-                          <div style={{marginBottom:14}}>
-                            <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"12px 14px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":"2px solid transparent"}}/>
-                          </div>
                           <div style={{display:"flex",gap:8}}>
                             <button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"11px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
                             <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
@@ -1604,7 +1712,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           </div>
                           <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{count} task{count!==1?"s":""}</div>
                         </div>
-                        {p.id===meId&&<span style={{color:C(0.2),fontSize:17}}>›</span>}
+                        {p.id===meId?(
+                          <span style={{color:C(0.2),fontSize:17}}>›</span>
+                        ):(
+                          <button onClick={e=>{e.stopPropagation();deletePerson(p.id);}} style={{background:"none",border:"none",color:"rgba(248,113,113,0.5)",fontSize:18,cursor:"pointer",padding:6,lineHeight:1}}>🗑️</button>
+                        )}
                       </div>
                     );
                   })}
@@ -1624,7 +1736,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Account entry point */}
-              <div onClick={()=>setSettingsView("account")} style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}>
+              <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",minHeight:44}}>
                 <span style={{color:C(0.82),fontSize:14,fontWeight:500}}>Account</span>
                 <span style={{color:C(0.2),fontSize:17}}>›</span>
               </div>
@@ -1724,10 +1836,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <span style={{fontSize:20}}>🤝</span>
                       <span style={{color:"#34d399",fontSize:13,fontWeight:500}}>Dream Team — everyone contributed!</span>
                     </div>}
+                    <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Progress on tasks assigned to each person, this week</div>
                     {[...people].sort((a,b)=>getWeekStats(tasks,b.id,weekDates).pct-getWeekStats(tasks,a.id,weekDates).pct).map(p=>{
                       const ws=getWeekStats(tasks,p.id,weekDates);
                       const rank=getRank(computePts(tasks,p.id));
-                      const streak=myStreak; // approximate
                       return(
                         <div key={p.id} style={{marginBottom:14}}>
                           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
@@ -1737,11 +1849,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 {p.name}
                                 {meId===p.id&&<span style={{fontSize:11,color:"#818cf8",background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
                               </div>
-                              <div style={{color:rank.color,fontSize:11}}>{rank.label} · {computePts(tasks,p.id)} pts</div>
+                              <div style={{color:rank.color,fontSize:11}}>{rank.label}</div>
                             </div>
                             <div style={{textAlign:"right"}}>
-                              <div style={{color:"rgba(255,255,255,0.88)",fontSize:15,fontWeight:700}}>{ws.done}<span style={{color:"rgba(255,255,255,0.3)",fontSize:11}}>/{ws.total}</span></div>
-                              <div style={{color:ws.pct>=80?"#34d399":ws.pct>=50?"#fbbf24":"#f87171",fontSize:11,fontWeight:600}}>{ws.pct}%</div>
+                              <div style={{color:"rgba(255,255,255,0.88)",fontSize:15,fontWeight:700}}>{ws.done} <span style={{color:"rgba(255,255,255,0.4)",fontSize:11,fontWeight:500}}>of {ws.total} tasks</span></div>
+                              <div style={{color:ws.pct>=80?"#34d399":ws.pct>=50?"#fbbf24":"#f87171",fontSize:11,fontWeight:600}}>{ws.pct}% done this week</div>
                             </div>
                           </div>
                           <div style={{background:"rgba(255,255,255,0.07)",borderRadius:4,height:4,overflow:"hidden"}}>
