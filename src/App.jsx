@@ -558,6 +558,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const zoneRefs=useRef({});
   const [dragOver,setDragOver]= useState(null);
   const [expandId,setExpandId]= useState(null);
+  useEffect(()=>{ if(tab!=="tasks") setExpandId(null); },[tab]);
+  useEffect(()=>{ if(tab!=="settings") setZoneExpandId(null); },[tab]);
   const [editTaskId,setEditTaskId]= useState(null);
   const [freeze,setFreeze]= useState(null); // {day, order:[ids]} — frozen render order during the 400ms hold
   const [justLiked,setJustLiked]= useState(null);
@@ -1599,7 +1601,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <span style={{color:C(0.18),fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
                           </div>
                           {open&&(
-                            <div onClick={e=>e.stopPropagation()} style={{marginTop:12,paddingTop:12}}>
+                            <div onClick={e=>e.stopPropagation()} style={{marginTop:6,paddingTop:8}}>
                               {people.length>1&&(
                               <>
                               <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:10}}>
