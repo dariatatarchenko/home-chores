@@ -424,7 +424,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           const row=rowToTask(payload.new);
           setTasks(ts=>{
             const exists=ts.some(t=>t.id===row.id);
-            return exists?ts.map(t=>t.id===row.id?row:t):[...ts,row];
+            return exists?ts.map(t=>t.id===row.id?row:t):[row,...ts];
           });
         }
       })
@@ -837,7 +837,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       setEditTaskId(null);
     } else {
       const newTask={id:uid(),...form,personId:form.personIds[0]||null,scheduledDates:dates,doneOn:[],likes:[],rescheduledFrom:null,createdBy:meId,confirmedBy:[meId]};
-      setTasks(ts=>[...ts,newTask]);
+      setTasks(ts=>[newTask,...ts]);
       const errMsg=await insertTask(newTask);
       if(errMsg){
         window.alert("This task couldn't be saved to the server: "+errMsg+"\n\nIt will disappear when you reload — please try adding it again.");
@@ -1001,8 +1001,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   };
 
   const groupedZones=(()=>{
-    const grouped=zones.map(z=>({...z,tasks:tasks.filter(t=>t.zone===z.id)})).filter(z=>z.tasks.length>0);
-    const orphaned=tasks.filter(t=>!zones.some(z=>z.id===t.zone));
+    const grouped=zones.map(z=>({...z,tasks:tasks.filter(t=>t.zone===z.id).slice().reverse()})).filter(z=>z.tasks.length>0);
+    const orphaned=tasks.filter(t=>!zones.some(z=>z.id===t.zone)).slice().reverse();
     if(orphaned.length>0) grouped.push({id:"__orphaned__",label:"Unfiled",emoji:"❓",tasks:orphaned});
     return grouped;
   })();
@@ -1301,7 +1301,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
-                            if(pIds.length!==1) return <span style={{fontSize:12,color:"#2dd4bf",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
+                            if(pIds.length!==1) return <span style={{fontSize:12,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
                             const p=getPerson(pIds[0]);
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
@@ -1590,7 +1590,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
                                 <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}</span>
                                 {people.length>1&&(()=>{
-                                  if(pIds.length!==1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#2dd4bf",fontWeight:600}}>{tr("all")}</span></span>;
+                                  if(pIds.length!==1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
                                   const p=getPerson(pIds[0]);
                                   return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name}</span></span>;
                                 })()}
