@@ -652,44 +652,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if(!enteringWeek) return;
     if(!stripRef.current) return; // strip not mounted yet (e.g. still loading) — don't mark as "entered" yet, so the next retry can still fire
     prevTabRef.current=tab;
-    const computeTarget=(el)=>{
-      const visWeekLocal=Array.from({length:21},(_,i)=>{const d=new Date(TODAY);d.setDate(TODAY.getDate()+weekOff-7+i);return d;});
-      const selIdx=visWeekLocal.findIndex(d=>ds(d)===selDay);
-      if(selIdx<0) return null;
-      const cellW=51;
-      return Math.max(0,selIdx*cellW-(el.clientWidth*0.42)+(cellW/2));
-    };
     let cancelled=false;
-    // Verify-and-retry: some browsers (notably iOS Safari right after a fresh
-    // page load/tab switch) can silently override or ignore a scrollLeft set
-    // too early, snapping it back toward 0. Rather than guessing a fixed
-    // delay, we check the actual result after each attempt and keep retrying
-    // — with increasing delays — until it sticks or we give up.
-    const delays=[0,50,120,250,450,700,1000];
-    let attempt=0;
-    const tryCenter=()=>{
+    const scrollToSelected=()=>{
       if(cancelled) return;
       const el=stripRef.current;
       if(!el) return;
-      const target=computeTarget(el);
-      if(target==null) return;
-      el.scrollLeft=target;
-      attempt++;
-      if(attempt>=delays.length) return;
-      setTimeout(()=>{
-        if(cancelled) return;
-        const el2=stripRef.current;
-        if(!el2) return;
-        // if it drifted from where we last set it, keep correcting
-        if(Math.abs(el2.scrollLeft-target)>3) tryCenter();
-        else {
-          // looks stable, but do one more confirmation pass a bit later just in case
-          if(attempt<delays.length) setTimeout(tryCenter,delays[attempt]);
-        }
-      },delays[attempt]);
+      const cell=el.querySelector(`[data-date="${selDay}"]`);
+      if(!cell) return;
+      cell.scrollIntoView({inline:"center",block:"nearest"});
     };
-    tryCenter();
-    return ()=>{ cancelled=true; };
+    // Using the browser's own scrollIntoView instead of manually computing
+    // scrollLeft — it handles all width/layout measurement internally, which
+    // should be far more robust against iOS Safari's layout-settling quirks
+    // than our own math. Re-applied a few times just in case layout is still
+    // settling right after a tab switch or fresh page load.
+    requestAnimationFrame(scrollToSelected);
+    const timers=[100,300,600].map(ms=>setTimeout(scrollToSelected,ms));
+    return ()=>{ cancelled=true; timers.forEach(clearTimeout); };
   },[dataLoading,tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
