@@ -646,30 +646,47 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   },[selDay]);
 
   // ── Scroll selected day to center (only when entering the Week tab) ────────
+  const hasCenteredOnceRef=useRef(false);
+  const weekScrollLeftRef=useRef(null);
   const prevTabRef=useRef(null);
+
+  // One-time initial centering: only when the app first finishes loading,
+  // center the strip on today (well, on whatever selDay starts as). After
+  // this happens once, we never auto-center again — the user's own scroll
+  // position takes over from here.
   useEffect(()=>{
-    const enteringWeek=tab==="week"&&prevTabRef.current!=="week";
-    if(!enteringWeek) return;
-    if(!stripRef.current) return; // strip not mounted yet (e.g. still loading) — don't mark as "entered" yet, so the next retry can still fire
-    prevTabRef.current=tab;
+    if(hasCenteredOnceRef.current) return;
+    if(dataLoading) return;
+    if(tab!=="week") return;
+    if(!stripRef.current) return;
+    hasCenteredOnceRef.current=true;
     let cancelled=false;
-    const scrollToSelected=()=>{
+    const doCenter=()=>{
       if(cancelled) return;
       const el=stripRef.current;
       if(!el) return;
       const cell=el.querySelector(`[data-date="${selDay}"]`);
       if(!cell) return;
       cell.scrollIntoView({inline:"center",block:"nearest"});
+      weekScrollLeftRef.current=el.scrollLeft;
     };
-    // Using the browser's own scrollIntoView instead of manually computing
-    // scrollLeft — it handles all width/layout measurement internally, which
-    // should be far more robust against iOS Safari's layout-settling quirks
-    // than our own math. Re-applied a few times just in case layout is still
-    // settling right after a tab switch or fresh page load.
-    requestAnimationFrame(scrollToSelected);
-    const timers=[100,300,600].map(ms=>setTimeout(scrollToSelected,ms));
+    requestAnimationFrame(doCenter);
+    const timers=[100,300,600].map(ms=>setTimeout(doCenter,ms));
     return ()=>{ cancelled=true; timers.forEach(clearTimeout); };
   },[dataLoading,tab]);
+
+  // Whenever we return to the Week tab (after the very first time), restore
+  // whatever scroll position the user last left it at — never re-center.
+  useEffect(()=>{
+    const enteringWeek=tab==="week"&&prevTabRef.current!=="week";
+    prevTabRef.current=tab;
+    if(!enteringWeek) return;
+    if(!hasCenteredOnceRef.current) return; // the initial-centering effect handles the very first entry
+    if(weekScrollLeftRef.current==null) return;
+    const el=stripRef.current;
+    if(!el) return;
+    el.scrollLeft=weekScrollLeftRef.current;
+  },[tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const isDone=(t,d)=>doneOnDate(t.doneOn,d);
@@ -840,7 +857,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setSavingTask(false);
     setToast({icon:wasEditing?"✏️":"✅",from:wasEditing?"Task updated":"Task added",text:form.text.trim()});
     setTimeout(()=>setToast(null),2800);
-    if(returnTab==="week"&&dates[0]) setSelDay(dates[0]);
+    if(returnTab==="week"&&dates[0]){
+      setSelDay(dates[0]);
+      weekScrollLeftRef.current=null;
+      setTimeout(()=>{
+        const el=stripRef.current;
+        const cell=el?.querySelector(`[data-date="${dates[0]}"]`);
+        cell?.scrollIntoView({inline:"center",block:"nearest"});
+      },50);
+    }
     setTab(returnTab);
   };
 
@@ -1115,7 +1140,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Week strip */}
               <div style={{flexShrink:0,margin:"0 0 2px"}}>
-                <div ref={stripRef} style={{display:"flex",gap:5,paddingLeft:20,paddingRight:20,paddingTop:20,paddingBottom:20,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",
+                <div ref={stripRef} onScroll={e=>{weekScrollLeftRef.current=e.currentTarget.scrollLeft;}} style={{display:"flex",gap:5,paddingLeft:20,paddingRight:20,paddingTop:20,paddingBottom:20,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",
                   WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)",
                   maskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)"}}>
                   {visWeek.map(d=>{
