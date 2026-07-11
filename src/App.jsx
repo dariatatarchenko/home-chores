@@ -312,6 +312,24 @@ function Avatar({person,size=30}){
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 function MainApp({household, me:initialMe, email, onSignOut}){
+  // Household-wide "day reset hour" — if set (e.g. 5 for 5am), the whole
+  // household's notion of "today" doesn't roll over at midnight but at this
+  // hour instead, so late-night task completion still counts toward the
+  // previous day. Shadows the module-level TODAY/todayStr constants so every
+  // existing date computation throughout this file picks it up automatically.
+  const [dayResetHour,setDayResetHour]=useState(household.day_reset_hour||0);
+  useEffect(()=>{
+    supabase.from("households").select("day_reset_hour").eq("id",household.id).single()
+      .then(({data})=>{ if(data) setDayResetHour(data.day_reset_hour||0); });
+  },[household.id]);
+  const TODAY=(()=>{
+    const now=new Date();
+    if(dayResetHour>0&&now.getHours()<dayResetHour) now.setDate(now.getDate()-1);
+    now.setHours(0,0,0,0);
+    return now;
+  })();
+  const todayStr=TODAY.toISOString().slice(0,10);
+
   useEffect(()=>{
     const setVh=()=>{
       document.documentElement.style.setProperty("--app-height",`${window.innerHeight}px`);
@@ -1273,8 +1291,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
               )}
 
-              {/* Move incomplete tasks forward */}
-              {selDay<todayStr&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
+              {/* Move incomplete tasks forward — only for yesterday; older days are past the point of moving them */}
+              {(()=>{const y=new Date(TODAY);y.setDate(y.getDate()-1);return selDay===ds(y);})()&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
                 <div style={{flexShrink:0,margin:"0 20px 14px",...G(0.08,20),border:"1px solid rgba(251,191,36,0.25)",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
                   <span style={{fontSize:18}}>⏭️</span>
                   <div style={{flex:1,color:C(0.7),fontSize:12,lineHeight:1.4}}>
@@ -1378,26 +1396,26 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Check */}
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",
-                          border:`2px solid ${done?"#34d399":"transparent"}`,background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
+                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,border:"none",
+                          background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
                           position:"relative",transition:"all 0.2s",
                         }}>
-                          {!done&&(()=>{ const R=13,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
-                          <svg width="28" height="28" style={{position:"absolute",top:-2,left:-2,transform:"rotate(-90deg)"}}>
-                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
+                          {!done&&(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
+                          <svg viewBox="0 0 28 28" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)"}}>
+                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.5"/>
                             <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<span style={{fontSize:12,fontWeight:700,color:"#fff",animation:"checkPop 0.35s ease",lineHeight:1}}>✓</span>
-                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6),lineHeight:1,transform:"translate(1.5px,1.5px)",display:"inline-block"}}>{doneCount}/{t.timesPerDay}</span>}
+                              ?<span style={{fontSize:12,fontWeight:700,color:"#fff",lineHeight:1}}>✓</span>
+                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
                         width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",
-                        border:`2px solid ${done?"#34d399":isFuture?C(0.07):C(0.2)}`,
+                        border:done?"none":`2px solid ${isFuture?C(0.07):C(0.2)}`,
                         background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":C(0.04),
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
@@ -1570,10 +1588,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
-                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):(t.timesPerDay||1)>1?"transparent":C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=9.7,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
-                          <svg width="22" height="22" style={{position:"absolute",top:-2,left:-2,transform:"rotate(-90deg)"}}>
-                            <circle cx="11" cy="11" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.2"/>
+                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=10,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
+                          <svg viewBox="0 0 22 22" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)"}}>
+                            <circle cx="11" cy="11" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.2"/>
                             <circle cx="11" cy="11" r={R} fill="none" stroke="#34d399" strokeWidth="2.2" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
@@ -1684,8 +1702,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ ALL TASKS ══════════════════════════════════════════ */}
           {tab==="tasks"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"16px 20px 8px"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+              <div style={{flexShrink:0,padding:"18px 20px 20px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                 <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_alltasks")}</div>
                 <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}>🏆 Stats</button>
               </div>
@@ -1929,13 +1947,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Preferences */}
               <div style={{marginTop:24,marginBottom:24}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("theme")}</span>
                   <button onClick={()=>setThemePersisted(theme==="dark"?"light":"dark")} style={{position:"relative",width:56,height:32,borderRadius:16,border:"none",background:C(0.1),cursor:"pointer",flexShrink:0,padding:0}}>
                     <div style={{position:"absolute",top:3,left:theme==="dark"?3:27,width:26,height:26,borderRadius:"50%",background:theme==="dark"?"#3730a3":"#fbbf24",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,transition:"left 0.2s"}}>
                       {theme==="dark"?"🌙":"☀️"}
                     </div>
                   </button>
+                </div>
+                <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:6}}>Day starts at</div>
+                <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Applies to everyone in this home — late-night tasks still count toward the previous day</div>
+                <div style={{display:"flex",gap:8}}>
+                  {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
+                    <button key={opt.h} onClick={()=>{
+                      setDayResetHour(opt.h);
+                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{ if(error) console.error("setDayResetHour",error); });
+                    }} style={{flex:1,height:34,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":C(0.06),border:`1.5px solid ${dayResetHour===opt.h?"#818cf8":"transparent"}`,borderRadius:12,color:dayResetHour===opt.h?"#fff":C(0.4),fontSize:13,fontWeight:dayResetHour===opt.h?700:500,cursor:"pointer"}}>{opt.label}</button>
+                  ))}
                 </div>
               </div>
 
