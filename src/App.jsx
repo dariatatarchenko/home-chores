@@ -1379,13 +1379,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           {!done&&(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
                           <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
                             <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                            <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5"
-                              strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="butt" style={{transition:"stroke-dasharray 0.25s ease"}}/>
+                            {frac>0&&<circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5"
+                              strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="butt" style={{transition:"stroke-dasharray 0.25s ease"}}/>}
                           </svg>
                           );})()}
                           {done
-                            ?<span style={{position:"relative",color:"#fff",fontSize:12,fontWeight:700,animation:"checkPop 0.35s ease"}}>✓</span>
-                            :<span style={{position:"relative",color:C(0.6),fontSize:9,fontWeight:700}}>{doneCount}/{t.timesPerDay}</span>}
+                            ?<span style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",color:"#fff",fontSize:12,fontWeight:700,animation:"checkPop 0.35s ease",lineHeight:1}}>✓</span>
+                            :<span style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",color:C(0.6),fontSize:9,fontWeight:700,lineHeight:1,whiteSpace:"nowrap"}}>{doneCount}/{t.timesPerDay}</span>}
                         </button>
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
