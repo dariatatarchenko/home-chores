@@ -47,7 +47,7 @@ const getHouseholdStreak=(tasks,ds,TODAY)=>{
     const dStr=ds(d);
     const dayAll=tasks.filter(t=>t.scheduledDates.includes(dStr));
     if(dayAll.length===0) continue; // no tasks scheduled — not a break, just skip
-    if(dayAll.every(t=>doneOnDate(t.doneOn,dStr))) streak++;
+    if(dayAll.every(t=>doneOnDate(t,dStr))) streak++;
     else break;
   }
   return streak;
@@ -79,6 +79,9 @@ const ZONES_DEFAULT = [
 const ZONE_EMOJIS = ["🍳","🚿","🛋️","🛏️","🚪","📦","🌿","🪟","🧹","🧺","🪣","🛁","🚽","🧴","🪴","🖥️","📚","🎮","🧸","🐾","🚗","🏋️","🎨","🎵","🏠","🏡","🚙","🍽️","☕","🧽","🧼","🗑️","🔌","💡","🪑","🚲","🧵","🎒","🧦","👕","🌱","🔧","🛠️","📮","🗄️","🖼️","🪞","🕯️","🧊","🌡️","📺","🎹","⚽"];
 const AVATAR_EMOJIS = ["😀","😎","🥳","🦊","🐱","🐶","🐼","🦁","🐰","🐨","🐯","🐸","🌟","🎯","🍀","🔥","💎","🎸","🚀","🌈","⚡","🌸","🍕","🦄"];
 const PALETTE = ["#f87171","#fb923c","#fbbf24","#34d399","#38bdf8","#818cf8","#e879f9","#94a3b8"];
+// Public OAuth Client ID (safe to expose client-side) — replace with the real
+// one from Google Cloud Console once created.
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 const CONFETTI = ["#f87171","#fbbf24","#34d399","#818cf8","#e879f9","#38bdf8"];
 
 const FREQ_OPTIONS = [
@@ -210,7 +213,11 @@ const ds = d => (d instanceof Date ? d : new Date(d+"T00:00:00")).toISOString().
 // doneOn entries are now {date, by} objects (not plain date strings) so we can
 // credit points/streaks to whoever ACTUALLY completed a task, not just whoever
 // it happened to be assigned to.
-const doneOnDate=(doneOn,d)=>(doneOn||[]).some(e=>e.date===d);
+const doneOnDate=(t,d)=>{
+  const count=(t.doneOn||[]).filter(e=>e.date===d).length;
+  return count>=(t.timesPerDay||1);
+};
+const doneCountOn=(t,d)=>(t.doneOn||[]).filter(e=>e.date===d).length;
 const doneOnDateBy=(doneOn,d,pid)=>(doneOn||[]).some(e=>e.date===d&&e.by===pid);
 
 const uid=()=>(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
@@ -284,7 +291,7 @@ const computeStreak = task => {
     const dStr=ds(d);
     const myT=task.scheduledDates.includes(dStr);
     if(!myT) continue;
-    if(doneOnDate(task.doneOn,dStr)) streak++;
+    if(doneOnDate(task,dStr)) streak++;
     else break;
   }
   return streak;
@@ -342,10 +349,40 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   });
   const CARD={...G(0.08,24),borderRadius:20,padding:"13px 15px"};
   const [codeCopied,setCodeCopied]=useState(false);
+  const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
+  useEffect(()=>{
+    supabase.from("google_calendar_tokens").select("person_id").eq("person_id",meId).maybeSingle()
+      .then(({data})=>setGoogleConnected(!!data))
+      .catch(()=>setGoogleConnected(false));
+  },[meId]);
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    if(params.get("google_calendar_connected")){
+      setGoogleConnected(true);
+      setToast({icon:"📅",from:"Google Calendar connected",text:"Your tasks will now sync automatically"});
+      setTimeout(()=>setToast(null),3000);
+      window.history.replaceState({},"",window.location.pathname);
+    } else if(params.get("google_calendar_error")){
+      window.alert("Google Calendar connection failed: "+params.get("google_calendar_error"));
+      window.history.replaceState({},"",window.location.pathname);
+    }
+  },[]);
+  const connectGoogleCalendar=()=>{
+    const redirectUri="https://housequest.design/api/google-callback";
+    const scope="https://www.googleapis.com/auth/calendar.events";
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${meId}`;
+    window.location.href=url;
+  };
+  const disconnectGoogleCalendar=()=>{
+    if(!window.confirm("Disconnect Google Calendar? Your tasks will stop syncing.")) return;
+    supabase.from("google_calendar_tokens").delete().eq("person_id",meId).then(({error})=>{
+      if(error){ console.error("disconnectGoogleCalendar",error); return; }
+      setGoogleConnected(false);
+    });
+  };
   const [settingsView,setSettingsView]=useState("main");
   const settingsScrollRef=useRef(null);
   const settingsMainScrollPos=useRef(0);
-  const [dismissedConfirms,setDismissedConfirms]=useState(new Set());
   const [zoneExpandId,setZoneExpandId]=useState(null);
   const [tab,     setTab]     = useState("week");
   const [returnTab,setReturnTab]= useState("week");
@@ -362,7 +399,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     personIds:r.person_ids||[],personId:(r.person_ids||[])[0]||null,
     scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
     rescheduledFrom:r.rescheduled_from,createdBy:r.created_by,confirmedBy:r.confirmed_by||[],
-    excludedDates:r.excluded_dates||[],
+    excludedDates:r.excluded_dates||[],timesPerDay:r.times_per_day||1,shiftAnchor:r.shift_anchor||null,
   });
   const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body,readBy:r.read_by||[]});
 
@@ -477,15 +514,42 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if("rescheduledFrom" in fields) dbFields.rescheduled_from=fields.rescheduledFrom;
     if("confirmedBy" in fields) dbFields.confirmed_by=fields.confirmedBy;
     if("excludedDates" in fields) dbFields.excluded_dates=fields.excludedDates;
+    if("timesPerDay" in fields) dbFields.times_per_day=fields.timesPerDay;
+    if("shiftAnchor" in fields) dbFields.shift_anchor=fields.shiftAnchor;
     dbFields.updated_at=new Date().toISOString();
-    supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{ if(error) console.error("persistTask",error); });
+    supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{
+      if(error){
+        console.error("persistTask",error);
+        window.alert("Couldn't save this change to the server: "+error.message+"\n\nIt may not survive a page reload — please let Daria know.");
+      }
+    });
+  };
+  const syncTaskToGoogleCalendar=async(task,existingEventId)=>{
+    if(!googleConnected) return;
+    try{
+      const {data:{session}}=await supabase.auth.getSession();
+      if(!session?.access_token) return;
+      await fetch("/api/google-calendar-sync",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          access_token:session.access_token,
+          task_id:task.id,
+          title:task.text,
+          date:task.scheduledDates?.[0],
+          existing_event_id:existingEventId||null,
+        }),
+      });
+    }catch(err){
+      console.error("syncTaskToGoogleCalendar",err); // best-effort — don't block the task save on calendar sync failures
+    }
   };
   const insertTask=async(row)=>{
     try{
       const {error}=await withRetry(()=>supabase.from("tasks").insert({
         id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
         custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
-        done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,confirmed_by:row.confirmedBy||[],excluded_dates:row.excludedDates||[],
+        done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,confirmed_by:row.confirmedBy||[],excluded_dates:row.excludedDates||[],times_per_day:row.timesPerDay||1,shift_anchor:row.shiftAnchor||null,
       }));
       if(error) console.error("insertTask",error);
       return error?error.message:null;
@@ -594,7 +658,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [assigneeError,setAssigneeError]= useState(false);
   const [assigneePopover,setAssigneePopover]= useState(null);
 
-  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32};
+  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32,timesPerDay:1};
   const [form,setForm]= useState(blankForm);
 
   const prevPct = useRef(0);
@@ -691,7 +755,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   },[tab]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  const isDone=(t,d)=>doneOnDate(t.doneOn,d);
+  const isDone=(t,d)=>doneOnDate(t,d);
   const isScheduledOn=(t,d)=>{
     if((t.excludedDates||[]).includes(d)) return false; // explicitly rescheduled away — never re-derive it via extrapolation
     if(t.scheduledDates.includes(d)) return true;
@@ -700,6 +764,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const f=FREQ_OPTIONS.find(x=>x.id===t.freq);
     const days=t.freq==="custom"?t.customDays:f?.days;
     if(!days) return false;
+    // If one occurrence was dragged to a later day, every occurrence from that
+    // point forward shifts by the same amount — only the anchor point changes,
+    // history before it keeps using the original schedule untouched.
+    if(t.shiftAnchor&&d>=t.shiftAnchor){
+      const diff2=Math.round((new Date(d)-new Date(t.shiftAnchor))/(1000*60*60*24));
+      return diff2%days===0;
+    }
     const first=t.scheduledDates[0];
     if(!first||d<first) return false;
     const diff=Math.round((new Date(d)-new Date(first))/(1000*60*60*24));
@@ -725,9 +796,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       // when THIS person finishes all of their OWN tasks for the day, even if others
       // in the household still have things left to do.
       const dayAll=tasks.filter(x=>x.scheduledDates.includes(d));
-      const nowAllDone=dayAll.length>0&&dayAll.every(x=>x.id===id||doneOnDate(x.doneOn,d));
+      const nowAllDone=dayAll.length>0&&dayAll.every(x=>x.id===id||doneOnDate(x,d));
       const myDayTasks=dayAll.filter(x=>(x.personIds||[x.personId]).includes(meId));
-      const myNowAllDone=myDayTasks.length>0&&myDayTasks.every(x=>x.id===id||doneOnDate(x.doneOn,d));
+      const myNowAllDone=myDayTasks.length>0&&myDayTasks.every(x=>x.id===id||doneOnDate(x,d));
       if((nowAllDone||myNowAllDone)&&tab==="week"){
         const isToday=d===todayStr, isPast=d<todayStr;
         const dateLabel=isToday?"today":isPast?new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}):"this day";
@@ -747,7 +818,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       }
     }
     setActivityOrder(o=>[key,...o.filter(k=>k!==key)]);
-    const newDoneOn=isDone(t,d)?(t.doneOn||[]).filter(e=>e.date!==d):[...(t.doneOn||[]),{date:d,by:meId}];
+    const newDoneOn=isDone(t,d)
+      ? (()=>{
+          const arr=t.doneOn||[];
+          const lastIdx=arr.map((e,i)=>e.date===d?i:-1).filter(i=>i>=0).pop();
+          return lastIdx==null?arr:arr.filter((_,i)=>i!==lastIdx);
+        })()
+      : [...(t.doneOn||[]),{date:d,by:meId}];
     setTasks(ts=>ts.map(t=>t.id!==id?t:{...t,doneOn:newDoneOn}));
     persistTask(id,{doneOn:newDoneOn});
   };
@@ -786,7 +863,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       if(t.id!==id) return t;
       const dates=[...new Set([...t.scheduledDates.filter(x=>x!==from),to])].sort();
       const excludedDates=[...new Set([...(t.excludedDates||[]),from])];
-      newFields={scheduledDates:dates,doneOn:(t.doneOn||[]).filter(e=>e.date!==from),rescheduledFrom:from,excludedDates};
+      // for recurring tasks, shift every future occurrence forward too — not
+      // just this one day
+      const shiftAnchor=(t.freq&&t.freq!=="once")?to:t.shiftAnchor;
+      newFields={scheduledDates:dates,doneOn:(t.doneOn||[]).filter(e=>e.date!==from),rescheduledFrom:from,excludedDates,shiftAnchor};
       return{...t,...newFields};
     }));
     if(newFields) persistTask(id,newFields);
@@ -803,7 +883,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         if(x.id!==t.id) return x;
         const dates=[...new Set([...x.scheduledDates.filter(d=>d!==fromDay),toDay])].sort();
         const excludedDates=[...new Set([...(x.excludedDates||[]),fromDay])];
-        newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay,excludedDates};
+        const shiftAnchor=(x.freq&&x.freq!=="once")?toDay:x.shiftAnchor;
+        newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay,excludedDates,shiftAnchor};
         return{...x,...newFields};
       }));
       if(newFields) persistTask(t.id,newFields);
@@ -836,6 +917,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const updated={...form,personId:form.personIds[0]||null,scheduledDates:dates};
       setTasks(ts=>ts.map(t=>t.id!==editTaskId?t:{...t,...updated}));
       persistTask(editTaskId,updated);
+      const editedTask=tasks.find(t=>t.id===editTaskId);
+      syncTaskToGoogleCalendar({...editedTask,...updated},editedTask?.googleEventId);
       setEditTaskId(null);
     } else {
       const newTask={id:uid(),...form,personId:form.personIds[0]||null,scheduledDates:dates,doneOn:[],likes:[],rescheduledFrom:null,createdBy:meId,confirmedBy:[meId]};
@@ -847,11 +930,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         setSavingTask(false);
         return;
       }
+      syncTaskToGoogleCalendar(newTask);
       if(people.length>1){
         const creator=getPerson(meId);
+        const assignedIds=(newTask.personIds||[]).filter(Boolean);
+        const assignedNote=assignedIds.length===1&&assignedIds[0]!==meId
+          ?` — assigned to ${getPerson(assignedIds[0])?.name||"you"}`
+          :"";
         supabase.from("notifications").insert({
           household_id:household.id,actor_person_id:meId,icon:"🆕",
-          title:`${creator?.name||"Someone"} added a new task`,body:newTask.text,
+          title:`${creator?.name||"Someone"} added a new task${assignedNote}`,body:newTask.text,
         }).then(({error})=>{ if(error) console.error("insert new-task notification",error); });
       }
     }
@@ -982,25 +1070,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const dayAllTasks=dayTasks(selDay);
   const dayAllDone=dayAllTasks.filter(t=>isDone(t,selDay)).length;
   const pct=dayAllTasks.length===0?100:Math.round(dayAllDone/dayAllTasks.length*100);
-  // Task assignment confirmation: find the first task assigned specifically to
-  // me (not "All", since "All" doesn't really need individual sign-off) that I
-  // haven't acknowledged yet and haven't dismissed this session.
-  const pendingConfirmTask=tasks.find(t=>{
-    const pIds=t.personIds||[t.personId].filter(Boolean);
-    return pIds.length===1&&pIds[0]===meId
-      &&t.createdBy&&t.createdBy!==meId // only when someone ELSE created and assigned it — never your own tasks, and never old tasks with no recorded creator
-      &&!(t.confirmedBy||[]).includes(meId)&&!dismissedConfirms.has(t.id);
-  });
-  const confirmTaskAssignment=(taskId,accept)=>{
-    setDismissedConfirms(s=>new Set([...s,taskId]));
-    if(accept){
-      const t=tasks.find(x=>x.id===taskId);
-      if(!t) return;
-      const newConfirmedBy=[...(t.confirmedBy||[]),meId];
-      setTasks(ts=>ts.map(x=>x.id===taskId?{...x,confirmedBy:newConfirmedBy}:x));
-      persistTask(taskId,{confirmedBy:newConfirmedBy});
-    }
-  };
 
   const groupedZones=(()=>{
     const grouped=zones.map(z=>({...z,tasks:tasks.filter(t=>t.zone===z.id).slice().reverse()})).filter(z=>z.tasks.length>0);
@@ -1240,7 +1309,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <div style={{color:C(0.38),marginTop:10,fontSize:14}}>No tasks for this day</div>
                   </div>
                 ):selTasks.map(t=>{
-                  const done=isDone(t,selDay),person=getPerson(t.personId),zone=getZone(t.zone);
+                  const done=isDone(t,selDay),doneCount=doneCountOn(t,selDay),person=getPerson(t.personId),zone=getZone(t.zone);
                   const liked=(t.likes||[]).includes(meId+selDay);
                   const likeCount=(t.likes||[]).filter(l=>l.endsWith(selDay)).length;
                   const streak=computeStreak(t);
@@ -1287,6 +1356,24 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         zIndex:dragActive&&dragInfo?.id===t.id?10:1,
 }}>
                       {/* Check */}
+                      {(t.timesPerDay||1)>1?(
+                        <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
+                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",position:"relative",
+                          border:"none",background:"none",cursor:isFuture?"not-allowed":"pointer",
+                          display:"flex",alignItems:"center",justifyContent:"center",
+                        }}>
+                          {(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
+                          <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
+                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.1)} strokeWidth="3"/>
+                            <circle cx="14" cy="14" r={R} fill="none" stroke={done?"#34d399":"#818cf8"} strokeWidth="3"
+                              strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.25s ease"}}/>
+                          </svg>
+                          );})()}
+                          {done
+                            ?<span style={{position:"relative",color:"#34d399",fontSize:12,fontWeight:700,animation:"checkPop 0.35s ease"}}>✓</span>
+                            :<span style={{position:"relative",color:C(0.5),fontSize:9,fontWeight:700}}>{doneCount}/{t.timesPerDay}</span>}
+                        </button>
+                      ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
                         width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",
                         border:`2px solid ${done?"#34d399":isFuture?C(0.07):C(0.2)}`,
@@ -1297,6 +1384,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         {done&&<span style={{color:"#fff",fontSize:12,fontWeight:700,display:"inline-block",animation:"checkPop 0.35s ease"}}>✓</span>}
                         {!done&&isFuture&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
                       </button>
+                      )}
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
                         <div style={{color:C(0.9),fontSize:15,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
@@ -1513,6 +1601,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   )}
                 </div>
 
+                <div>
+                  <span style={labelSt}>How many times per day?</span>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.max(1,(f.timesPerDay||1)-1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer"}}>−</button>
+                    <span style={{color:"#fff",fontSize:16,fontWeight:700,minWidth:20,textAlign:"center"}}>{form.timesPerDay||1}</span>
+                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.min(10,(f.timesPerDay||1)+1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer"}}>+</button>
+                    {(form.timesPerDay||1)>1&&<span style={{color:C(0.4),fontSize:12}}>Shows as {form.timesPerDay} checkmarks per day</span>}
+                  </div>
+                </div>
+
                 <div style={{width:"100%",maxWidth:"100%",overflow:"hidden",boxSizing:"border-box"}}>
                   <span style={labelSt}>{tr("start_date")}</span>
                   <input type="date" value={form.startDate} min={todayStr}
@@ -1625,10 +1723,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                {(!t.createdBy||t.createdBy===meId)&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32});setExpandId(null);setTab("add");}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1});setExpandId(null);setTab("add");}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
-                              {t.createdBy&&t.createdBy!==meId&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name} — only they can delete it</div>:null;})()}
+                              {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
                           )}
                         </div>
@@ -1808,6 +1906,21 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {settingsView==="account"&&(
               <div>
                 {email&&<div style={{color:C(0.3),fontSize:12,marginBottom:20}}>{tr("signed_in_as")} {email}</div>}
+
+                <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>Google Calendar</div>
+                <div style={{...CARD,display:"flex",alignItems:"center",gap:10,marginBottom:24}}>
+                  <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>📅</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{color:C(0.82),fontSize:14,fontWeight:500}}>{googleConnected?"Connected":"Not connected"}</div>
+                    <div style={{color:C(0.4),fontSize:11,marginTop:1}}>{googleConnected?"Your tasks sync automatically":"Sync your tasks to Google Calendar"}</div>
+                  </div>
+                  {googleConnected===null?null:googleConnected?(
+                    <button onClick={disconnectGoogleCalendar} style={{background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px 12px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer",flexShrink:0}}>Disconnect</button>
+                  ):(
+                    <button onClick={connectGoogleCalendar} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"9px 12px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>Connect</button>
+                  )}
+                </div>
+
                 <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>{tr("invite_code")}</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <span style={{color:C(0.85),fontSize:18,fontWeight:700,letterSpacing:2}}>{household.invite_code}</span>
@@ -2129,7 +2242,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           const dStr=ds(d);
                           const dayAll=tasks.filter(t=>t.scheduledDates.includes(dStr));
                           total+=dayAll.length;
-                          done+=dayAll.filter(t=>doneOnDate(t.doneOn,dStr)).length;
+                          done+=dayAll.filter(t=>doneOnDate(t,dStr)).length;
                         }
                         return {label,pct:total===0?null:Math.round(done/total*100)};
                       });
@@ -2237,24 +2350,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
                 </>);
               })()}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── ASSIGNMENT CONFIRMATION ───────────────────────────── */}
-        {pendingConfirmTask&&(
-          <div style={{position:"absolute",inset:0,zIndex:450,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",padding:24}}>
-            <div style={{width:"100%",maxWidth:320,background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:24,padding:"28px 24px",textAlign:"center",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.1)"}}>
-              <div style={{fontSize:44,marginBottom:12}}>📋</div>
-              <div style={{color:"#fff",fontSize:18,fontWeight:700,marginBottom:8}}>New task assigned to you</div>
-              <div style={{color:"rgba(255,255,255,0.6)",fontSize:14,marginBottom:24}}>
-                {(()=>{const owner=getPerson(pendingConfirmTask.createdBy);return owner?`${owner.name} assigned you:`:"You've been assigned:";})()}
-                {" "}<strong style={{color:"#fff"}}>{pendingConfirmTask.text}</strong>
-              </div>
-              <div style={{display:"flex",gap:10}}>
-                <button onClick={()=>confirmTaskAssignment(pendingConfirmTask.id,false)} style={{flex:1,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:14,padding:"12px",color:"rgba(255,255,255,0.7)",fontSize:14,fontWeight:600,cursor:"pointer"}}>Later</button>
-                <button onClick={()=>confirmTaskAssignment(pendingConfirmTask.id,true)} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:14,padding:"12px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Got it 👍</button>
               </div>
             </div>
           </div>
