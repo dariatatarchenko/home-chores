@@ -1389,8 +1389,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<span style={{fontSize:12,fontWeight:700,color:"#fff",animation:"checkPop 0.35s ease"}}>✓</span>
-                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6)}}>{doneCount}/{t.timesPerDay}</span>}
+                              ?<span style={{fontSize:12,fontWeight:700,color:"#fff",animation:"checkPop 0.35s ease",lineHeight:1}}>✓</span>
+                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
                       ):(
@@ -1570,7 +1570,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     return (
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
                         <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):(t.timesPerDay||1)>1?"transparent":C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=9,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
+                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=9.7,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg width="22" height="22" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
                             <circle cx="11" cy="11" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.2"/>
                             <circle cx="11" cy="11" r={R} fill="none" stroke="#34d399" strokeWidth="2.2" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
