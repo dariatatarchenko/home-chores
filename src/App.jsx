@@ -613,6 +613,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
   const [dragInfo,setDragInfo]= useState(null);
   const [dragActive,setDragActive]= useState(false);
+  const activeDragHandlerRef=useRef(null);
   const longPressTimerRef=useRef(null);
   const touchStartPosRef=useRef(null);
   const [zoneDragId,setZoneDragId]=useState(null);
@@ -668,26 +669,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const cardRefs = useRef({});
   const prevRects = useRef({});
   const taskNameRef = useRef(null);
-
-  // React's synthetic onTouchMove handler is registered as a passive listener,
-  // so calling e.preventDefault() inside it is silently ignored by the browser
-  // — the page scrolls anyway even while our drag logic runs. To actually stop
-  // the native scroll during an active drag, we attach a real, non-passive
-  // touchmove listener directly to the dragging card's DOM node.
-  useEffect(()=>{
-    if(!dragActive||!dragInfo?.id) return;
-    const el=cardRefs.current[dragInfo.id];
-    if(!el) return;
-    const handler=e=>{
-      e.preventDefault();
-      const touch=e.touches[0];
-      const target=document.elementFromPoint(touch.clientX,touch.clientY);
-      const d=target?.closest("[data-date]")?.dataset?.date;
-      if(d) setDragOver(d);
-    };
-    el.addEventListener("touchmove",handler,{passive:false});
-    return ()=>el.removeEventListener("touchmove",handler);
-  },[dragActive,dragInfo?.id]);
 
   useEffect(()=>{
     if(!zoneDragActive||!zoneDragId) return;
@@ -785,7 +766,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   const toggleDone=(id,d)=>{
     const t=tasks.find(x=>x.id===id);
-    const becomingDone=t&&!isDone(t,d);
+    const wasFullyDone=t&&isDone(t,d);
+    const currentCount=t?doneCountOn(t,d):0;
+    const target=t?.timesPerDay||1;
+    // For multi-times-per-day tasks, only the tap that actually reaches the
+    // target should behave like "becoming done" (reorder animation, day
+    // celebration) — intermediate taps (e.g. 2 of 4) shouldn't move the card
+    // or celebrate anything yet.
+    const becomingDone=!wasFullyDone&&(currentCount+1>=target);
     const key=id+"|"+d;
     if(becomingDone){
       const isLastUndone=d===selDay&&undoneRaw.length>0&&undoneRaw[undoneRaw.length-1].id===id;
@@ -811,7 +799,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           setTimeout(()=>setCelebration(null),3500);
         },500);
       }
-    } else {
+    } else if(wasFullyDone){
       const wasTopDone=d===selDay&&doneRawSorted.length>0&&doneRawSorted[0].id===id;
       if(!wasTopDone&&d===selDay){
         setFreeze({day:d,order:selTasks.map(x=>x.id)});
@@ -904,6 +892,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     }
     if(!form.zone||!zones.some(z=>z.id===form.zone)){
       window.alert("Please choose a zone for this task before saving.");
+      return;
+    }
+    if(people.length>1&&(!form.personIds||form.personIds.length===0)){
+      window.alert("Please choose at least one person for this task.");
       return;
     }
     setSavingTask(true);
@@ -1327,10 +1319,27 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           setDragInfo({id:t.id,from:selDay});
                           setDragActive(true);
                           if(navigator.vibrate) navigator.vibrate(10);
+                          // Attach the real, non-passive touchmove listener right now,
+                          // synchronously — waiting for a React re-render (via a
+                          // useEffect keyed on dragActive) can be just late enough
+                          // for iOS Safari to have already committed to scrolling
+                          // the page for this touch sequence.
+                          const el=cardRefs.current[t.id];
+                          if(el){
+                            const handler=me=>{
+                              me.preventDefault();
+                              const mt=me.touches[0];
+                              const target=document.elementFromPoint(mt.clientX,mt.clientY);
+                              const d=target?.closest("[data-date]")?.dataset?.date;
+                              if(d) setDragOver(d);
+                            };
+                            el.addEventListener("touchmove",handler,{passive:false});
+                            activeDragHandlerRef.current={el,handler};
+                          }
                         },380);
                       }}
                       onTouchMove={e=>{
-                        if(dragActive) return; // handled by the native non-passive listener instead
+                        if(dragActive) return; // real dragging is handled by the directly-attached native listener now
                         // not in drag mode yet — if the finger has moved noticeably,
                         // this is a normal scroll gesture, so cancel the pending long-press
                         const touch=e.touches[0];
@@ -1342,6 +1351,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       }}
                       onTouchEnd={e=>{
                         clearTimeout(longPressTimerRef.current);
+                        if(activeDragHandlerRef.current){
+                          activeDragHandlerRef.current.el.removeEventListener("touchmove",activeDragHandlerRef.current.handler);
+                          activeDragHandlerRef.current=null;
+                        }
                         if(!dragActive){ setDragInfo(null); return; }
                         const touch=e.changedTouches[0];
                         const el=document.elementFromPoint(touch.clientX,touch.clientY);
@@ -1359,20 +1372,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Check */}
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",position:"relative",
-                          border:"none",background:"none",cursor:isFuture?"not-allowed":"pointer",
-                          display:"flex",alignItems:"center",justifyContent:"center",
+                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",position:"relative",overflow:"hidden",
+                          border:`2px solid ${done?"#34d399":C(0.2)}`,background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":C(0.04),cursor:isFuture?"not-allowed":"pointer",
+                          display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                         }}>
-                          {(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
-                          <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
-                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.1)} strokeWidth="3"/>
-                            <circle cx="14" cy="14" r={R} fill="none" stroke={done?"#34d399":"#818cf8"} strokeWidth="3"
+                          {!done&&(()=>{ const R=11,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
+                          <svg width="26" height="26" viewBox="0 0 26 26" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
+                            <circle cx="13" cy="13" r={R} fill="none" stroke="#34d399" strokeWidth="3"
                               strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.25s ease"}}/>
                           </svg>
                           );})()}
                           {done
-                            ?<span style={{position:"relative",color:"#34d399",fontSize:12,fontWeight:700,animation:"checkPop 0.35s ease"}}>✓</span>
-                            :<span style={{position:"relative",color:C(0.5),fontSize:9,fontWeight:700}}>{doneCount}/{t.timesPerDay}</span>}
+                            ?<span style={{position:"relative",color:"#fff",fontSize:12,fontWeight:700,animation:"checkPop 0.35s ease"}}>✓</span>
+                            :<span style={{position:"relative",color:C(0.6),fontSize:9,fontWeight:700}}>{doneCount}/{t.timesPerDay}</span>}
                         </button>
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
@@ -1392,7 +1404,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
-                            if(pIds.length!==1) return <span style={{fontSize:12,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
+                            if(pIds.length===people.length) return <span style={{fontSize:12,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
+                            if(pIds.length>1){
+                              const p=getPerson(pIds[0]);
+                              return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name} +{pIds.length-1}</span>;
+                            }
                             const p=getPerson(pIds[0]);
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
@@ -1420,7 +1436,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",flexShrink:0,
                       }}>
                         <span style={{display:"inline-block",fontSize:15,lineHeight:1,animation:justLiked===(t.id+"|"+selDay)?"heartPop 0.4s ease":"none"}}>{likeCount>0?"❤️":"🤍"}</span>
-                        {likeCount>1&&<span style={{position:"absolute",top:-4,right:-4,background:"#f87171",borderRadius:"50%",minWidth:18,height:18,padding:"0 3px",fontSize:11,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{likeCount}</span>}
+                        {likeCount>1&&<span style={{position:"absolute",top:-4,right:-4,background:"#f87171",borderRadius:"50%",...(likeCount<10?{width:18,height:18}:{minWidth:18,height:18,padding:"0 4px"}),fontSize:11,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{likeCount}</span>}
                       </button>
                       {/* Avatar(s) */}
                       {(()=>{
@@ -1605,9 +1621,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <span style={labelSt}>How many times per day?</span>
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
-                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.max(1,(f.timesPerDay||1)-1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer"}}>−</button>
+                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.max(1,(f.timesPerDay||1)-1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
                     <span style={{color:"#fff",fontSize:16,fontWeight:700,minWidth:20,textAlign:"center"}}>{form.timesPerDay||1}</span>
-                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.min(10,(f.timesPerDay||1)+1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer"}}>+</button>
+                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.min(10,(f.timesPerDay||1)+1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
                     {(form.timesPerDay||1)>1&&<span style={{color:C(0.4),fontSize:12}}>Shows as {form.timesPerDay} checkmarks per day</span>}
                   </div>
                 </div>
@@ -1622,7 +1638,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <span style={labelSt}>{tr("assigned_to")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
-                    <button onClick={()=>setForm(f=>({...f,personIds:people.map(p=>p.id)}))} style={{
+                    <button onClick={()=>setForm(f=>({...f,personIds:(f.personIds||[]).length===people.length?[]:people.map(p=>p.id)}))} style={{
                       display:"flex",alignItems:"center",height:34,boxSizing:"border-box",
                       background:(form.personIds||[]).length===people.length?C(0.15):C(0.05),
                       border:`2px solid ${(form.personIds||[]).length===people.length?C(0.4):C(0.08)}`,
@@ -1631,8 +1647,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <span style={{color:(form.personIds||[]).length===people.length?C(0.9):C(0.4),fontSize:13,fontWeight:500}}>{tr("all")}</span>
                     </button>
                     {people.map(p=>{
-                      const sel=(form.personIds||[]).length===1&&(form.personIds||[]).includes(p.id);
-                      return <button key={p.id} onClick={()=>setForm(f=>({...f,personIds:[p.id]}))} style={{display:"flex",alignItems:"center",gap:7,height:34,boxSizing:"border-box",background:sel?p.color+"28":C(0.05),border:`2px solid ${sel?p.color+"90":C(0.08)}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",position:"relative"}}>
+                      const sel=(form.personIds||[]).includes(p.id);
+                      return <button key={p.id} onClick={()=>setForm(f=>{
+                        const cur=f.personIds||[];
+                        const next=cur.includes(p.id)?cur.filter(id=>id!==p.id):[...cur,p.id];
+                        return {...f,personIds:next};
+                      })} style={{display:"flex",alignItems:"center",gap:7,height:34,boxSizing:"border-box",background:sel?p.color+"28":C(0.05),border:`2px solid ${sel?p.color+"90":C(0.08)}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",position:"relative"}}>
                         <Avatar person={p} size={20}/>
                         <span style={{color:sel?p.color:C(0.45),fontSize:13,fontWeight:500}}>{p.name}</span>
                       </button>;
@@ -1691,8 +1711,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
                                 <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}</span>
                                 {people.length>1&&(()=>{
-                                  if(pIds.length!==1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
+                                  if(pIds.length===people.length) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
                                   const p=getPerson(pIds[0]);
+                                  if(pIds.length>1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name} +{pIds.length-1}</span></span>;
                                   return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name}</span></span>;
                                 })()}
                               </div>
