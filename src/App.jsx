@@ -1377,10 +1377,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                         }}>
                           {!done&&(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
-                          <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
-                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                            {frac>0&&<circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5"
-                              strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="butt" style={{transition:"stroke-dasharray 0.25s ease"}}/>}
+                          <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0}}>
+                            <g style={{transform:"rotate(-90deg)",transformOrigin:"14px 14px"}}>
+                              <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
+                              {frac>0&&<circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5"
+                                strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="butt" style={{transition:"stroke-dasharray 0.25s ease"}}/>}
+                            </g>
+                            <circle cx="14" cy="14" r="9" fill="#16213e"/>
                           </svg>
                           );})()}
                           {done
