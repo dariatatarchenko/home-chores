@@ -1373,12 +1373,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
                           width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",position:"relative",overflow:"hidden",
-                          border:`2px solid ${done?"#34d399":C(0.2)}`,background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":C(0.04),cursor:isFuture?"not-allowed":"pointer",
+                          border:`2px solid ${done?"#34d399":"transparent"}`,background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
                           display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                         }}>
-                          {!done&&(()=>{ const R=11,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
-                          <svg width="26" height="26" viewBox="0 0 26 26" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
-                            <circle cx="13" cy="13" r={R} fill="none" stroke="#34d399" strokeWidth="3"
+                          {!done&&(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
+                          <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
+                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
+                            <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5"
                               strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.25s ease"}}/>
                           </svg>
                           );})()}
