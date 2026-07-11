@@ -1372,23 +1372,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Check */}
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",position:"relative",overflow:"hidden",
+                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",
                           border:`2px solid ${done?"#34d399":"transparent"}`,background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
-                          display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
+                          position:"relative",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                         }}>
-                          {!done&&(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)); return (
-                          <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0}}>
-                            <g style={{transform:"rotate(-90deg)",transformOrigin:"14px 14px"}}>
-                              <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                              {frac>0&&<circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5"
-                                strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="butt" style={{transition:"stroke-dasharray 0.25s ease"}}/>}
-                            </g>
-                            <circle cx="14" cy="14" r="9" fill="#16213e"/>
+                          {!done&&(()=>{ const R=13,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
+                          <svg width="28" height="28" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
+                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
+                            <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
                           {done
-                            ?<span style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",color:"#fff",fontSize:12,fontWeight:700,animation:"checkPop 0.35s ease",lineHeight:1}}>✓</span>
-                            :<span style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",color:C(0.6),fontSize:9,fontWeight:700,lineHeight:1,whiteSpace:"nowrap"}}>{doneCount}/{t.timesPerDay}</span>}
+                            ?<span style={{fontSize:12,fontWeight:700,position:"relative",zIndex:1,color:"#fff",animation:"checkPop 0.35s ease"}}>✓</span>
+                            :<span style={{fontSize:9,fontWeight:700,position:"relative",zIndex:1,color:C(0.6)}}>{doneCount}/{t.timesPerDay}</span>}
                         </button>
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
@@ -1627,7 +1623,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
                     <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.max(1,(f.timesPerDay||1)-1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
                     <span style={{color:"#fff",fontSize:16,fontWeight:700,minWidth:20,textAlign:"center"}}>{form.timesPerDay||1}</span>
-                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.min(10,(f.timesPerDay||1)+1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
+                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.min(5,(f.timesPerDay||1)+1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:C(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
                     {(form.timesPerDay||1)>1&&<span style={{color:C(0.4),fontSize:12}}>Shows as {form.timesPerDay} checkmarks per day</span>}
                   </div>
                 </div>
