@@ -1401,7 +1401,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           position:"relative",transition:"all 0.2s",
                         }}>
                           {!done&&(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
-                          <svg viewBox="0 0 28 28" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)"}}>
+                          <svg viewBox="0 0 28 28" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
                             <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.5"/>
                             <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
                           </svg>
@@ -1589,8 +1589,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     return (
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
                         <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=10,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
-                          <svg viewBox="0 0 22 22" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)"}}>
+                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=9.3,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
+                          <svg viewBox="0 0 22 22" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
                             <circle cx="11" cy="11" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.2"/>
                             <circle cx="11" cy="11" r={R} fill="none" stroke="#34d399" strokeWidth="2.2" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
                           </svg>
