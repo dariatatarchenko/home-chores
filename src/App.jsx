@@ -1391,7 +1391,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
                               ?<span style={{fontSize:12,fontWeight:700,color:"#fff",animation:"checkPop 0.35s ease",lineHeight:1}}>✓</span>
-                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
+                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6),lineHeight:1,transform:"translate(1.5px,1.5px)",display:"inline-block"}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
                       ):(
