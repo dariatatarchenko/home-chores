@@ -1687,7 +1687,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                 <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_alltasks")}</div>
                 <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                  <button onClick={()=>setShowStats(true)} style={{background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:12,padding:"8px 14px",color:"#fbbf24",fontSize:13,fontWeight:500,cursor:"pointer"}}>🏆 Stats</button>
+                  <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}>🏆 Stats</button>
                   <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setTab("add");}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
                 </div>
               </div>
