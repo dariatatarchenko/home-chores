@@ -806,7 +806,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         setTimeout(()=>setFreeze(null),400);
       }
     }
-    setActivityOrder(o=>[key,...o.filter(k=>k!==key)]);
+    if(becomingDone||wasFullyDone) setActivityOrder(o=>[key,...o.filter(k=>k!==key)]);
     const newDoneOn=isDone(t,d)
       ? (()=>{
           const arr=t.doneOn||[];
