@@ -608,6 +608,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   const [myFilter,setMyFilter]= useState(false);
   const [weekZoneFilter,setWeekZoneFilter]= useState(null);
+  const [taskZoneFilter,setTaskZoneFilter]= useState(null);
   const [weekOff, setWeekOff] = useState(0);
   const [calYear, setCalYear] = useState(TODAY.getFullYear());
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
@@ -1382,7 +1383,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           position:"relative",transition:"all 0.2s",
                         }}>
                           {!done&&(()=>{ const R=13,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
-                          <svg width="28" height="28" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
+                          <svg width="28" height="28" style={{position:"absolute",top:-2,left:-2,transform:"rotate(-90deg)"}}>
                             <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
                             <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
                           </svg>
@@ -1571,7 +1572,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
                         <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):(t.timesPerDay||1)>1?"transparent":C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=9.7,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
-                          <svg width="22" height="22" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
+                          <svg width="22" height="22" style={{position:"absolute",top:-2,left:-2,transform:"rotate(-90deg)"}}>
                             <circle cx="11" cy="11" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.2"/>
                             <circle cx="11" cy="11" r={R} fill="none" stroke="#34d399" strokeWidth="2.2" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
                           </svg>
@@ -1686,10 +1687,21 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:"16px 20px 8px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                 <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_alltasks")}</div>
-                <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                  <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}>🏆 Stats</button>
-                  <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setTab("add");}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
-                </div>
+                <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}>🏆 Stats</button>
+              </div>
+              <div style={{display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
+                <button onClick={()=>setTaskZoneFilter(null)} style={{
+                  flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${taskZoneFilter===null?"#818cf8":"transparent"}`,cursor:"pointer",fontSize:13,fontWeight:taskZoneFilter===null?700:500,
+                  background:taskZoneFilter===null?"rgba(129,140,248,0.28)":C(0.06),
+                  color:taskZoneFilter===null?"#fff":C(0.4),
+                }}>{tr("all")}</button>
+                {zones.map(z=>(
+                  <button key={z.id} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)} style={{
+                    flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${taskZoneFilter===z.id?"#818cf8":"transparent"}`,cursor:"pointer",fontSize:13,fontWeight:taskZoneFilter===z.id?700:500,
+                    background:taskZoneFilter===z.id?"rgba(129,140,248,0.28)":C(0.06),
+                    color:taskZoneFilter===z.id?"#fff":C(0.4),
+                  }}>{z.emoji} {z.label}</button>
+                ))}
               </div>
               </div>
               <div style={{flex:1,overflowY:"auto",padding:"0 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
@@ -1698,7 +1710,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{fontSize:44}}>📋</div>
                   <div style={{color:C(0.38),marginTop:10,fontSize:14}}>{tr("no_tasks_yet")}</div>
                 </div>
-              ):groupedZones.map(zone=>(
+              ):groupedZones.filter(zone=>!taskZoneFilter||zone.id===taskZoneFilter).map(zone=>(
                 <div key={zone.id} style={{marginBottom:24}}>
                   <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>{zone.emoji} {zone.label}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1722,8 +1734,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <div style={{flex:1}}>
                               <div style={{color:C(0.9),fontSize:15,fontWeight:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{t.text}</div>
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
-                                <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}</span>
-                                {(t.timesPerDay||1)>1&&<span style={{color:"#34d399",fontSize:11,fontWeight:700,background:"rgba(52,211,153,0.12)",borderRadius:8,padding:"1px 6px"}}>×{t.timesPerDay}/day</span>}
+                                <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}{(t.timesPerDay||1)>1?` ×${t.timesPerDay}`:""}</span>
                                 {people.length>1&&(()=>{
                                   if(pIds.length===people.length) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
                                   const p=getPerson(pIds[0]);
