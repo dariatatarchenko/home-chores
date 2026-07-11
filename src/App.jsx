@@ -667,6 +667,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const stripRef = useRef(null);
   const taskListRef = useRef(null);
   const cardRefs = useRef({});
+  const lastToggleRef = useRef({});
   const prevRects = useRef({});
   const taskNameRef = useRef(null);
 
@@ -765,6 +766,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const me=getPerson(meId);
 
   const toggleDone=(id,d)=>{
+    const key0=id+"|"+d;
+    const now=Date.now();
+    if(lastToggleRef.current[key0]&&now-lastToggleRef.current[key0]<350) return; // ignore accidental rapid double-tap
+    lastToggleRef.current[key0]=now;
     const t=tasks.find(x=>x.id===id);
     const wasFullyDone=t&&isDone(t,d);
     const currentCount=t?doneCountOn(t,d):0;
@@ -1374,7 +1379,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
                           width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",
                           border:`2px solid ${done?"#34d399":"transparent"}`,background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
-                          position:"relative",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
+                          position:"relative",transition:"all 0.2s",
                         }}>
                           {!done&&(()=>{ const R=13,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
                           <svg width="28" height="28" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
@@ -1382,9 +1387,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
-                          {done
-                            ?<span style={{fontSize:12,fontWeight:700,position:"relative",zIndex:1,color:"#fff",animation:"checkPop 0.35s ease"}}>✓</span>
-                            :<span style={{fontSize:9,fontWeight:700,position:"relative",zIndex:1,color:C(0.6),transform:"translate(2px,2px)",display:"inline-block"}}>{doneCount}/{t.timesPerDay}</span>}
+                          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                            {done
+                              ?<span style={{fontSize:12,fontWeight:700,color:"#fff",animation:"checkPop 0.35s ease"}}>✓</span>
+                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6)}}>{doneCount}/{t.timesPerDay}</span>}
+                          </div>
                         </button>
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
@@ -1562,7 +1569,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
-                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):(t.timesPerDay||1)>1?"transparent":C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=9,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg width="22" height="22" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
                             <circle cx="11" cy="11" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.2"/>
@@ -1716,6 +1723,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <div style={{color:C(0.9),fontSize:15,fontWeight:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{t.text}</div>
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
                                 <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}</span>
+                                {(t.timesPerDay||1)>1&&<span style={{color:"#34d399",fontSize:11,fontWeight:700,background:"rgba(52,211,153,0.12)",borderRadius:8,padding:"1px 6px"}}>×{t.timesPerDay}/day</span>}
                                 {people.length>1&&(()=>{
                                   if(pIds.length===people.length) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
                                   const p=getPerson(pIds[0]);
