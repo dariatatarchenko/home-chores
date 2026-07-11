@@ -350,6 +350,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const CARD={...G(0.08,24),borderRadius:20,padding:"13px 15px"};
   const [codeCopied,setCodeCopied]=useState(false);
   const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
+  const [settingsView,setSettingsView]=useState("main");
+  const settingsScrollRef=useRef(null);
+  const settingsMainScrollPos=useRef(0);
+  const [zoneExpandId,setZoneExpandId]=useState(null);
+  const [tab,     setTab]     = useState("week");
+  const [returnTab,setReturnTab]= useState("week");
+  const [selDay,  setSelDay]  = useState(todayStr);
+  const [meId,    setMeId]    = useState(initialMe.id);
+  const meIdRef=useRef(meId);
+  useEffect(()=>{ meIdRef.current=meId; },[meId]);
+
   useEffect(()=>{
     supabase.from("google_calendar_tokens").select("person_id").eq("person_id",meId).maybeSingle()
       .then(({data})=>setGoogleConnected(!!data))
@@ -380,16 +391,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       setGoogleConnected(false);
     });
   };
-  const [settingsView,setSettingsView]=useState("main");
-  const settingsScrollRef=useRef(null);
-  const settingsMainScrollPos=useRef(0);
-  const [zoneExpandId,setZoneExpandId]=useState(null);
-  const [tab,     setTab]     = useState("week");
-  const [returnTab,setReturnTab]= useState("week");
-  const [selDay,  setSelDay]  = useState(todayStr);
-  const [meId,    setMeId]    = useState(initialMe.id);
-  const meIdRef=useRef(meId);
-  useEffect(()=>{ meIdRef.current=meId; },[meId]);
 
   // ── Load data from Supabase + realtime sync ──────────────────────────────
   const rowToPerson=r=>({id:r.id,name:r.name,color:r.color,avatarEmoji:r.avatar_emoji||""});
