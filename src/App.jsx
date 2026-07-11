@@ -1380,7 +1380,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <svg width="28" height="28" viewBox="0 0 28 28" style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
                             <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
                             <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5"
-                              strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.25s ease"}}/>
+                              strokeDasharray={`${frac*CIRC2} ${CIRC2}`} strokeLinecap="butt" style={{transition:"stroke-dasharray 0.25s ease"}}/>
                           </svg>
                           );})()}
                           {done
