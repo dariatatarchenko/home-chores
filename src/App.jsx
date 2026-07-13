@@ -332,7 +332,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   useEffect(()=>{
     const setVh=()=>{
-      const h=window.visualViewport?window.visualViewport.height:window.innerHeight;
+      // Ignore visualViewport changes caused by pinch-zoom (scale != 1) — those
+      // shrink the visual viewport in a way that's about the user zooming the
+      // page, not the address bar/keyboard changing, and applying that height
+      // to the app shell made the tab bar drift upward while zoomed.
+      const zoomed=window.visualViewport&&Math.abs(window.visualViewport.scale-1)>0.01;
+      const h=(window.visualViewport&&!zoomed)?window.visualViewport.height:window.innerHeight;
       document.documentElement.style.setProperty("--app-height",`${h}px`);
     };
     setVh();
@@ -919,6 +924,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const nextDate=new Date(fromDay+"T00:00:00"); nextDate.setDate(nextDate.getDate()+1);
     const toDay=ds(nextDate);
     const incomplete=dayTasks(fromDay).filter(t=>!isDone(t,fromDay));
+    window.alert(`DIAGNOSTIC: moveIncompleteToNextDay called.\nfromDay=${fromDay}, toDay=${toDay}\nincomplete count=${incomplete.length}\ntask names: ${incomplete.map(t=>t.text).join(", ")||"(none)"}`);
     incomplete.forEach(t=>{
       let newFields=null;
       setTasks(ts=>ts.map(x=>{
@@ -1450,15 +1456,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
                           position:"relative",transition:"all 0.2s",
                         }}>
-                          {!done&&(()=>{ const R=9.5,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
+                          {!done&&(()=>{ const R=10.9,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
                           <svg viewBox="0 0 24 24" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
                             <circle cx="12" cy="12" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.1"/>
-                            <circle cx="12" cy="12" r={R} fill="none" stroke="#34d399" strokeWidth="2.1" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
+                            <circle cx="12" cy="12" r={R} fill="none" stroke="#34d399" strokeWidth="2.1" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                           </svg>
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<span style={{fontSize:13,fontWeight:700,color:"#fff",lineHeight:1}}>✓</span>
+                              ?<span style={{fontSize:13,fontWeight:700,color:"#fff",lineHeight:1,animation:"checkPop 0.35s ease"}}>✓</span>
                               :<span style={{fontSize:8,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
@@ -1639,10 +1645,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     return (
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
                         <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=7.5,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
+                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=8.1,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
                             <circle cx="9" cy="9" r={R} fill="none" stroke={C(0.1)} strokeWidth="1.8"/>
-                            <circle cx="9" cy="9" r={R} fill="none" stroke="#34d399" strokeWidth="1.8" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
+                            <circle cx="9" cy="9" r={R} fill="none" stroke="#34d399" strokeWidth="1.8" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                           </svg>
                           );})()}
                           {done&&<span style={{color:"#fff",fontSize:10,fontWeight:700,position:"relative"}}>✓</span>}
@@ -2779,7 +2785,12 @@ export default function Root(){
       // collapsing/expanding address bar) far more reliably than
       // window.innerHeight + the plain resize event, which is what was
       // causing the tab bar to drift for some testers.
-      const h=window.visualViewport?window.visualViewport.height:window.innerHeight;
+      // Ignore visualViewport changes caused by pinch-zoom (scale != 1) — those
+      // shrink the visual viewport in a way that's about the user zooming the
+      // page, not the address bar/keyboard changing, and applying that height
+      // to the app shell made the tab bar drift upward while zoomed.
+      const zoomed=window.visualViewport&&Math.abs(window.visualViewport.scale-1)>0.01;
+      const h=(window.visualViewport&&!zoomed)?window.visualViewport.height:window.innerHeight;
       document.documentElement.style.setProperty("--app-height",`${h}px`);
     };
     setVh();
