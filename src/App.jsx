@@ -330,32 +330,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   })();
   const todayStr=TODAY.toISOString().slice(0,10);
 
-  useEffect(()=>{
-    const setVh=()=>{
-      // Ignore visualViewport changes caused by pinch-zoom (scale != 1) — those
-      // shrink the visual viewport in a way that's about the user zooming the
-      // page, not the address bar/keyboard changing, and applying that height
-      // to the app shell made the tab bar drift upward while zoomed.
-      const zoomed=window.visualViewport&&Math.abs(window.visualViewport.scale-1)>0.01;
-      const h=(window.visualViewport&&!zoomed)?window.visualViewport.height:window.innerHeight;
-      document.documentElement.style.setProperty("--app-height",`${h}px`);
-    };
-    setVh();
-    window.addEventListener("resize",setVh);
-    window.addEventListener("orientationchange",setVh);
-    if(window.visualViewport){
-      window.visualViewport.addEventListener("resize",setVh);
-      window.visualViewport.addEventListener("scroll",setVh);
-    }
-    return ()=>{
-      window.removeEventListener("resize",setVh);
-      window.removeEventListener("orientationchange",setVh);
-      if(window.visualViewport){
-        window.visualViewport.removeEventListener("resize",setVh);
-        window.visualViewport.removeEventListener("scroll",setVh);
-      }
-    };
-  },[]);
+
   const [tasks,   setTasks]   = useState([]);
   const [people,  setPeople]  = useState([]);
   const [zones,   setZones]   = useState([]);
@@ -2778,38 +2753,6 @@ function HouseholdGate({session,onReady}){
 }
 
 export default function Root(){
-  useEffect(()=>{
-    const setVh=()=>{
-      // visualViewport tracks the actually-visible area (excluding the
-      // on-screen keyboard, and correctly reflecting iOS Safari's
-      // collapsing/expanding address bar) far more reliably than
-      // window.innerHeight + the plain resize event, which is what was
-      // causing the tab bar to drift for some testers.
-      // Ignore visualViewport changes caused by pinch-zoom (scale != 1) — those
-      // shrink the visual viewport in a way that's about the user zooming the
-      // page, not the address bar/keyboard changing, and applying that height
-      // to the app shell made the tab bar drift upward while zoomed.
-      const zoomed=window.visualViewport&&Math.abs(window.visualViewport.scale-1)>0.01;
-      const h=(window.visualViewport&&!zoomed)?window.visualViewport.height:window.innerHeight;
-      document.documentElement.style.setProperty("--app-height",`${h}px`);
-    };
-    setVh();
-    window.addEventListener("resize",setVh);
-    window.addEventListener("orientationchange",setVh);
-    if(window.visualViewport){
-      window.visualViewport.addEventListener("resize",setVh);
-      window.visualViewport.addEventListener("scroll",setVh);
-    }
-    return ()=>{
-      window.removeEventListener("resize",setVh);
-      window.removeEventListener("orientationchange",setVh);
-      if(window.visualViewport){
-        window.visualViewport.removeEventListener("resize",setVh);
-        window.visualViewport.removeEventListener("scroll",setVh);
-      }
-    };
-  },[]);
-
   const [session,setSession]=useState(null);
   const [authLoading,setAuthLoading]=useState(true);
   const [me,setMe]=useState(null);
@@ -2837,16 +2780,16 @@ export default function Root(){
   },[]);
 
   if(authLoading){
-    return <div style={{height:"var(--app-height,100dvh)",...SHELL_STYLE}}><div style={{margin:"auto",color:"rgba(255,255,255,0.4)"}}>Loading…</div></div>;
+    return <div style={{height:"100dvh",...SHELL_STYLE}}><div style={{margin:"auto",color:"rgba(255,255,255,0.4)"}}>Loading…</div></div>;
   }
   if(!session){
-    return <div style={{height:"var(--app-height,100dvh)"}}><LoginScreen/></div>;
+    return <div style={{height:"100dvh"}}><LoginScreen/></div>;
   }
   if(!household||!me){
-    return <div style={{height:"var(--app-height,100dvh)"}}><HouseholdGate session={session} onReady={({household,me})=>{setHousehold(household);setMe(me);}}/></div>;
+    return <div style={{height:"100dvh"}}><HouseholdGate session={session} onReady={({household,me})=>{setHousehold(household);setMe(me);}}/></div>;
   }
   return (
-    <div style={{height:"var(--app-height,100dvh)"}}>
+    <div style={{height:"100dvh"}}>
       <MainApp household={household} me={me} email={session?.user?.email} onSignOut={()=>supabase.auth.signOut()}/>
     </div>
   );
