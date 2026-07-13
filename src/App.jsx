@@ -1426,32 +1426,32 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Check */}
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                          width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,border:"none",
+                          width:16,height:16,borderRadius:"50%",flexShrink:0,padding:0,border:"none",
                           background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
                           position:"relative",transition:"all 0.2s",
                         }}>
-                          {!done&&(()=>{ const R=12,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
-                          <svg viewBox="0 0 28 28" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
-                            <circle cx="14" cy="14" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.5"/>
-                            <circle cx="14" cy="14" r={R} fill="none" stroke="#34d399" strokeWidth="2.5" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
+                          {!done&&(()=>{ const R=6.3,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
+                          <svg viewBox="0 0 16 16" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
+                            <circle cx="8" cy="8" r={R} fill="none" stroke={C(0.1)} strokeWidth="1.4"/>
+                            <circle cx="8" cy="8" r={R} fill="none" stroke="#34d399" strokeWidth="1.4" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<span style={{fontSize:12,fontWeight:700,color:"#fff",lineHeight:1}}>✓</span>
-                              :<span style={{fontSize:9,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
+                              ?<span style={{fontSize:9,fontWeight:700,color:"#fff",lineHeight:1}}>✓</span>
+                              :<span style={{fontSize:5.5,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                        width:28,height:28,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",
-                        border:done?"none":`2px solid ${isFuture?C(0.07):C(0.2)}`,
+                        width:16,height:16,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",
+                        border:done?"none":`1.4px solid ${isFuture?C(0.07):C(0.2)}`,
                         background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":C(0.04),
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                       }}>
-                        {done&&<span style={{color:"#fff",fontSize:12,fontWeight:700,display:"inline-block",animation:"checkPop 0.35s ease"}}>✓</span>}
-                        {!done&&isFuture&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
+                        {done&&<span style={{color:"#fff",fontSize:9,fontWeight:700,display:"inline-block",animation:"checkPop 0.35s ease"}}>✓</span>}
+                        {!done&&isFuture&&<svg width="8" height="8" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
                       </button>
                       )}
                       {/* Text */}
@@ -1618,16 +1618,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
-                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:22,height:22,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=9.3,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
-                          <svg viewBox="0 0 22 22" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
-                            <circle cx="11" cy="11" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.2"/>
-                            <circle cx="11" cy="11" r={R} fill="none" stroke="#34d399" strokeWidth="2.2" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
+                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:12,height:12,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`1.4px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=5,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
+                          <svg viewBox="0 0 12 12" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
+                            <circle cx="6" cy="6" r={R} fill="none" stroke={C(0.1)} strokeWidth="1.2"/>
+                            <circle cx="6" cy="6" r={R} fill="none" stroke="#34d399" strokeWidth="1.2" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
-                          {done&&<span style={{color:"#fff",fontSize:11,fontWeight:700,position:"relative"}}>✓</span>}
-                          {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:11,fontWeight:700,position:"relative"}}>✕</span>}
-                          {!done&&!missed&&isFutureDay&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.45)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.45)} strokeWidth="2.2" strokeLinecap="round"/></svg>}
+                          {done&&<span style={{color:"#fff",fontSize:7,fontWeight:700,position:"relative"}}>✓</span>}
+                          {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:7,fontWeight:700,position:"relative"}}>✕</span>}
+                          {!done&&!missed&&isFutureDay&&<svg width="6" height="6" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.45)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.45)} strokeWidth="2.2" strokeLinecap="round"/></svg>}
                         </button>
                         <div style={{flex:1}}>
                           <div style={{color:done?C(0.38):missed?"rgba(248,113,113,0.6)":C(0.82),fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
