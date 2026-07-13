@@ -332,14 +332,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   useEffect(()=>{
     const setVh=()=>{
-      document.documentElement.style.setProperty("--app-height",`${window.innerHeight}px`);
+      const h=window.visualViewport?window.visualViewport.height:window.innerHeight;
+      document.documentElement.style.setProperty("--app-height",`${h}px`);
     };
     setVh();
     window.addEventListener("resize",setVh);
     window.addEventListener("orientationchange",setVh);
+    if(window.visualViewport){
+      window.visualViewport.addEventListener("resize",setVh);
+      window.visualViewport.addEventListener("scroll",setVh);
+    }
     return ()=>{
       window.removeEventListener("resize",setVh);
       window.removeEventListener("orientationchange",setVh);
+      if(window.visualViewport){
+        window.visualViewport.removeEventListener("resize",setVh);
+        window.visualViewport.removeEventListener("scroll",setVh);
+      }
     };
   },[]);
   const [tasks,   setTasks]   = useState([]);
@@ -900,7 +909,28 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay,excludedDates,shiftAnchor};
         return{...x,...newFields};
       }));
-      if(newFields) persistTask(t.id,newFields);
+      if(newFields){
+        persistTask(t.id,newFields);
+        // TEMPORARY DIAGNOSTIC — re-reads the row straight back from the
+        // database ~1.5s later so we can see, directly on-screen, whether the
+        // write actually landed (without needing to open Supabase manually).
+        // Safe to remove once the move-persistence issue is confirmed fixed.
+        const expectedFields=newFields;
+        setTimeout(()=>{
+          supabase.from("tasks").select("scheduled_dates,excluded_dates").eq("id",t.id).single().then(({data,error})=>{
+            if(error){ window.alert("DIAGNOSTIC: couldn't re-read task "+t.text+": "+error.message); return; }
+            const savedDates=JSON.stringify(data.scheduled_dates);
+            const savedExcluded=JSON.stringify(data.excluded_dates);
+            const expectedDates=JSON.stringify(expectedFields.scheduledDates);
+            const expectedExcluded=JSON.stringify(expectedFields.excludedDates);
+            if(savedDates!==expectedDates||savedExcluded!==expectedExcluded){
+              window.alert(`DIAGNOSTIC — mismatch for "${t.text}":\n\nExpected scheduled_dates: ${expectedDates}\nActually in DB: ${savedDates}\n\nExpected excluded_dates: ${expectedExcluded}\nActually in DB: ${savedExcluded}`);
+            } else {
+              window.alert(`DIAGNOSTIC — "${t.text}" saved correctly:\nscheduled_dates: ${savedDates}\nexcluded_dates: ${savedExcluded}`);
+            }
+          });
+        },1500);
+      }
     });
     setSelDay(toDay);
   };
@@ -2743,10 +2773,30 @@ function HouseholdGate({session,onReady}){
 
 export default function Root(){
   useEffect(()=>{
-    const setVh=()=>document.documentElement.style.setProperty("--app-height",`${window.innerHeight}px`);
+    const setVh=()=>{
+      // visualViewport tracks the actually-visible area (excluding the
+      // on-screen keyboard, and correctly reflecting iOS Safari's
+      // collapsing/expanding address bar) far more reliably than
+      // window.innerHeight + the plain resize event, which is what was
+      // causing the tab bar to drift for some testers.
+      const h=window.visualViewport?window.visualViewport.height:window.innerHeight;
+      document.documentElement.style.setProperty("--app-height",`${h}px`);
+    };
     setVh();
     window.addEventListener("resize",setVh);
-    return ()=>window.removeEventListener("resize",setVh);
+    window.addEventListener("orientationchange",setVh);
+    if(window.visualViewport){
+      window.visualViewport.addEventListener("resize",setVh);
+      window.visualViewport.addEventListener("scroll",setVh);
+    }
+    return ()=>{
+      window.removeEventListener("resize",setVh);
+      window.removeEventListener("orientationchange",setVh);
+      if(window.visualViewport){
+        window.visualViewport.removeEventListener("resize",setVh);
+        window.visualViewport.removeEventListener("scroll",setVh);
+      }
+    };
   },[]);
 
   const [session,setSession]=useState(null);
