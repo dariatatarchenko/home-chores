@@ -525,10 +525,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if("timesPerDay" in fields) dbFields.times_per_day=fields.timesPerDay;
     if("shiftAnchor" in fields) dbFields.shift_anchor=fields.shiftAnchor;
     dbFields.updated_at=new Date().toISOString();
-    supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{
+    // TEMPORARY DIAGNOSTIC — shows the raw outcome of this specific save
+    // immediately, whether it's a scheduled_dates/excluded_dates change or not.
+    const isMoveRelated="scheduled_dates" in dbFields || "excluded_dates" in dbFields;
+    supabase.from("tasks").update(dbFields).eq("id",id).select().then(({data,error})=>{
       if(error){
         console.error("persistTask",error);
         window.alert("Couldn't save this change to the server: "+error.message+"\n\nIt may not survive a page reload — please let Daria know.");
+      } else if(isMoveRelated){
+        window.alert(`DIAGNOSTIC persistTask SUCCESS for task ${id}:\nrows updated: ${data?.length}\nscheduled_dates now: ${JSON.stringify(data?.[0]?.scheduled_dates)}\nexcluded_dates now: ${JSON.stringify(data?.[0]?.excluded_dates)}`);
       }
     });
   };
@@ -899,7 +904,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const nextDate=new Date(fromDay+"T00:00:00"); nextDate.setDate(nextDate.getDate()+1);
     const toDay=ds(nextDate);
     const incomplete=dayTasks(fromDay).filter(t=>!isDone(t,fromDay));
-    window.alert(`DIAGNOSTIC: moveIncompleteToNextDay called.\nfromDay=${fromDay}, toDay=${toDay}\nincomplete count=${incomplete.length}\ntask names: ${incomplete.map(t=>t.text).join(", ")||"(none)"}`);
     incomplete.forEach(t=>{
       let newFields=null;
       setTasks(ts=>ts.map(x=>{
@@ -910,28 +914,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay,excludedDates,shiftAnchor};
         return{...x,...newFields};
       }));
-      if(newFields){
-        persistTask(t.id,newFields);
-        // TEMPORARY DIAGNOSTIC — re-reads the row straight back from the
-        // database ~1.5s later so we can see, directly on-screen, whether the
-        // write actually landed (without needing to open Supabase manually).
-        // Safe to remove once the move-persistence issue is confirmed fixed.
-        const expectedFields=newFields;
-        setTimeout(()=>{
-          supabase.from("tasks").select("scheduled_dates,excluded_dates").eq("id",t.id).single().then(({data,error})=>{
-            if(error){ window.alert("DIAGNOSTIC: couldn't re-read task "+t.text+": "+error.message); return; }
-            const savedDates=JSON.stringify(data.scheduled_dates);
-            const savedExcluded=JSON.stringify(data.excluded_dates);
-            const expectedDates=JSON.stringify(expectedFields.scheduledDates);
-            const expectedExcluded=JSON.stringify(expectedFields.excludedDates);
-            if(savedDates!==expectedDates||savedExcluded!==expectedExcluded){
-              window.alert(`DIAGNOSTIC — mismatch for "${t.text}":\n\nExpected scheduled_dates: ${expectedDates}\nActually in DB: ${savedDates}\n\nExpected excluded_dates: ${expectedExcluded}\nActually in DB: ${savedExcluded}`);
-            } else {
-              window.alert(`DIAGNOSTIC — "${t.text}" saved correctly:\nscheduled_dates: ${savedDates}\nexcluded_dates: ${savedExcluded}`);
-            }
-          });
-        },1500);
-      }
+      if(newFields) persistTask(t.id,newFields);
     });
     setSelDay(toDay);
   };
@@ -1751,6 +1734,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     color:taskZoneFilter===z.id?"#fff":C(0.4),
                   }}>{z.emoji} {z.label}</button>
                 ))}
+                <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");}} style={{
+                  flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${C(0.15)}`,cursor:"pointer",fontSize:13,fontWeight:600,
+                  background:"transparent",color:"#818cf8",
+                }}>＋ Zone</button>
               </div>
               </div>
               <div style={{flex:1,overflowY:"auto",padding:"0 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
@@ -1761,7 +1748,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
               ):groupedZones.filter(zone=>!taskZoneFilter||zone.id===taskZoneFilter).map(zone=>(
                 <div key={zone.id} style={{marginBottom:24}}>
-                  <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>{zone.emoji} {zone.label}</div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{zone.emoji} {zone.label}</span>
+                    {zone.id!=="__orphaned__"&&(
+                      <button onClick={()=>{setZoneNameError(false);setZForm({label:zone.label,emoji:zone.emoji});setEmojiPicker(false);setZoneExpandId(zone.id);}} style={{background:C(0.08),border:"none",borderRadius:8,width:26,height:26,color:"#818cf8",fontSize:13,cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>✏️</button>
+                    )}
+                  </div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {zone.tasks.map(t=>{
                       const pIds=(t.personIds||[t.personId]).filter(Boolean),open=expandId===t.id,streak=computeStreak(t);
@@ -1855,96 +1847,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </div>
                 </div>
               )}
-              {/* Zones */}
-              <div style={{marginBottom:24}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("zones")}</span>
-                  <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setZoneModal({mode:"new"});setEmojiPicker(false);}} style={{background:"none",border:"none",color:"#818cf8",fontSize:13,fontWeight:600,cursor:"pointer",padding:0}}>＋ Add</button>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {zones.length===0&&<div style={{color:C(0.3),fontSize:13,padding:"8px 0"}}>{tr("no_zones_yet")}</div>}
-                  {zones.map(z=>{
-                    return (
-                    <div key={z.id} ref={el=>{if(el)zoneRefs.current[z.id]=el;}} data-zone-id={z.id}
-                      draggable
-                      onDragStart={()=>setZoneDragId(z.id)}
-                      onDragEnd={()=>{setZoneDragId(null);setZoneDragOverId(null);}}
-                      onDragOver={e=>{e.preventDefault();setZoneDragOverId(z.id);}}
-                      onDrop={()=>{if(zoneDragId)reorderZones(zoneDragId,z.id);setZoneDragId(null);setZoneDragOverId(null);}}
-                      onTouchStart={()=>{
-                        zoneTouchStartPosRef.current=null;
-                        clearTimeout(zoneLongPressTimerRef.current);
-                        zoneLongPressTimerRef.current=setTimeout(()=>{
-                          setZoneDragId(z.id);
-                          setZoneDragActive(true);
-                          if(navigator.vibrate) navigator.vibrate(10);
-                        },380);
-                      }}
-                      onTouchMoveCapture={e=>{
-                        if(zoneDragActive) return;
-                        const touch=e.touches[0];
-                        if(!zoneTouchStartPosRef.current){ zoneTouchStartPosRef.current={x:touch.clientX,y:touch.clientY}; return; }
-                        const dx=Math.abs(touch.clientX-zoneTouchStartPosRef.current.x), dy=Math.abs(touch.clientY-zoneTouchStartPosRef.current.y);
-                        if(dx>8||dy>8) clearTimeout(zoneLongPressTimerRef.current);
-                      }}
-                      onTouchEnd={e=>{
-                        clearTimeout(zoneLongPressTimerRef.current);
-                        if(!zoneDragActive) return;
-                        const touch=e.changedTouches[0];
-                        const target=document.elementFromPoint(touch.clientX,touch.clientY);
-                        const targetId=target?.closest("[data-zone-id]")?.dataset?.zoneId;
-                        if(targetId) reorderZones(zoneDragId,targetId);
-                        setZoneDragId(null);setZoneDragOverId(null);setZoneDragActive(false);
-                      }}
-                      style={{...CARD,overflow:"hidden",boxSizing:"border-box",cursor:"grab",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",touchAction:zoneDragActive&&zoneDragId===z.id?"none":"pan-y",
-                        opacity:zoneDragId===z.id&&zoneDragActive?0.5:1,
-                        outline:zoneDragOverId===z.id&&zoneDragId&&zoneDragId!==z.id?"2px solid rgba(129,140,248,0.5)":"none",
-                        transition:"opacity 0.15s",display:"flex",alignItems:"center",gap:10,minHeight:44}}>
-                        <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0}}>{z.emoji}</div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
-                          <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
-                        </div>
-                        <button onClick={e=>{e.stopPropagation();setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);}} style={{background:C(0.08),border:"none",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>Edit</button>
-                    </div>
-                    );
-                  })}
-                </div>
-
-                {/* Zone edit bottom sheet */}
-                {zoneExpandId&&(()=>{const z=zones.find(x=>x.id===zoneExpandId);if(!z)return null;return(
-                  <div style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}}>
-                    <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:"28px 28px 0 0",padding:"12px 20px 28px",boxShadow:"0 -20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.1)"}}>
-                      <div style={{width:36,height:4,background:"rgba(255,255,255,0.38)",borderRadius:2,margin:"0 auto 18px"}}/>
-                      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:`1px solid ${C(0.12)}`,borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
-                        <input
-                          value={zForm.label}
-                          onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
-                          placeholder="Zone name"
-                          autoFocus
-                          style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
-                        />
-                      </div>
-                      <div style={{display:"flex",gap:8}}>
-                        <button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"13px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>
-                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Save</button>
-                      </div>
-                    </div>
-                  </div>
-                );})()}
-
-                {emojiPicker&&zoneExpandId&&(
-                  <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
-                    <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
-                      <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
-                        {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?C(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
               {/* People */}
               <div>
                 <div style={{marginBottom:12}}>
@@ -2436,6 +2338,56 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
                 </>);
               })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── ZONE EDIT/CREATE SHEET (global — reachable from any tab) ──── */}
+        {zoneExpandId&&(()=>{
+          const isNew=zoneExpandId==="__new__";
+          const z=isNew?null:zones.find(x=>x.id===zoneExpandId);
+          if(!isNew&&!z) return null;
+          return(
+          <div style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:"28px 28px 0 0",padding:"12px 20px 28px",boxShadow:"0 -20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.1)"}}>
+              <div style={{width:36,height:4,background:"rgba(255,255,255,0.38)",borderRadius:2,margin:"0 auto 18px"}}/>
+              <div style={{color:"#fff",fontSize:16,fontWeight:700,marginBottom:16}}>{isNew?"New Zone":"Edit Zone"}</div>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+                <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:`1px solid ${C(0.12)}`,borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                <input
+                  value={zForm.label}
+                  onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
+                  placeholder="Zone name"
+                  autoFocus
+                  style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
+                />
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                {!isNew&&<button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"13px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                <button onClick={()=>{
+                  if(isNew){
+                    if(!zForm.label.trim()){setZoneNameError(true);return;}
+                    const nz={id:uid(),label:zForm.label.trim(),emoji:zForm.emoji};
+                    setZones(zs=>[...zs,nz]);
+                    insertZone(nz);
+                  } else {
+                    saveZone();
+                  }
+                  setZoneExpandId(null);
+                }} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>{isNew?"Add":"Save"}</button>
+              </div>
+            </div>
+          </div>
+          );
+        })()}
+
+        {emojiPicker&&zoneExpandId&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
+            <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
+              <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
+                {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?C(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>)}
               </div>
             </div>
           </div>
