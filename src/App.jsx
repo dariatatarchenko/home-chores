@@ -891,7 +891,27 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       newFields={scheduledDates:dates,doneOn:(t.doneOn||[]).filter(e=>e.date!==from),rescheduledFrom:from,excludedDates,shiftAnchor};
       return{...t,...newFields};
     }));
-    if(newFields) persistTask(id,newFields);
+    if(newFields){
+      persistTask(id,newFields);
+      // TEMPORARY DIAGNOSTIC — same as moveIncompleteToNextDay's, so drag-based
+      // moves are covered too regardless of which path is actually being used.
+      const expectedFields=newFields;
+      const taskRef=tasks.find(x=>x.id===id);
+      setTimeout(()=>{
+        supabase.from("tasks").select("scheduled_dates,excluded_dates").eq("id",id).single().then(({data,error})=>{
+          if(error){ window.alert("DIAGNOSTIC (drag): couldn't re-read task: "+error.message); return; }
+          const savedDates=JSON.stringify(data.scheduled_dates);
+          const savedExcluded=JSON.stringify(data.excluded_dates);
+          const expectedDates=JSON.stringify(expectedFields.scheduledDates);
+          const expectedExcluded=JSON.stringify(expectedFields.excludedDates);
+          if(savedDates!==expectedDates||savedExcluded!==expectedExcluded){
+            window.alert(`DIAGNOSTIC (drag) — mismatch for "${taskRef?.text||id}":\n\nExpected scheduled_dates: ${expectedDates}\nActually in DB: ${savedDates}\n\nExpected excluded_dates: ${expectedExcluded}\nActually in DB: ${savedExcluded}`);
+          } else {
+            window.alert(`DIAGNOSTIC (drag) — "${taskRef?.text||id}" saved correctly:\nscheduled_dates: ${savedDates}\nexcluded_dates: ${savedExcluded}`);
+          }
+        });
+      },1500);
+    }
     setSelDay(to);
   };
 
@@ -1426,32 +1446,32 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Check */}
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                          width:16,height:16,borderRadius:"50%",flexShrink:0,padding:0,border:"none",
+                          width:24,height:24,borderRadius:"50%",flexShrink:0,padding:0,border:"none",
                           background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
                           position:"relative",transition:"all 0.2s",
                         }}>
-                          {!done&&(()=>{ const R=6.3,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
-                          <svg viewBox="0 0 16 16" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
-                            <circle cx="8" cy="8" r={R} fill="none" stroke={C(0.1)} strokeWidth="1.4"/>
-                            <circle cx="8" cy="8" r={R} fill="none" stroke="#34d399" strokeWidth="1.4" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
+                          {!done&&(()=>{ const R=9.5,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
+                          <svg viewBox="0 0 24 24" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
+                            <circle cx="12" cy="12" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.1"/>
+                            <circle cx="12" cy="12" r={R} fill="none" stroke="#34d399" strokeWidth="2.1" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<span style={{fontSize:9,fontWeight:700,color:"#fff",lineHeight:1}}>✓</span>
-                              :<span style={{fontSize:5.5,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
+                              ?<span style={{fontSize:13,fontWeight:700,color:"#fff",lineHeight:1}}>✓</span>
+                              :<span style={{fontSize:8,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                        width:16,height:16,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",
-                        border:done?"none":`1.4px solid ${isFuture?C(0.07):C(0.2)}`,
+                        width:24,height:24,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",
+                        border:done?"none":`2px solid ${isFuture?C(0.07):C(0.2)}`,
                         background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":C(0.04),
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                       }}>
-                        {done&&<span style={{color:"#fff",fontSize:9,fontWeight:700,display:"inline-block",animation:"checkPop 0.35s ease"}}>✓</span>}
-                        {!done&&isFuture&&<svg width="8" height="8" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
+                        {done&&<span style={{color:"#fff",fontSize:13,fontWeight:700,display:"inline-block",animation:"checkPop 0.35s ease"}}>✓</span>}
+                        {!done&&isFuture&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
                       </button>
                       )}
                       {/* Text */}
@@ -1618,16 +1638,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
                       <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
-                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:12,height:12,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`1.4px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=5,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
-                          <svg viewBox="0 0 12 12" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
-                            <circle cx="6" cy="6" r={R} fill="none" stroke={C(0.1)} strokeWidth="1.2"/>
-                            <circle cx="6" cy="6" r={R} fill="none" stroke="#34d399" strokeWidth="1.2" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
+                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                          {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=7.5,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
+                          <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
+                            <circle cx="9" cy="9" r={R} fill="none" stroke={C(0.1)} strokeWidth="1.8"/>
+                            <circle cx="9" cy="9" r={R} fill="none" stroke="#34d399" strokeWidth="1.8" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round"/>
                           </svg>
                           );})()}
-                          {done&&<span style={{color:"#fff",fontSize:7,fontWeight:700,position:"relative"}}>✓</span>}
-                          {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:7,fontWeight:700,position:"relative"}}>✕</span>}
-                          {!done&&!missed&&isFutureDay&&<svg width="6" height="6" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.45)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.45)} strokeWidth="2.2" strokeLinecap="round"/></svg>}
+                          {done&&<span style={{color:"#fff",fontSize:10,fontWeight:700,position:"relative"}}>✓</span>}
+                          {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:10,fontWeight:700,position:"relative"}}>✕</span>}
+                          {!done&&!missed&&isFutureDay&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.45)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.45)} strokeWidth="2.2" strokeLinecap="round"/></svg>}
                         </button>
                         <div style={{flex:1}}>
                           <div style={{color:done?C(0.38):missed?"rgba(248,113,113,0.6)":C(0.82),fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
@@ -1863,7 +1883,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {zones.length===0&&<div style={{color:C(0.3),fontSize:13,padding:"8px 0"}}>{tr("no_zones_yet")}</div>}
                   {zones.map(z=>{
-                    const open=zoneExpandId===z.id;
                     return (
                     <div key={z.id} ref={el=>{if(el)zoneRefs.current[z.id]=el;}} data-zone-id={z.id}
                       draggable
@@ -1899,48 +1918,43 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       style={{...CARD,overflow:"hidden",boxSizing:"border-box",cursor:"grab",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",touchAction:zoneDragActive&&zoneDragId===z.id?"none":"pan-y",
                         opacity:zoneDragId===z.id&&zoneDragActive?0.5:1,
                         outline:zoneDragOverId===z.id&&zoneDragId&&zoneDragId!==z.id?"2px solid rgba(129,140,248,0.5)":"none",
-                        transition:"opacity 0.15s"}}>
-                      <div onClick={()=>{
-                        if(open){ setZoneExpandId(null); return; }
-                        setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);
-                      }} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",minHeight:44}}>
-                        <div onClick={e=>{if(open){e.stopPropagation();setEmojiPicker(v=>!v);}}} style={{position:"relative",width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0,borderRadius:12,background:open?C(0.06):"transparent",border:open?`1px dashed ${C(0.25)}`:"1px solid transparent",cursor:open?"pointer":"inherit"}}>
-                          {open?zForm.emoji:z.emoji}
-                          {open&&<div style={{position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,border:"2px solid #1a1035"}}>✏️</div>}
-                        </div>
+                        transition:"opacity 0.15s",display:"flex",alignItems:"center",gap:10,minHeight:44}}>
+                        <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,flexShrink:0}}>{z.emoji}</div>
                         <div style={{flex:1,minWidth:0}}>
-                          {open?(
-                            <input
-                              value={zForm.label}
-                              onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
-                              onClick={e=>e.stopPropagation()}
-                              placeholder="Zone name"
-                              autoFocus
-                              style={{background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:14,fontWeight:500,fontFamily:"inherit",outline:"none",width:"100%",padding:"8px 10px",boxSizing:"border-box",borderRadius:10}}
-                            />
-                          ):(
-                            <>
-                              <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
-                              <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
-                            </>
-                          )}
+                          <div style={{color:C(0.82),fontSize:14,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                          <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{(()=>{const n=tasks.filter(x=>x.zone===z.id).length;return `${n} task${n!==1?"s":""}`;})()}</div>
                         </div>
-                        <span style={{color:C(0.2),fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
-                      </div>
-                      {open&&(
-                        <div onClick={e=>e.stopPropagation()} style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C(0.07)}`}}>
-                          <div style={{display:"flex",gap:8}}>
-                            <button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"11px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
-                            <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
-                          </div>
-                        </div>
-                      )}
+                        <button onClick={e=>{e.stopPropagation();setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);}} style={{background:C(0.08),border:"none",borderRadius:10,padding:"7px 12px",color:"#818cf8",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>Edit</button>
                     </div>
                     );
                   })}
                 </div>
+
+                {/* Zone edit bottom sheet */}
+                {zoneExpandId&&(()=>{const z=zones.find(x=>x.id===zoneExpandId);if(!z)return null;return(
+                  <div style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}}>
+                    <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:"28px 28px 0 0",padding:"12px 20px 28px",boxShadow:"0 -20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.1)"}}>
+                      <div style={{width:36,height:4,background:"rgba(255,255,255,0.38)",borderRadius:2,margin:"0 auto 18px"}}/>
+                      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:`1px solid ${C(0.12)}`,borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                        <input
+                          value={zForm.label}
+                          onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
+                          placeholder="Zone name"
+                          autoFocus
+                          style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
+                        />
+                      </div>
+                      <div style={{display:"flex",gap:8}}>
+                        <button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"13px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Save</button>
+                      </div>
+                    </div>
+                  </div>
+                );})()}
+
                 {emojiPicker&&zoneExpandId&&(
-                  <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+                  <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
                     <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
                       <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
                       <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
@@ -2011,20 +2025,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {settingsView==="account"&&(
               <div>
                 {email&&<div style={{color:C(0.3),fontSize:12,marginBottom:20}}>{tr("signed_in_as")} {email}</div>}
-
-                <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>Google Calendar</div>
-                <div style={{...CARD,display:"flex",alignItems:"center",gap:10,marginBottom:24}}>
-                  <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>📅</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{color:C(0.82),fontSize:14,fontWeight:500}}>{googleConnected?"Connected":"Not connected"}</div>
-                    <div style={{color:C(0.4),fontSize:11,marginTop:1}}>{googleConnected?"Your tasks sync automatically":"Sync your tasks to Google Calendar"}</div>
-                  </div>
-                  {googleConnected===null?null:googleConnected?(
-                    <button onClick={disconnectGoogleCalendar} style={{background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px 12px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer",flexShrink:0}}>Disconnect</button>
-                  ):(
-                    <button onClick={connectGoogleCalendar} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:12,padding:"9px 12px",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>Connect</button>
-                  )}
-                </div>
 
                 <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:12}}>{tr("invite_code")}</div>
                 <div style={{...CARD,display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
