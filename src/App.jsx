@@ -362,7 +362,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const G=(o=0.1,b=20)=>({
     background:isDark
       ?`linear-gradient(180deg, rgba(255,255,255,${o*1.4}), rgba(255,255,255,${o*0.7}))`
-      :`linear-gradient(180deg, rgba(255,255,255,${o*1.8}), rgba(255,255,255,${o*0.9}))`,
+      :"rgba(255,255,255,0.5)",
     backdropFilter:`blur(${b}px) saturate(200%)`,
     WebkitBackdropFilter:`blur(${b}px) saturate(200%)`,
     border:isDark?`1px solid ${C(0.14)}`:"1px solid rgba(255,255,255,0.5)",
