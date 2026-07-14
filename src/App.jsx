@@ -1391,7 +1391,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${weekZoneFilter===z.id?ACCENT:"transparent"}`,cursor:"pointer",fontSize:13,fontWeight:weekZoneFilter===z.id?700:500,
                     background:weekZoneFilter===z.id?"rgba(129,140,248,0.28)":S(0.06),
                     color:weekZoneFilter===z.id?"#fff":C(0.4),
-                  }}>{z.label}</button>
+                  }}>{z.emoji} {z.label}</button>
                 ))}
               </div>
 
@@ -1890,7 +1890,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     </div>
                   ):(
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-                    <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{zone.emoji} {zone.label}</span>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{zone.label}</span>
                     {zone.id!=="__orphaned__"&&(
                       <button onClick={()=>{setZoneNameError(false);setZForm({label:zone.label,emoji:zone.emoji});setEmojiPicker(false);setZoneExpandId(zone.id);}} style={{background:"none",border:"none",width:26,height:26,cursor:"pointer",flexShrink:0,padding:0}}><div style={{width:"100%",height:"100%",backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/edit-outline.png)",maskImage:"url(/icons/edit-outline.png)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                     )}
