@@ -332,7 +332,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [dayResetHour,setDayResetHour]=useState(household.day_reset_hour||0);
   useEffect(()=>{
     supabase.from("households").select("day_reset_hour").eq("id",household.id).single()
-      .then(({data})=>{ if(data) setDayResetHour(data.day_reset_hour||0); });
+      .then(({data,error})=>{
+        if(error){ console.error("fetch day_reset_hour",error); return; }
+        if(data) setDayResetHour(data.day_reset_hour||0);
+      });
   },[household.id]);
   const TODAY=(()=>{
     const now=new Date();
@@ -376,6 +379,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [zoneExpandId,setZoneExpandId]=useState(null);
   const [tab,     setTab]     = useState("week");
   const [taskFormOpen,setTaskFormOpen]=useState(false);
+  const [sheetDragY,setSheetDragY]=useState(0);
+  const sheetDragRef=useRef(null);
   const [selDay,  setSelDay]  = useState(todayStr);
   const [meId,    setMeId]    = useState(initialMe.id);
   const meIdRef=useRef(meId);
@@ -1667,11 +1672,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
           {/* ══ ADD TASK ══════════════════════════════════════════ */}
           {taskFormOpen&&(
-          <div style={{position:"fixed",inset:0,zIndex:400,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)"}}>
-            <div style={{width:"100%",height:"92%",background:THEME_COLORS[theme].bg,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
-            <div style={{width:36,height:4,background:C(0.2),borderRadius:2,margin:"10px auto 0",flexShrink:0}}/>
-            <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"16px 20px 8px",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
+          <div onClick={()=>{setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTaskFormOpen(false);}} style={{position:"fixed",inset:0,zIndex:400,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)"}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:"100%",height:"92%",background:THEME_COLORS[theme].bg,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden",transform:`translateY(${sheetDragY}px)`,transition:sheetDragY===0?"transform 0.2s ease":"none"}}>
+            <div onTouchStart={e=>{ sheetDragRef.current={startY:e.touches[0].clientY,dy:0}; }} onTouchMove={e=>{ if(!sheetDragRef.current) return; const dy=e.touches[0].clientY-sheetDragRef.current.startY; if(dy>0){ sheetDragRef.current.dy=dy; setSheetDragY(dy); } }} onTouchEnd={()=>{ if(sheetDragRef.current&&sheetDragRef.current.dy>90){ setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTaskFormOpen(false); } setSheetDragY(0); sheetDragRef.current=null; }} style={{flexShrink:0,paddingTop:6,paddingBottom:4}}>
+              <div style={{width:36,height:4,background:C(0.2),borderRadius:2,margin:"4px auto 0"}}/>
+              <div style={{padding:"10px 20px 0",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",flex:1,minHeight:0}}>
               {editTaskId&&(()=>{const et=tasks.find(x=>x.id===editTaskId);return et?.rescheduledFrom?(
                 <div style={{margin:"0 20px 8px",color:"#fbbf24",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
                   <span>⏭️</span><span>Moved from {new Date(et.rescheduledFrom+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
@@ -2000,7 +2007,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
                     <button key={opt.h} onClick={()=>{
                       setDayResetHour(opt.h);
-                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{ if(error) console.error("setDayResetHour",error); });
+                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{ if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); } });
                     }} style={{flex:1,height:34,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":C(0.06),border:`1.5px solid ${dayResetHour===opt.h?"#818cf8":"transparent"}`,borderRadius:12,color:dayResetHour===opt.h?"#fff":C(0.4),fontSize:13,fontWeight:dayResetHour===opt.h?700:500,cursor:"pointer"}}>{opt.label}</button>
                   ))}
                 </div>
@@ -2560,8 +2567,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
               </div>
               <button onClick={savePerson} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>{personModal.mode==="new"?"Add":"Save"}</button>
-              {personModal.mode==="edit"&&<button onClick={()=>{deletePerson(personModal.id);setPersonModal(null);}} style={{...G(0.06,20),border:"1px solid rgba(248,113,113,0.2)",borderRadius:15,padding:"12px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Remove Person</button>}
-              {personModal.mode==="new"&&<button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",color:C(0.4),fontSize:13,cursor:"pointer",padding:"4px 0"}}>Cancel</button>}
+              <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",color:C(0.4),fontSize:13,cursor:"pointer",padding:"4px 0"}}>Cancel</button>
             </div>
           </div>
         )}
