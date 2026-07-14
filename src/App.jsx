@@ -375,7 +375,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const settingsMainScrollPos=useRef(0);
   const [zoneExpandId,setZoneExpandId]=useState(null);
   const [tab,     setTab]     = useState("week");
-  const [returnTab,setReturnTab]= useState("week");
+  const [taskFormOpen,setTaskFormOpen]=useState(false);
   const [selDay,  setSelDay]  = useState(todayStr);
   const [meId,    setMeId]    = useState(initialMe.id);
   const meIdRef=useRef(meId);
@@ -789,7 +789,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const diff=Math.round((new Date(d)-new Date(first))/(1000*60*60*24));
     return diff%days===0;
   };
-  const dayTasks=d=>tasks.filter(t=>!t.archivedAt&&isScheduledOn(t,d));
+  const dayTasks=d=>tasks.filter(t=>(!t.archivedAt||d<todayStr)&&isScheduledOn(t,d));
   const getPerson=id=>people.find(p=>p.id===id);
   const getZone=id=>zones.find(z=>z.id===id);
   const unread=notifs.filter(n=>!n.readBy.includes(meId)).length;
@@ -938,16 +938,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           rescheduled_from:fromDay,
         }).eq("id",t.id).select();
       }catch(err){
-        window.alert(`REWRITE — network/JS error moving "${t.text}":\n${err.message||err}`);
+        window.alert(`Couldn't move "${t.text}" — a network error occurred:\n${err.message||err}`);
         continue;
       }
 
       if(result.error){
-        window.alert(`REWRITE — Supabase rejected the save for "${t.text}":\n${result.error.message}\n\ncode: ${result.error.code}\ndetails: ${result.error.details||"(none)"}`);
+        window.alert(`Couldn't move "${t.text}" — the server rejected the change:\n${result.error.message}`);
         continue;
       }
       if(!result.data||result.data.length===0){
-        window.alert(`REWRITE — "${t.text}": update ran with NO ERROR but matched 0 rows. This usually means a row-level-security policy is silently blocking the write, or the task id doesn't exist in the table.`);
+        window.alert(`Couldn't move "${t.text}" — the change didn't save. Please let Daria know.`);
         continue;
       }
 
@@ -1017,7 +1017,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setSavingTask(false);
     setToast({icon:wasEditing?"✏️":"✅",from:wasEditing?"Task updated":"Task added",text:form.text.trim()});
     setTimeout(()=>setToast(null),2800);
-    if(returnTab==="week"&&dates[0]){
+    if(tab==="week"&&dates[0]){
       setSelDay(dates[0]);
       weekScrollLeftRef.current=null;
       setTimeout(()=>{
@@ -1026,7 +1026,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         cell?.scrollIntoView({inline:"center",block:"nearest"});
       },50);
     }
-    setTab(returnTab);
+    setTaskFormOpen(false);
   };
 
   const savePerson=()=>{
@@ -1671,7 +1671,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           })()}
 
           {/* ══ ADD TASK ══════════════════════════════════════════ */}
-          {tab==="add"&&(
+          {taskFormOpen&&(
+          <div style={{position:"fixed",inset:0,zIndex:400,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)"}}>
+            <div style={{width:"100%",height:"92%",background:isDark?BG_DARK:BG_LIGHT,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{width:36,height:4,background:C(0.2),borderRadius:2,margin:"10px auto 0",flexShrink:0}}/>
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 20px 8px",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
               {editTaskId&&(()=>{const et=tasks.find(x=>x.id===editTaskId);return et?.rescheduledFrom?(
@@ -1722,25 +1725,25 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                     {[null,5,10,15,30,45,60].map(min=>(
                       <button key={min??"none"} onClick={()=>{setCustomTimeOpen(false);setForm(f=>({...f,estMinutes:min}));}} style={{
-                        height:32,boxSizing:"border-box",padding:"0 12px",borderRadius:16,cursor:"pointer",fontSize:12,fontWeight:600,
-                        border:`1.5px solid ${!customTimeOpen&&form.estMinutes===min?"#818cf8":"transparent"}`,
-                        background:!customTimeOpen&&form.estMinutes===min?"rgba(129,140,248,0.28)":C(0.06),
-                        color:!customTimeOpen&&form.estMinutes===min?"#fff":C(0.45),
+                        background:!customTimeOpen&&form.estMinutes===min?"#818cf825":C(0.05),
+                        border:`1px solid ${!customTimeOpen&&form.estMinutes===min?"#818cf860":C(0.08)}`,
+                        borderRadius:12,padding:"8px 14px",cursor:"pointer",
+                        color:!customTimeOpen&&form.estMinutes===min?"#818cf8":C(0.4),fontSize:13,fontWeight:500,
                       }}>{min==null?"None":min<60?`${min} min`:"1 hr"}</button>
                     ))}
                     <button onClick={()=>{
                       if(customTimeOpen){ setCustomTimeOpen(false); return; } // tap again to collapse
                       setCustomTimeOpen(true);
                       const presets=[null,5,10,15,30,45,60];
-                      if(presets.includes(form.estMinutes)) setForm(f=>({...f,estMinutes:90}));
+                      if(presets.includes(form.estMinutes)) setForm(f=>({...f,estMinutes:10}));
                     }} style={{
-                      height:32,boxSizing:"border-box",padding:"0 12px",borderRadius:16,cursor:"pointer",fontSize:12,fontWeight:600,
-                      border:`1.5px solid ${customTimeOpen?"#818cf8":"transparent"}`,
-                      background:customTimeOpen?"rgba(129,140,248,0.28)":C(0.06),
-                      color:customTimeOpen?"#fff":C(0.45),
+                      background:customTimeOpen?"#818cf825":C(0.05),
+                      border:`1px solid ${customTimeOpen?"#818cf860":C(0.08)}`,
+                      borderRadius:12,padding:"8px 14px",cursor:"pointer",
+                      color:customTimeOpen?"#818cf8":C(0.4),fontSize:13,fontWeight:500,
                     }}>Custom</button>
                   </div>
-                  {customTimeOpen&&(()=>{ const totalMin=form.estMinutes||90,h=Math.floor(totalMin/60),m=totalMin%60; return (
+                  {customTimeOpen&&(()=>{ const totalMin=form.estMinutes||10,h=Math.floor(totalMin/60),m=totalMin%60; return (
                     <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10}}>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
                         <button onClick={()=>setForm(f=>({...f,estMinutes:Math.max(0,totalMin-60)}))} style={{width:30,height:30,borderRadius:8,border:"none",background:C(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
@@ -1797,10 +1800,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 )}
                 <button onClick={saveTask} disabled={savingTask} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:savingTask?"default":"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
-                <button onClick={()=>{setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTab(returnTab);}} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
+                <button onClick={()=>{setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTaskFormOpen(false);}} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
               </div>
             </div>
+            </div>
+          </div>
           )}
 
           {/* ══ ALL TASKS ══════════════════════════════════════════ */}
@@ -1924,7 +1929,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               )}
                               <div style={{display:"flex",gap:8}}>
                                 {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTab("add");}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormOpen(true);}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
@@ -2069,7 +2074,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             const active=tab===item.id;
             if(item.accent) return (
               <div key={item.id} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTab("add");}} style={{width:52,height:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#6366f1,#8b5cf6)",boxShadow:`0 6px 22px rgba(99,102,241,0.5),inset 0 1px 0 ${C(0.25)}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",marginTop:-18}}><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="11" y1="2" x2="11" y2="20" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><line x1="2" y1="11" x2="20" y2="11" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg></button>
+                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{width:52,height:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#6366f1,#8b5cf6)",boxShadow:`0 6px 22px rgba(99,102,241,0.5),inset 0 1px 0 ${C(0.25)}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",marginTop:-18}}><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="11" y1="2" x2="11" y2="20" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><line x1="2" y1="11" x2="20" y2="11" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg></button>
               </div>
             );
             return (
