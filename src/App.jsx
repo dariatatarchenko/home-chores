@@ -407,7 +407,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     personIds:r.person_ids||[],personId:(r.person_ids||[])[0]||null,
     scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
     rescheduledFrom:r.rescheduled_from,createdBy:r.created_by,confirmedBy:r.confirmed_by||[],
-    excludedDates:r.excluded_dates||[],timesPerDay:r.times_per_day||1,shiftAnchor:r.shift_anchor||null,
+    excludedDates:r.excluded_dates||[],timesPerDay:r.times_per_day||1,shiftAnchor:r.shift_anchor||null,estMinutes:r.est_minutes??null,
   });
   const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body,readBy:r.read_by||[]});
 
@@ -523,6 +523,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if("confirmedBy" in fields) dbFields.confirmed_by=fields.confirmedBy;
     if("excludedDates" in fields) dbFields.excluded_dates=fields.excludedDates;
     if("timesPerDay" in fields) dbFields.times_per_day=fields.timesPerDay;
+    if("estMinutes" in fields) dbFields.est_minutes=fields.estMinutes;
     if("shiftAnchor" in fields) dbFields.shift_anchor=fields.shiftAnchor;
     dbFields.updated_at=new Date().toISOString();
     // TEMPORARY DIAGNOSTIC — shows the raw outcome of this specific save
@@ -562,7 +563,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const {error}=await withRetry(()=>supabase.from("tasks").insert({
         id:row.id,household_id:household.id,zone_id:row.zone,text:row.text,freq:row.freq,
         custom_days:row.customDays,person_ids:row.personIds,scheduled_dates:row.scheduledDates,
-        done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,confirmed_by:row.confirmedBy||[],excluded_dates:row.excludedDates||[],times_per_day:row.timesPerDay||1,shift_anchor:row.shiftAnchor||null,
+        done_on:row.doneOn,likes:row.likes,rescheduled_from:row.rescheduledFrom,created_by:row.createdBy,confirmed_by:row.confirmedBy||[],excluded_dates:row.excludedDates||[],times_per_day:row.timesPerDay||1,shift_anchor:row.shiftAnchor||null,est_minutes:row.estMinutes??null,
       }));
       if(error) console.error("insertTask",error);
       return error?error.message:null;
@@ -673,7 +674,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [assigneeError,setAssigneeError]= useState(false);
   const [assigneePopover,setAssigneePopover]= useState(null);
 
-  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32,timesPerDay:1};
+  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32,timesPerDay:1,estMinutes:null};
   const [form,setForm]= useState(blankForm);
 
   const prevPct = useRef(0);
@@ -1454,6 +1455,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           })()}
                           {people.length>1&&<span style={{fontSize:14,color:C(0.32),flexShrink:0}}>·</span>}
                           <span style={{fontSize:12,color:C(0.5),...(streak>1||t.rescheduledFrom?{maxWidth:80}:{flex:1}),overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
+                          {t.estMinutes&&<span style={{fontSize:11,color:C(0.35),flexShrink:0}}>· {t.estMinutes<60?`${t.estMinutes}m`:"1h"}</span>}
                           {streak>1&&<>
                             <span style={{fontSize:13,color:C(0.32),flexShrink:0}}>·</span>
                             <span style={{fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}>🔥{streak}</span>
@@ -1674,6 +1676,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </div>
                 </div>
 
+                <div>
+                  <span style={labelSt}>Estimated time (optional)</span>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {[null,5,10,15,30,45,60].map(min=>(
+                      <button key={min??"none"} onClick={()=>setForm(f=>({...f,estMinutes:min}))} style={{
+                        height:32,boxSizing:"border-box",padding:"0 12px",borderRadius:16,cursor:"pointer",fontSize:12,fontWeight:600,
+                        border:`1.5px solid ${form.estMinutes===min?"#818cf8":"transparent"}`,
+                        background:form.estMinutes===min?"rgba(129,140,248,0.28)":C(0.06),
+                        color:form.estMinutes===min?"#fff":C(0.45),
+                      }}>{min==null?"None":min<60?`${min} min`:"1 hr"}</button>
+                    ))}
+                  </div>
+                </div>
+
                 <div style={{width:"100%",maxWidth:"100%",overflow:"hidden",boxSizing:"border-box"}}>
                   <span style={labelSt}>{tr("start_date")}</span>
                   <input type="date" value={form.startDate} min={todayStr}
@@ -1684,7 +1700,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <span style={labelSt}>{tr("assigned_to")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
-                    <button onClick={()=>setForm(f=>({...f,personIds:(f.personIds||[]).length===people.length?[]:people.map(p=>p.id)}))} style={{
+                    <button onClick={()=>setForm(f=>({...f,personIds:(f.personIds||[]).length===people.length?[meId]:people.map(p=>p.id)}))} style={{
                       display:"flex",alignItems:"center",height:34,boxSizing:"border-box",
                       background:(form.personIds||[]).length===people.length?C(0.15):C(0.05),
                       border:`2px solid ${(form.personIds||[]).length===people.length?C(0.4):C(0.08)}`,
@@ -1696,6 +1712,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       const sel=(form.personIds||[]).includes(p.id);
                       return <button key={p.id} onClick={()=>setForm(f=>{
                         const cur=f.personIds||[];
+                        if(cur.includes(p.id)&&cur.length===1) return f; // can't deselect the last remaining person
                         const next=cur.includes(p.id)?cur.filter(id=>id!==p.id):[...cur,p.id];
                         return {...f,personIds:next};
                       })} style={{display:"flex",alignItems:"center",gap:7,height:34,boxSizing:"border-box",background:sel?p.color+"28":C(0.05),border:`2px solid ${sel?p.color+"90":C(0.08)}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",position:"relative"}}>
@@ -1746,14 +1763,36 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{fontSize:44}}>📋</div>
                   <div style={{color:C(0.38),marginTop:10,fontSize:14}}>{tr("no_tasks_yet")}</div>
                 </div>
-              ):groupedZones.filter(zone=>!taskZoneFilter||zone.id===taskZoneFilter).map(zone=>(
+              ):groupedZones.filter(zone=>!taskZoneFilter||zone.id===taskZoneFilter).map(zone=>{
+                const editing=zoneExpandId===zone.id;
+                return (
                 <div key={zone.id} style={{marginBottom:24}}>
+                  {editing?(
+                    <div style={{...CARD,marginBottom:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:`1px solid ${C(0.12)}`,borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
+                        <input
+                          value={zForm.label}
+                          onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
+                          placeholder="Zone name"
+                          autoFocus
+                          style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:10}}
+                        />
+                      </div>
+                      <div style={{display:"flex",gap:8}}>
+                        <button onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}} style={{flex:1,background:C(0.06),border:"none",borderRadius:10,padding:"10px",color:C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancel</button>
+                        <button onClick={()=>{deleteZone(zone.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:10,padding:"10px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:10,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
+                      </div>
+                    </div>
+                  ):(
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
                     <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{zone.emoji} {zone.label}</span>
                     {zone.id!=="__orphaned__"&&(
                       <button onClick={()=>{setZoneNameError(false);setZForm({label:zone.label,emoji:zone.emoji});setEmojiPicker(false);setZoneExpandId(zone.id);}} style={{background:C(0.08),border:"none",borderRadius:8,width:26,height:26,color:"#818cf8",fontSize:13,cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>✏️</button>
                     )}
                   </div>
+                  )}
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {zone.tasks.map(t=>{
                       const pIds=(t.personIds||[t.personId]).filter(Boolean),open=expandId===t.id,streak=computeStreak(t);
@@ -1812,7 +1851,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               )}
                               <div style={{display:"flex",gap:8}}>
                                 {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1});setExpandId(null);setTab("add");}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setExpandId(null);setTab("add");}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
@@ -1822,7 +1861,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     })}
                   </div>
                 </div>
-              ))}
+                );})}
               </div>
             </div>
           )}
