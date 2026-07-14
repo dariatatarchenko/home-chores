@@ -1222,7 +1222,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Toast */}
         {toast&&(
-          <div onClick={()=>setToast(null)} style={{position:"fixed",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 20px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
+          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 20px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
             <span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>
             <div style={{minWidth:0,flex:1}}>
               <div style={{color:C(0.9),fontSize:14,fontWeight:700}}>{toast.from}</div>
@@ -1234,7 +1234,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {/* Notifications panel */}
         {showNotifs&&(
           <>
-            <div style={{position:"fixed",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
+            <div style={{position:"absolute",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
             <div style={{position:"absolute",top:44,right:12,zIndex:50,...G(0.2,30),borderRadius:20,padding:16,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.5)"}}>
               <div style={{color:C(0.9),fontSize:14,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:C(0.3),fontSize:13}}>All caught up!</div>}
@@ -1554,7 +1554,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         const pIds=(t.personIds||[t.personId]).filter(Boolean);
                         return (
                           <>
-                            <div onClick={e=>{e.stopPropagation();setAssigneePopover(null);}} style={{position:"fixed",inset:0,zIndex:400}}/>
+                            <div onClick={e=>{e.stopPropagation();setAssigneePopover(null);}} style={{position:"absolute",inset:0,zIndex:400}}/>
                             <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:"100%",right:0,marginTop:6,...G(0.2,30),borderRadius:14,padding:"10px 12px",zIndex:401,boxShadow:"0 8px 24px rgba(0,0,0,0.4)",minWidth:120}}>
                               {pIds.map(pid=>{const p=getPerson(pid);return(
                                 <div key={pid} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 0"}}>
@@ -1672,7 +1672,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
           {/* ══ ADD TASK ══════════════════════════════════════════ */}
           {taskFormOpen&&(
-          <div onClick={()=>{setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTaskFormOpen(false);}} style={{position:"fixed",inset:0,zIndex:400,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)"}}>
+          <div onClick={()=>{setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTaskFormOpen(false);}} style={{position:"absolute",inset:0,zIndex:400,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)"}}>
             <div onClick={e=>e.stopPropagation()} style={{width:"100%",height:"92%",background:THEME_COLORS[theme].bg,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden",transform:`translateY(${sheetDragY}px)`,transition:sheetDragY===0?"transform 0.2s ease":"none"}}>
             <div onTouchStart={e=>{ sheetDragRef.current={startY:e.touches[0].clientY,dy:0}; }} onTouchMove={e=>{ if(!sheetDragRef.current) return; const dy=e.touches[0].clientY-sheetDragRef.current.startY; if(dy>0){ sheetDragRef.current.dy=dy; setSheetDragY(dy); } }} onTouchEnd={()=>{ if(sheetDragRef.current&&sheetDragRef.current.dy>90){ setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTaskFormOpen(false); } setSheetDragY(0); sheetDragRef.current=null; }} style={{flexShrink:0,paddingTop:6,paddingBottom:4}}>
               <div style={{width:36,height:4,background:C(0.2),borderRadius:2,margin:"4px auto 0"}}/>
@@ -2468,7 +2468,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           const z=isNew?null:zones.find(x=>x.id===zoneExpandId);
           if(!isNew&&!z) return null;
           return(
-          <div style={{position:"fixed",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}}>
+          <div style={{position:"absolute",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}}>
             <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:"28px 28px 0 0",padding:"12px 20px 28px",boxShadow:"0 -20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.1)"}}>
               <div style={{width:36,height:4,background:"rgba(255,255,255,0.38)",borderRadius:2,margin:"0 auto 18px"}}/>
               <div style={{color:"#fff",fontSize:16,fontWeight:700,marginBottom:16}}>{isNew?"New Zone":"Edit Zone"}</div>
@@ -2502,7 +2502,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         })()}
 
         {emojiPicker&&zoneExpandId&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
+          <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
@@ -2533,7 +2533,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── PERSON MODAL ──────────────────────────────────────── */}
         {personModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200}} onClick={()=>{setPersonModal(null);setAvatarPicker(false);}}>
+          <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.65)",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200}} onClick={()=>{setPersonModal(null);setAvatarPicker(false);}}>
             <div onClick={e=>e.stopPropagation()} style={{width:375,...G(0.18,40),borderRadius:"30px 30px 0 0",padding:"22px 22px 42px",display:"flex",flexDirection:"column",gap:16,boxShadow:"0 -20px 60px rgba(0,0,0,0.5)"}}>
               <div style={{width:34,height:4,background:C(0.18),borderRadius:2,margin:"0 auto"}}/>
               <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>{personModal.mode==="new"?"New Person":"Edit Person"}</div>
@@ -2572,7 +2572,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           </div>
         )}
         {personModal&&avatarPicker&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setAvatarPicker(false)}>
+          <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setAvatarPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
@@ -2587,7 +2587,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── ZONE MODAL ────────────────────────────────────────── */}
         {zoneModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200}} onClick={()=>{setZoneModal(null);setEmojiPicker(false);}}>
+          <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.65)",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200}} onClick={()=>{setZoneModal(null);setEmojiPicker(false);}}>
             <div onClick={e=>e.stopPropagation()} style={{width:375,...G(0.18,40),borderRadius:"30px 30px 0 0",padding:"22px 22px 42px",display:"flex",flexDirection:"column",gap:16,boxShadow:"0 -20px 60px rgba(0,0,0,0.5)"}}>
               <div style={{width:34,height:4,background:C(0.18),borderRadius:2,margin:"0 auto"}}/>
               <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>New Zone</div>
@@ -2602,7 +2602,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           </div>
         )}
         {zoneModal&&emojiPicker&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+          <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
