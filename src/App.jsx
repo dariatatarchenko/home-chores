@@ -215,9 +215,21 @@ const ds = d => (d instanceof Date ? d : new Date(d+"T00:00:00")).toISOString().
 // it happened to be assigned to.
 const doneOnDate=(t,d)=>{
   const count=(t.doneOn||[]).filter(e=>e.date===d).length;
+  // Preserve history: if the task's "times per day" target was changed LATER
+  // (e.g. a task that used to be a single checkmark became a 3x/day one),
+  // don't retroactively mark past days as incomplete just because they don't
+  // meet the NEW target — only today/future use the live target.
+  if(d<todayStr) return count>=1;
   return count>=(t.timesPerDay||1);
 };
 const doneCountOn=(t,d)=>(t.doneOn||[]).filter(e=>e.date===d).length;
+const formatEstMinutes=min=>{
+  if(!min) return "";
+  const h=Math.floor(min/60),m=min%60;
+  if(h===0) return `${m}m`;
+  if(m===0) return `${h}h`;
+  return `${h}h ${m}m`;
+};
 const doneOnDateBy=(doneOn,d,pid)=>(doneOn||[]).some(e=>e.date===d&&e.by===pid);
 
 const uid=()=>(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
@@ -356,6 +368,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   });
   const CARD={...G(0.08,24),borderRadius:20,padding:"13px 15px"};
   const [codeCopied,setCodeCopied]=useState(false);
+  const [customTimeOpen,setCustomTimeOpen]=useState(false);
   const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
   const [settingsView,setSettingsView]=useState("main");
   const settingsScrollRef=useRef(null);
@@ -407,7 +420,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     personIds:r.person_ids||[],personId:(r.person_ids||[])[0]||null,
     scheduledDates:r.scheduled_dates||[],doneOn:r.done_on||[],likes:r.likes||[],
     rescheduledFrom:r.rescheduled_from,createdBy:r.created_by,confirmedBy:r.confirmed_by||[],
-    excludedDates:r.excluded_dates||[],timesPerDay:r.times_per_day||1,shiftAnchor:r.shift_anchor||null,estMinutes:r.est_minutes??null,
+    excludedDates:r.excluded_dates||[],timesPerDay:r.times_per_day||1,shiftAnchor:r.shift_anchor||null,estMinutes:r.est_minutes??null,archivedAt:r.archived_at||null,
   });
   const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body,readBy:r.read_by||[]});
 
@@ -573,7 +586,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     }
   };
   const deleteTaskRemote=id=>{
-    supabase.from("tasks").delete().eq("id",id).then(({error})=>{ if(error) console.error("deleteTask",error); });
+    // Soft-delete: mark as archived rather than actually removing the row, so
+    // past completions/points stay intact in Stats even after the task is
+    // "deleted" from the active lists.
+    supabase.from("tasks").update({archived_at:new Date().toISOString()}).eq("id",id).then(({error})=>{ if(error) console.error("deleteTask",error); });
   };
   const persistPerson=(id,fields)=>{
     const dbFields={};
@@ -773,7 +789,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const diff=Math.round((new Date(d)-new Date(first))/(1000*60*60*24));
     return diff%days===0;
   };
-  const dayTasks=d=>tasks.filter(t=>isScheduledOn(t,d));
+  const dayTasks=d=>tasks.filter(t=>!t.archivedAt&&isScheduledOn(t,d));
   const getPerson=id=>people.find(p=>p.id===id);
   const getZone=id=>zones.find(z=>z.id===id);
   const unread=notifs.filter(n=>!n.readBy.includes(meId)).length;
@@ -901,22 +917,44 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     setSelDay(to);
   };
 
-  const moveIncompleteToNextDay=(fromDay)=>{
+  const moveIncompleteToNextDay=async(fromDay)=>{
     const nextDate=new Date(fromDay+"T00:00:00"); nextDate.setDate(nextDate.getDate()+1);
     const toDay=ds(nextDate);
     const incomplete=dayTasks(fromDay).filter(t=>!isDone(t,fromDay));
-    incomplete.forEach(t=>{
-      let newFields=null;
-      setTasks(ts=>ts.map(x=>{
-        if(x.id!==t.id) return x;
-        const dates=[...new Set([...x.scheduledDates.filter(d=>d!==fromDay),toDay])].sort();
-        const excludedDates=[...new Set([...(x.excludedDates||[]),fromDay])];
-        const shiftAnchor=(x.freq&&x.freq!=="once")?toDay:x.shiftAnchor;
-        newFields={scheduledDates:dates,doneOn:(x.doneOn||[]).filter(e=>e.date!==fromDay),rescheduledFrom:fromDay,excludedDates,shiftAnchor};
-        return{...x,...newFields};
-      }));
-      if(newFields) persistTask(t.id,newFields);
-    });
+
+    for(const t of incomplete){
+      const dates=[...new Set([...t.scheduledDates.filter(d=>d!==fromDay),toDay])].sort();
+      const excludedDates=[...new Set([...(t.excludedDates||[]),fromDay])];
+      const shiftAnchor=(t.freq&&t.freq!=="once")?toDay:(t.shiftAnchor||null);
+      const doneOn=(t.doneOn||[]).filter(e=>e.date!==fromDay);
+
+      let result;
+      try{
+        result=await supabase.from("tasks").update({
+          scheduled_dates:dates,
+          excluded_dates:excludedDates,
+          shift_anchor:shiftAnchor,
+          done_on:doneOn,
+          rescheduled_from:fromDay,
+        }).eq("id",t.id).select();
+      }catch(err){
+        window.alert(`REWRITE — network/JS error moving "${t.text}":\n${err.message||err}`);
+        continue;
+      }
+
+      if(result.error){
+        window.alert(`REWRITE — Supabase rejected the save for "${t.text}":\n${result.error.message}\n\ncode: ${result.error.code}\ndetails: ${result.error.details||"(none)"}`);
+        continue;
+      }
+      if(!result.data||result.data.length===0){
+        window.alert(`REWRITE — "${t.text}": update ran with NO ERROR but matched 0 rows. This usually means a row-level-security policy is silently blocking the write, or the task id doesn't exist in the table.`);
+        continue;
+      }
+
+      // Update local state to match what we just confirmed was saved
+      setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,scheduledDates:dates,excludedDates,shiftAnchor,doneOn,rescheduledFrom:fromDay}));
+    }
+
     setSelDay(toDay);
   };
 
@@ -1104,8 +1142,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const pct=dayAllTasks.length===0?100:Math.round(dayAllDone/dayAllTasks.length*100);
 
   const groupedZones=(()=>{
-    const grouped=zones.map(z=>({...z,tasks:tasks.filter(t=>t.zone===z.id).slice().reverse()})).filter(z=>z.tasks.length>0);
-    const orphaned=tasks.filter(t=>!zones.some(z=>z.id===t.zone)).slice().reverse();
+    const activeTasks=tasks.filter(t=>!t.archivedAt);
+    const grouped=zones.map(z=>({...z,tasks:activeTasks.filter(t=>t.zone===z.id).slice().reverse()})).filter(z=>z.tasks.length>0);
+    const orphaned=activeTasks.filter(t=>!zones.some(z=>z.id===t.zone)).slice().reverse();
     if(orphaned.length>0) grouped.push({id:"__orphaned__",label:"Unfiled",emoji:"❓",tasks:orphaned});
     return grouped;
   })();
@@ -1411,11 +1450,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Check */}
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                          width:24,height:24,borderRadius:"50%",flexShrink:0,padding:0,border:"none",
+                          width:24,height:24,borderRadius:"50%",flexShrink:0,padding:0,border:isFuture?`2px solid ${C(0.07)}`:"none",boxSizing:"border-box",
                           background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
                           position:"relative",transition:"all 0.2s",
                         }}>
-                          {!done&&(()=>{ const R=10.9,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
+                          {!done&&!isFuture&&(()=>{ const R=10.9,CIRC2=2*Math.PI*R,frac=Math.min(1,doneCount/(t.timesPerDay||1)),DA2=frac*CIRC2; return (
                           <svg viewBox="0 0 24 24" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
                             <circle cx="12" cy="12" r={R} fill="none" stroke={C(0.1)} strokeWidth="2.1"/>
                             <circle cx="12" cy="12" r={R} fill="none" stroke="#34d399" strokeWidth="2.1" strokeDasharray={`${DA2} ${CIRC2}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
@@ -1424,6 +1463,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
                               ?<span style={{fontSize:13,fontWeight:700,color:"#fff",lineHeight:1,animation:"checkPop 0.35s ease"}}>✓</span>
+                              :isFuture
+                              ?<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2.2" strokeLinecap="round"/></svg>
                               :<span style={{fontSize:8,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
@@ -1455,7 +1496,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           })()}
                           {people.length>1&&<span style={{fontSize:14,color:C(0.32),flexShrink:0}}>·</span>}
                           <span style={{fontSize:12,color:C(0.5),...(streak>1||t.rescheduledFrom?{maxWidth:80}:{flex:1}),overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
-                          {t.estMinutes&&<span style={{fontSize:11,color:C(0.35),flexShrink:0}}>· {t.estMinutes<60?`${t.estMinutes}m`:"1h"}</span>}
+                          {t.estMinutes&&<span style={{fontSize:11,color:C(0.35),flexShrink:0}}>· {formatEstMinutes(t.estMinutes)}</span>}
                           {streak>1&&<>
                             <span style={{fontSize:13,color:C(0.32),flexShrink:0}}>·</span>
                             <span style={{fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}>🔥{streak}</span>
@@ -1655,7 +1696,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <span style={labelSt}>{tr("frequency")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-                    {FREQ_OPTIONS.map(f=><button key={f.id} onClick={()=>setForm(fm=>({...fm,freq:f.id}))} style={{background:form.freq===f.id?FREQ_COLOR[f.id]+"25":C(0.05),border:`1px solid ${form.freq===f.id?FREQ_COLOR[f.id]+"60":C(0.08)}`,borderRadius:12,padding:"8px 14px",cursor:"pointer",color:form.freq===f.id?FREQ_COLOR[f.id]:C(0.4),fontSize:13,fontWeight:500}}>{f.label}</button>)}
+                    {FREQ_OPTIONS.map(f=><button key={f.id} onClick={()=>setForm(fm=>({...fm,freq:(f.id==="custom"&&fm.freq==="custom")?"daily":f.id}))} style={{background:form.freq===f.id?FREQ_COLOR[f.id]+"25":C(0.05),border:`1px solid ${form.freq===f.id?FREQ_COLOR[f.id]+"60":C(0.08)}`,borderRadius:12,padding:"8px 14px",cursor:"pointer",color:form.freq===f.id?FREQ_COLOR[f.id]:C(0.4),fontSize:13,fontWeight:500}}>{f.label}</button>)}
                   </div>
                   {form.freq==="custom"&&(
                     <div style={{display:"flex",alignItems:"center",gap:10,...G(0.08,20),borderRadius:14,padding:"12px 16px",marginTop:8,border:"1px solid rgba(232,121,249,0.3)"}}>
@@ -1680,14 +1721,39 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={labelSt}>Estimated time (optional)</span>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                     {[null,5,10,15,30,45,60].map(min=>(
-                      <button key={min??"none"} onClick={()=>setForm(f=>({...f,estMinutes:min}))} style={{
+                      <button key={min??"none"} onClick={()=>{setCustomTimeOpen(false);setForm(f=>({...f,estMinutes:min}));}} style={{
                         height:32,boxSizing:"border-box",padding:"0 12px",borderRadius:16,cursor:"pointer",fontSize:12,fontWeight:600,
-                        border:`1.5px solid ${form.estMinutes===min?"#818cf8":"transparent"}`,
-                        background:form.estMinutes===min?"rgba(129,140,248,0.28)":C(0.06),
-                        color:form.estMinutes===min?"#fff":C(0.45),
+                        border:`1.5px solid ${!customTimeOpen&&form.estMinutes===min?"#818cf8":"transparent"}`,
+                        background:!customTimeOpen&&form.estMinutes===min?"rgba(129,140,248,0.28)":C(0.06),
+                        color:!customTimeOpen&&form.estMinutes===min?"#fff":C(0.45),
                       }}>{min==null?"None":min<60?`${min} min`:"1 hr"}</button>
                     ))}
+                    <button onClick={()=>{
+                      if(customTimeOpen){ setCustomTimeOpen(false); return; } // tap again to collapse
+                      setCustomTimeOpen(true);
+                      const presets=[null,5,10,15,30,45,60];
+                      if(presets.includes(form.estMinutes)) setForm(f=>({...f,estMinutes:90}));
+                    }} style={{
+                      height:32,boxSizing:"border-box",padding:"0 12px",borderRadius:16,cursor:"pointer",fontSize:12,fontWeight:600,
+                      border:`1.5px solid ${customTimeOpen?"#818cf8":"transparent"}`,
+                      background:customTimeOpen?"rgba(129,140,248,0.28)":C(0.06),
+                      color:customTimeOpen?"#fff":C(0.45),
+                    }}>Custom</button>
                   </div>
+                  {customTimeOpen&&(()=>{ const totalMin=form.estMinutes||90,h=Math.floor(totalMin/60),m=totalMin%60; return (
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:Math.max(0,totalMin-60)}))} style={{width:30,height:30,borderRadius:8,border:"none",background:C(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
+                        <span style={{color:"#fff",fontSize:14,fontWeight:700,minWidth:44,textAlign:"center"}}>{h}h</span>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:totalMin+60}))} style={{width:30,height:30,borderRadius:8,border:"none",background:C(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:Math.max(0,totalMin-5)}))} style={{width:30,height:30,borderRadius:8,border:"none",background:C(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
+                        <span style={{color:"#fff",fontSize:14,fontWeight:700,minWidth:44,textAlign:"center"}}>{m}m</span>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:totalMin+5}))} style={{width:30,height:30,borderRadius:8,border:"none",background:C(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
+                      </div>
+                    </div>
+                  );})()}
                 </div>
 
                 <div style={{width:"100%",maxWidth:"100%",overflow:"hidden",boxSizing:"border-box"}}>
@@ -1709,8 +1775,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <span style={{color:(form.personIds||[]).length===people.length?C(0.9):C(0.4),fontSize:13,fontWeight:500}}>{tr("all")}</span>
                     </button>
                     {people.map(p=>{
-                      const sel=(form.personIds||[]).includes(p.id);
+                      const isAll=(form.personIds||[]).length===people.length;
+                      const sel=(form.personIds||[]).includes(p.id)&&!isAll;
                       return <button key={p.id} onClick={()=>setForm(f=>{
+                        if(people.length===2){
+                          // With exactly two people, this is a simple 3-way choice
+                          // (Person A / Person B / All) — picking one always just
+                          // replaces the selection, no ambiguous partial state.
+                          return {...f,personIds:[p.id]};
+                        }
                         const cur=f.personIds||[];
                         if(cur.includes(p.id)&&cur.length===1) return f; // can't deselect the last remaining person
                         const next=cur.includes(p.id)?cur.filter(id=>id!==p.id):[...cur,p.id];
@@ -1724,7 +1797,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 )}
                 <button onClick={saveTask} disabled={savingTask} style={{background:"linear-gradient(135deg,#6366f1,#8b5cf6)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:savingTask?"default":"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
-                <button onClick={()=>{setForm(blankForm);setEditTaskId(null);setTab(returnTab);}} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
+                <button onClick={()=>{setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTab(returnTab);}} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
               </div>
             </div>
@@ -1850,8 +1923,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.filter(x=>x.id!==t.id));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setExpandId(null);setTab("add");}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                                <button onClick={()=>{setTaskNameError(false);setReturnTab(tab);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTab("add");}} style={{flex:1,background:C(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
@@ -1996,7 +2069,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             const active=tab===item.id;
             if(item.accent) return (
               <div key={item.id} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setTab("add");}} style={{width:52,height:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#6366f1,#8b5cf6)",boxShadow:`0 6px 22px rgba(99,102,241,0.5),inset 0 1px 0 ${C(0.25)}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",marginTop:-18}}><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="11" y1="2" x2="11" y2="20" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><line x1="2" y1="11" x2="20" y2="11" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg></button>
+                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setReturnTab(tab);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTab("add");}} style={{width:52,height:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#6366f1,#8b5cf6)",boxShadow:`0 6px 22px rgba(99,102,241,0.5),inset 0 1px 0 ${C(0.25)}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",marginTop:-18}}><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="11" y1="2" x2="11" y2="20" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><line x1="2" y1="11" x2="20" y2="11" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg></button>
               </div>
             );
             return (
