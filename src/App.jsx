@@ -539,15 +539,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if("estMinutes" in fields) dbFields.est_minutes=fields.estMinutes;
     if("shiftAnchor" in fields) dbFields.shift_anchor=fields.shiftAnchor;
     dbFields.updated_at=new Date().toISOString();
-    // TEMPORARY DIAGNOSTIC — shows the raw outcome of this specific save
-    // immediately, whether it's a scheduled_dates/excluded_dates change or not.
-    const isMoveRelated="scheduled_dates" in dbFields || "excluded_dates" in dbFields;
-    supabase.from("tasks").update(dbFields).eq("id",id).select().then(({data,error})=>{
+    supabase.from("tasks").update(dbFields).eq("id",id).then(({error})=>{
       if(error){
         console.error("persistTask",error);
         window.alert("Couldn't save this change to the server: "+error.message+"\n\nIt may not survive a page reload — please let Daria know.");
-      } else if(isMoveRelated){
-        window.alert(`DIAGNOSTIC persistTask SUCCESS for task ${id}:\nrows updated: ${data?.length}\nscheduled_dates now: ${JSON.stringify(data?.[0]?.scheduled_dates)}\nexcluded_dates now: ${JSON.stringify(data?.[0]?.excluded_dates)}`);
       }
     });
   };
@@ -1644,8 +1639,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
-                      <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none"}}>
-                        <button onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none",cursor:isFutureDay?"default":"pointer"}}>
+                        <button onClick={e=>{e.stopPropagation();if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=8.1,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
                             <circle cx="9" cy="9" r={R} fill="none" stroke={C(0.1)} strokeWidth="1.8"/>
