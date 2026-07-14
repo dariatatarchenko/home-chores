@@ -234,8 +234,16 @@ const isScheduledOnG=(t,d)=>{
   return diff%days===0;
 };
 const doneOnDate=(t,d)=>{
-  const count=(t.doneOn||[]).filter(e=>e.date===d).length;
-  return count>=(t.timesPerDay||1);
+  const entries=(t.doneOn||[]).filter(e=>e.date===d);
+  if(entries.length===0) return false;
+  // Use the target that was in effect when these entries were actually
+  // recorded (stamped on each entry at completion time), not today's current
+  // timesPerDay — so a later change to "times per day" doesn't retroactively
+  // rewrite whether an old day counts as done, while a fresh tap right now
+  // still has to satisfy today's real target (since it gets stamped with the
+  // CURRENT value at the moment it's added).
+  const recordedTarget=Math.max(...entries.map(e=>e.target||1));
+  return entries.length>=recordedTarget;
 };
 const doneCountOn=(t,d)=>(t.doneOn||[]).filter(e=>e.date===d).length;
 const formatEstMinutes=min=>{
@@ -869,7 +877,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           const lastIdx=arr.map((e,i)=>e.date===d?i:-1).filter(i=>i>=0).pop();
           return lastIdx==null?arr:arr.filter((_,i)=>i!==lastIdx);
         })()
-      : [...(t.doneOn||[]),{date:d,by:meId}];
+      : [...(t.doneOn||[]),{date:d,by:meId,target:t.timesPerDay||1}];
     setTasks(ts=>ts.map(t=>t.id!==id?t:{...t,doneOn:newDoneOn}));
     persistTask(id,{doneOn:newDoneOn});
   };
@@ -942,8 +950,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const nextDate=new Date(fromDay+"T00:00:00"); nextDate.setDate(nextDate.getDate()+1);
     const toDay=ds(nextDate);
     const incomplete=dayTasks(fromDay).filter(t=>!isDone(t,fromDay));
+    const movedIds=[];
+    const originals=[]; // snapshots for undo
 
     for(const t of incomplete){
+      const original={id:t.id,scheduledDates:t.scheduledDates,excludedDates:t.excludedDates||[],shiftAnchor:t.shiftAnchor||null,doneOn:t.doneOn||[],rescheduledFrom:t.rescheduledFrom||null};
+
       const dates=[...new Set([...t.scheduledDates.filter(d=>d!==fromDay),toDay])].sort();
       const excludedDates=[...new Set([...(t.excludedDates||[]),fromDay])];
       const shiftAnchor=(t.freq&&t.freq!=="once")?toDay:(t.shiftAnchor||null);
@@ -974,9 +986,29 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
       // Update local state to match what we just confirmed was saved
       setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,scheduledDates:dates,excludedDates,shiftAnchor,doneOn,rescheduledFrom:fromDay}));
+      movedIds.push(t.id);
+      originals.push(original);
     }
 
     setSelDay(toDay);
+
+    if(movedIds.length>0){
+      const undoMove=async()=>{
+        for(const o of originals){
+          setTasks(ts=>ts.map(x=>x.id!==o.id?x:{...x,scheduledDates:o.scheduledDates,excludedDates:o.excludedDates,shiftAnchor:o.shiftAnchor,doneOn:o.doneOn,rescheduledFrom:o.rescheduledFrom}));
+          supabase.from("tasks").update({
+            scheduled_dates:o.scheduledDates,
+            excluded_dates:o.excludedDates,
+            shift_anchor:o.shiftAnchor,
+            done_on:o.doneOn,
+            rescheduled_from:o.rescheduledFrom,
+          }).eq("id",o.id).then(({error})=>{ if(error) console.error("undoMove",error); });
+        }
+        setSelDay(fromDay);
+      };
+      setToast({icon:"➡️",from:`${movedIds.length} task${movedIds.length!==1?"s":""} moved`,text:`Moved to tomorrow`,onUndo:undoMove});
+      setTimeout(()=>setToast(null),6000);
+    }
   };
 
   const [savingTask,setSavingTask]= useState(false);
@@ -1249,6 +1281,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{color:C(0.9),fontSize:14,fontWeight:700}}>{toast.from}</div>
               <div style={{color:C(0.6),fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{toast.text}</div>
             </div>
+            {toast.onUndo&&<button onClick={e=>{e.stopPropagation();toast.onUndo();setToast(null);}} style={{flexShrink:0,background:"none",border:"none",color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",padding:"6px 8px"}}>Undo</button>}
           </div>
         )}
 
@@ -2094,7 +2127,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #3B435D":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #2D3346":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             const accentColor=isDark?"#7F72F6":"#7163F3";
