@@ -235,11 +235,6 @@ const isScheduledOnG=(t,d)=>{
 };
 const doneOnDate=(t,d)=>{
   const count=(t.doneOn||[]).filter(e=>e.date===d).length;
-  // Preserve history: if the task's "times per day" target was changed LATER
-  // (e.g. a task that used to be a single checkmark became a 3x/day one),
-  // don't retroactively mark past days as incomplete just because they don't
-  // meet the NEW target — only today/future use the live target.
-  if(d<todayStr) return count>=1;
   return count>=(t.timesPerDay||1);
 };
 const doneCountOn=(t,d)=>(t.doneOn||[]).filter(e=>e.date===d).length;
@@ -353,7 +348,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   useEffect(()=>{
     supabase.from("households").select("day_reset_hour").eq("id",household.id).single()
       .then(({data,error})=>{
-        window.alert(`DIAGNOSTIC (load): household.id=${household.id}\ninitial prop value=${household.day_reset_hour}\nerror=${error?error.message:"none"}\nfetched data=${JSON.stringify(data)}`);
         if(error){ console.error("fetch day_reset_hour",error); return; }
         if(data) setDayResetHour(data.day_reset_hour||0);
       });
@@ -828,6 +822,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const wasFullyDone=t&&isDone(t,d);
     const currentCount=t?doneCountOn(t,d):0;
     const target=t?.timesPerDay||1;
+    if(target>1){
+      window.alert(`DIAGNOSTIC toggleDone:\ntask="${t?.text}"\nd=${d}\nt.timesPerDay=${JSON.stringify(t?.timesPerDay)} (type: ${typeof t?.timesPerDay})\ncurrentCount=${currentCount}\ntarget=${target}\nwasFullyDone=${wasFullyDone}\nt.doneOn for this date=${JSON.stringify((t?.doneOn||[]).filter(e=>e.date===d))}`);
+    }
     // For multi-times-per-day tasks, only the tap that actually reaches the
     // target should behave like "becoming done" (reorder animation, day
     // celebration) — intermediate taps (e.g. 2 of 4) shouldn't move the card
@@ -1297,7 +1294,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   )}
                   {people.length>1&&(
                   <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:34,height:34,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:22}}>
-                    <div style={{width:22,height:22,backgroundColor:isDark?"#868C93":"#343249",WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    <div style={{width:22,height:22,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                     {unread>0&&<div style={{position:"absolute",top:2,right:2,width:9,height:9,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -1486,7 +1483,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<span style={{fontSize:13,fontWeight:700,color:"#fff",lineHeight:1,animation:"checkPop 0.35s ease"}}>✓</span>
+                              ?<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check-fill.svg)",maskImage:"url(/icons/check-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>
                               :isFuture
                               ?<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2.2" strokeLinecap="round"/></svg>
                               :<span style={{fontSize:8,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
@@ -1500,7 +1497,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                       }}>
-                        {done&&<span style={{color:"#fff",fontSize:13,fontWeight:700,display:"inline-block",animation:"checkPop 0.35s ease"}}>✓</span>}
+                        {done&&<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check-fill.svg)",maskImage:"url(/icons/check-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>}
                         {!done&&isFuture&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
                       </button>
                       )}
@@ -1542,7 +1539,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         width:28,height:28,cursor:"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",flexShrink:0,padding:0,
                       }}>
-                        <span style={{display:"inline-block",fontSize:24,lineHeight:1,animation:justLiked===(t.id+"|"+selDay)?"heartPop 0.4s ease":"none"}}>{likeCount>0?"❤️":"🤍"}</span>
+                        <div style={{width:24,height:24,backgroundColor:likeCount>0?"#f87171":C(0.35),WebkitMaskImage:`url(/icons/heart-${likeCount>0?"fill":"outline"}.svg)`,maskImage:`url(/icons/heart-${likeCount>0?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:justLiked===(t.id+"|"+selDay)?"heartPop 0.4s ease":"none"}}/>
                         {likeCount>1&&<span style={{position:"absolute",top:-4,right:-4,background:"#f87171",borderRadius:"50%",...(likeCount<10?{width:18,height:18}:{minWidth:18,height:18,padding:"0 4px"}),fontSize:11,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{likeCount}</span>}
                       </button>
                       {/* Avatar(s) */}
@@ -1676,8 +1673,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <circle cx="9" cy="9" r={R} fill="none" stroke="#34d399" strokeWidth="1.8" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                           </svg>
                           );})()}
-                          {done&&<span style={{color:"#fff",fontSize:10,fontWeight:700,position:"relative"}}>✓</span>}
-                          {missed&&<span style={{color:"rgba(248,113,113,0.7)",fontSize:10,fontWeight:700,position:"relative"}}>✕</span>}
+                          {done&&<div style={{width:10,height:10,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check-fill.svg)",maskImage:"url(/icons/check-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
+                          {missed&&<div style={{width:10,height:10,backgroundColor:"rgba(248,113,113,0.7)",WebkitMaskImage:"url(/icons/cross-fill.svg)",maskImage:"url(/icons/cross-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
                           {!done&&!missed&&isFutureDay&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.45)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.45)} strokeWidth="2.2" strokeLinecap="round"/></svg>}
                         </button>
                         <div style={{flex:1}}>
@@ -1840,7 +1837,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:"18px 16px 16px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                 <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_alltasks")}</div>
-                <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}>🏆 Stats</button>
+                <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}><div style={{width:15,height:15,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-outline.svg)",maskImage:"url(/icons/trophy-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats</button>
               </div>
               <div style={{display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
                 <button onClick={()=>setTaskZoneFilter(null)} style={{
@@ -2031,9 +2028,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
                     <button key={opt.h} onClick={()=>{
                       setDayResetHour(opt.h);
-                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).select().then(({data,error})=>{
-                        if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); return; }
-                        window.alert(`DIAGNOSTIC (save): saved value=${opt.h}\nrows returned=${data?.length}\nactual row now=${JSON.stringify(data?.[0])}`);
+                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{
+                        if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); }
                       });
                     }} style={{flex:1,height:34,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":S(0.06),border:`1.5px solid ${dayResetHour===opt.h?ACCENT:"transparent"}`,borderRadius:12,color:dayResetHour===opt.h?"#fff":C(0.4),fontSize:13,fontWeight:dayResetHour===opt.h?700:500,cursor:"pointer"}}>{opt.label}</button>
                   ))}
@@ -2098,14 +2094,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(62,64,100,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #52555D":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #3B435D":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             const accentColor=isDark?"#7F72F6":"#7163F3";
             if(item.accent) return (
               <div key={item.id} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
                 <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{width:38,height:38,borderRadius:20,border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <div style={{width:18,height:18,backgroundColor:"#343249",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                  <div style={{width:18,height:18,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </button>
               </div>
             );
@@ -2126,7 +2122,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Sticky header */}
               <div style={{flexShrink:0,padding:"16px 16px 12px",borderBottom:`1px solid rgba(255,255,255,0.07)`}}>
                 <div style={{width:36,height:4,background:"rgba(255,255,255,0.38)",borderRadius:2,margin:"0 auto 14px"}}/>
-                <div style={{color:"rgba(255,255,255,0.9)",fontSize:20,fontWeight:650}}>🏆 Stats</div>
+                <div style={{color:"rgba(255,255,255,0.9)",fontSize:20,fontWeight:650,display:"flex",alignItems:"center",gap:8}}><div style={{width:20,height:20,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-fill.svg)",maskImage:"url(/icons/trophy-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats</div>
               </div>
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"16px 16px 40px"}}>
@@ -2414,7 +2410,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <div style={{color:C(0.45),fontSize:11}}>day household streak</div>
                         </div>
                         <div style={{flex:1,...G(0.08,20),borderRadius:16,padding:"14px",textAlign:"center"}}>
-                          <div style={{fontSize:22}}>🏆</div>
+                          <div style={{width:22,height:22,margin:"0 auto",backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-fill.svg)",maskImage:"url(/icons/trophy-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                           <div style={{color:"#fff",fontSize:20,fontWeight:700,marginTop:2}}>{allTime}</div>
                           <div style={{color:C(0.45),fontSize:11}}>tasks done, all time</div>
                         </div>
@@ -2432,12 +2428,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       const z=getZone(ml.task.zone);
                       return (
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
-                          <span style={{fontSize:26}}>❤️</span>
+                          <div style={{width:26,height:26,backgroundColor:"#f87171",flexShrink:0,WebkitMaskImage:"url(/icons/heart-fill.svg)",maskImage:"url(/icons/heart-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{color:"#fff",fontSize:14,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ml.task.text}</div>
                             <div style={{color:C(0.4),fontSize:11}}>{z?.emoji} {z?.label}</div>
                           </div>
-                          <div style={{color:"#f87171",fontSize:16,fontWeight:700}}>{ml.count} ❤️</div>
+                          <div style={{color:"#f87171",fontSize:16,fontWeight:700,display:"flex",alignItems:"center",gap:4}}>{ml.count}<div style={{width:14,height:14,backgroundColor:"#f87171",WebkitMaskImage:"url(/icons/heart-fill.svg)",maskImage:"url(/icons/heart-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></div>
                         </div>
                       );
                     })()}
