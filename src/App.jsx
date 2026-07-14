@@ -1394,7 +1394,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Task cards */}
-              <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 20px",display:"flex",flexDirection:"column",gap:8,paddingBottom:20}}>
+              <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 20px",display:"flex",flexDirection:"column",gap:8,paddingBottom:110}}>
                 {selTasks.length===0?(
                   <div style={{textAlign:"center",padding:"40px 0"}}>
                     <div style={{fontSize:44}}>✨</div>
@@ -1534,12 +1534,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Like */}
                       <button onClick={e=>{e.stopPropagation();likeTask(t.id,selDay);}} style={{
                         position:"relative",
-                        background:likeCount>0?"rgba(248,113,113,0.18)":"rgba(248,113,113,0.07)",
-                        border:`1px solid ${likeCount>0?"rgba(248,113,113,0.45)":"rgba(248,113,113,0.2)"}`,
-                        borderRadius:"50%",width:34,height:34,cursor:"pointer",fontSize:15,
-                        display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",flexShrink:0,
+                        background:"none",
+                        border:"none",
+                        width:28,height:28,cursor:"pointer",
+                        display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",flexShrink:0,padding:0,
                       }}>
-                        <span style={{display:"inline-block",fontSize:15,lineHeight:1,animation:justLiked===(t.id+"|"+selDay)?"heartPop 0.4s ease":"none"}}>{likeCount>0?"❤️":"🤍"}</span>
+                        <span style={{display:"inline-block",fontSize:24,lineHeight:1,animation:justLiked===(t.id+"|"+selDay)?"heartPop 0.4s ease":"none"}}>{likeCount>0?"❤️":"🤍"}</span>
                         {likeCount>1&&<span style={{position:"absolute",top:-4,right:-4,background:"#f87171",borderRadius:"50%",...(likeCount<10?{width:18,height:18}:{minWidth:18,height:18,padding:"0 4px"}),fontSize:11,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{likeCount}</span>}
                       </button>
                       {/* Avatar(s) */}
@@ -1618,7 +1618,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:C(0.6),fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
                 </div>
                 </div>
-                <div style={{flex:1,overflowY:"auto",padding:"0 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
+                <div style={{flex:1,overflowY:"auto",padding:"0 20px 110px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
                   {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:C(0.38),fontSize:11,fontWeight:700}}>{d}</div>)}
                 </div>
@@ -1705,7 +1705,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span>⏭️</span><span>Moved from {new Date(et.rescheduledFrom+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
                 </div>
               ):null;})()}
-              <div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
+              <div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"8px 20px 110px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
               <div style={{display:"flex",flexDirection:"column",gap:22}}>
                 <div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
@@ -1858,7 +1858,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 }}>＋ Zone</button>
               </div>
               </div>
-              <div style={{flex:1,overflowY:"auto",padding:"0 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
+              <div style={{flex:1,overflowY:"auto",padding:"0 20px 110px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
               {groupedZones.length===0?(
                 <div style={{textAlign:"center",padding:"60px 0"}}>
                   <div style={{fontSize:44}}>📋</div>
@@ -1976,7 +1976,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 )}
                 <span style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
               </div>
-              <div ref={settingsScrollRef} style={{flex:1,overflowY:"auto",padding:"8px 20px 20px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
+              <div ref={settingsScrollRef} style={{flex:1,overflowY:"auto",padding:"8px 20px 110px",WebkitMaskImage:"linear-gradient(to bottom,black 0%,black 100%)",maskImage:"linear-gradient(to bottom,black 0%,black 100%)"}}>
               {settingsView==="main"&&(<>
               {myStreak>0&&(
                 <div style={{marginBottom:22,display:"flex",alignItems:"center",gap:12}}>
@@ -2092,7 +2092,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?G(0.14,40).background:"rgba(255,255,255,0.5)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?`1px solid ${C(0.14)}`:"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?G(0.14,40).background:"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?`1px solid ${C(0.14)}`:"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             if(item.accent) return (
@@ -2102,7 +2102,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             );
             return (
               <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{flex:1,border:"none",padding:0,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"transparent",transition:"all 0.2s"}}>
-                <img src={`/icons/${item.icon}-${active?"fill":"outline"}.png`} alt="" style={{width:22,height:22,filter:active?"invert(37%) sepia(74%) saturate(1234%) hue-rotate(215deg) brightness(1.05) contrast(1.05)":isDark?"invert(1) brightness(0.75)":"grayscale(1) brightness(1.6) opacity(0.7)"}}/>
+                <img src={`/icons/${item.icon}-${active?"fill":"outline"}.png`} alt="" style={{width:22,height:22,filter:active?"invert(37%) sepia(74%) saturate(1234%) hue-rotate(215deg) brightness(1.05) contrast(1.05)":isDark?"grayscale(1) invert(1) brightness(0.85) opacity(0.8)":"grayscale(1) brightness(1.6) opacity(0.7)"}}/>
                 <span style={{fontFamily:"'SF Pro Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:700,letterSpacing:0.2,color:active?"#818cf8":C(0.3)}}>{item.label}</span>
               </button>
             );
