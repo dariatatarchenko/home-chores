@@ -353,6 +353,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   useEffect(()=>{
     supabase.from("households").select("day_reset_hour").eq("id",household.id).single()
       .then(({data,error})=>{
+        window.alert(`DIAGNOSTIC (load): household.id=${household.id}\ninitial prop value=${household.day_reset_hour}\nerror=${error?error.message:"none"}\nfetched data=${JSON.stringify(data)}`);
         if(error){ console.error("fetch day_reset_hour",error); return; }
         if(data) setDayResetHour(data.day_reset_hour||0);
       });
@@ -1284,7 +1285,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:"18px 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div>
                   <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_hometasks")}</div>
-                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:12,marginTop:2,display:"flex",alignItems:"center",gap:4}}><div style={{width:13,height:13,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.png)",maskImage:"url(/icons/streak-fill.png)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
+                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:12,marginTop:2,display:"flex",alignItems:"center",gap:4}}><div style={{width:13,height:13,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
                   {myStreak===0&&<div style={{color:C(0.2),fontSize:12,marginTop:2}}>Start your streak today!</div>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1296,7 +1297,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   )}
                   {people.length>1&&(
                   <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:34,height:34,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:22}}>
-                    <div style={{width:22,height:22,backgroundColor:isDark?"#868C93":"#343249",WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.png)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.png)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    <div style={{width:22,height:22,backgroundColor:isDark?"#868C93":"#343249",WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                     {unread>0&&<div style={{position:"absolute",top:2,right:2,width:9,height:9,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -1518,11 +1519,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
                           {people.length>1&&<span style={{fontSize:14,color:C(0.32),flexShrink:0}}>·</span>}
-                          <span style={{fontSize:12,color:C(0.5),...(streak>1||t.rescheduledFrom?{maxWidth:80}:{flex:1}),overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
+                          <span style={{fontSize:12,color:C(0.5),maxWidth:streak>1||t.rescheduledFrom?80:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
                           {t.estMinutes&&<span style={{fontSize:11,color:C(0.35),flexShrink:0}}>· {formatEstMinutes(t.estMinutes)}</span>}
                           {streak>1&&<>
                             <span style={{fontSize:13,color:C(0.32),flexShrink:0}}>·</span>
-                            <span style={{fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:12,height:12,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.png)",maskImage:"url(/icons/streak-fill.png)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
+                            <span style={{fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:12,height:12,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
                           </>}
                           {t.rescheduledFrom&&<>
                             <span style={{fontSize:13,color:C(0.32),flexShrink:0}}>·</span>
@@ -1892,7 +1893,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
                     <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{zone.label}</span>
                     {zone.id!=="__orphaned__"&&(
-                      <button onClick={()=>{setZoneNameError(false);setZForm({label:zone.label,emoji:zone.emoji});setEmojiPicker(false);setZoneExpandId(zone.id);}} style={{background:"none",border:"none",width:26,height:26,cursor:"pointer",flexShrink:0,padding:0}}><div style={{width:"100%",height:"100%",backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/edit-outline.png)",maskImage:"url(/icons/edit-outline.png)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                      <button onClick={()=>{setZoneNameError(false);setZForm({label:zone.label,emoji:zone.emoji});setEmojiPicker(false);setZoneExpandId(zone.id);}} style={{background:"none",border:"none",width:26,height:26,cursor:"pointer",flexShrink:0,padding:0}}><div style={{width:"100%",height:"100%",backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/edit-outline.svg)",maskImage:"url(/icons/edit-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                     )}
                   </div>
                   )}
@@ -2020,7 +2021,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("theme")}</span>
                   <button onClick={()=>setThemePersisted(theme==="dark"?"light":"dark")} style={{position:"relative",width:56,height:32,borderRadius:16,border:"none",background:S(0.1),cursor:"pointer",flexShrink:0,padding:0}}>
                     <div style={{position:"absolute",top:3,left:theme==="dark"?3:27,width:26,height:26,borderRadius:"50%",background:theme==="dark"?"#3730a3":"#fbbf24",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,transition:"left 0.2s"}}>
-                      <div style={{width:16,height:16,backgroundColor:"#fff",WebkitMaskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.png)`,maskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.png)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                      <div style={{width:16,height:16,backgroundColor:"#fff",WebkitMaskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,maskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                     </div>
                   </button>
                 </div>
@@ -2030,7 +2031,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
                     <button key={opt.h} onClick={()=>{
                       setDayResetHour(opt.h);
-                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{ if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); } });
+                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).select().then(({data,error})=>{
+                        if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); return; }
+                        window.alert(`DIAGNOSTIC (save): saved value=${opt.h}\nrows returned=${data?.length}\nactual row now=${JSON.stringify(data?.[0])}`);
+                      });
                     }} style={{flex:1,height:34,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":S(0.06),border:`1.5px solid ${dayResetHour===opt.h?ACCENT:"transparent"}`,borderRadius:12,color:dayResetHour===opt.h?"#fff":C(0.4),fontSize:13,fontWeight:dayResetHour===opt.h?700:500,cursor:"pointer"}}>{opt.label}</button>
                   ))}
                 </div>
@@ -2058,7 +2062,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     {codeCopied?(
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     ):(
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke=ACCENT strokeWidth="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke=ACCENT strokeWidth="2" strokeLinecap="round"/></svg>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke={ACCENT} strokeWidth="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke={ACCENT} strokeWidth="2" strokeLinecap="round"/></svg>
                     )}
                   </button>
                 </div>
@@ -2101,13 +2105,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             if(item.accent) return (
               <div key={item.id} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
                 <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{width:38,height:38,borderRadius:20,border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <div style={{width:18,height:18,backgroundColor:"#343249",WebkitMaskImage:"url(/icons/plus-outline.png)",maskImage:"url(/icons/plus-outline.png)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                  <div style={{width:18,height:18,backgroundColor:"#343249",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </button>
               </div>
             );
             return (
               <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{flex:1,border:"none",padding:0,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"transparent",transition:"all 0.2s"}}>
-                <div style={{width:22,height:22,backgroundColor:active?accentColor:"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.png)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.png)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
+                <div style={{width:22,height:22,backgroundColor:active?accentColor:"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
                 <span style={{fontFamily:"'SF Pro Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:700,letterSpacing:0.2,color:active?accentColor:"#868C93"}}>{item.label}</span>
               </button>
             );
