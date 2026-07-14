@@ -25,7 +25,7 @@ const computePts = (tasks,pid) => tasks.reduce((s,t)=>s+(t.doneOn||[]).filter(e=
 const getWeekStats = (tasks,pid,dates) => {
   let done=0,total=0;
   dates.forEach(d=>{
-    const dt=tasks.filter(t=>t.scheduledDates.includes(d));
+    const dt=tasks.filter(t=>isScheduledOnG(t,d));
     total+=dt.length;
     done+=dt.filter(t=>doneOnDateBy(t.doneOn,d,pid)).length;
   });
@@ -45,7 +45,7 @@ const getHouseholdStreak=(tasks,ds,TODAY)=>{
   for(let i=0;i<=90;i++){
     const d=new Date(TODAY); d.setDate(TODAY.getDate()-i);
     const dStr=ds(d);
-    const dayAll=tasks.filter(t=>t.scheduledDates.includes(dStr));
+    const dayAll=tasks.filter(t=>isScheduledOnG(t,dStr));
     if(dayAll.length===0) continue; // no tasks scheduled — not a break, just skip
     if(dayAll.every(t=>doneOnDate(t,dStr))) streak++;
     else break;
@@ -213,6 +213,26 @@ const ds = d => (d instanceof Date ? d : new Date(d+"T00:00:00")).toISOString().
 // doneOn entries are now {date, by} objects (not plain date strings) so we can
 // credit points/streaks to whoever ACTUALLY completed a task, not just whoever
 // it happened to be assigned to.
+// Module-level equivalent of the component's isScheduledOn — needed because
+// getWeekStats/getHouseholdStreak/computeStreak live outside the component
+// and previously only checked the raw scheduledDates array (missing recurring
+// extrapolation entirely), which threw off streak counts.
+const isScheduledOnG=(t,d)=>{
+  if((t.excludedDates||[]).includes(d)) return false;
+  if(t.scheduledDates.includes(d)) return true;
+  if(!t.freq||t.freq==="once") return false;
+  const f=FREQ_OPTIONS.find(x=>x.id===t.freq);
+  const days=t.freq==="custom"?t.customDays:f?.days;
+  if(!days) return false;
+  if(t.shiftAnchor&&d>=t.shiftAnchor){
+    const diff2=Math.round((new Date(d)-new Date(t.shiftAnchor))/(1000*60*60*24));
+    return diff2%days===0;
+  }
+  const first=t.scheduledDates[0];
+  if(!first||d<first) return false;
+  const diff=Math.round((new Date(d)-new Date(first))/(1000*60*60*24));
+  return diff%days===0;
+};
 const doneOnDate=(t,d)=>{
   const count=(t.doneOn||[]).filter(e=>e.date===d).length;
   // Preserve history: if the task's "times per day" target was changed LATER
@@ -301,7 +321,7 @@ const computeStreak = task => {
   for(let i=1;i<=60;i++){
     const d=new Date(TODAY); d.setDate(TODAY.getDate()-i);
     const dStr=ds(d);
-    const myT=task.scheduledDates.includes(dStr);
+    const myT=isScheduledOnG(task,dStr);
     if(!myT) continue;
     if(doneOnDate(task,dStr)) streak++;
     else break;
@@ -820,7 +840,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       // Celebration: whole-household day complete takes priority; otherwise, celebrate
       // when THIS person finishes all of their OWN tasks for the day, even if others
       // in the household still have things left to do.
-      const dayAll=tasks.filter(x=>x.scheduledDates.includes(d));
+      const dayAll=tasks.filter(x=>isScheduledOn(x,d));
       const nowAllDone=dayAll.length>0&&dayAll.every(x=>x.id===id||doneOnDate(x,d));
       const myDayTasks=dayAll.filter(x=>(x.personIds||[x.personId]).includes(meId));
       const myNowAllDone=myDayTasks.length>0&&myDayTasks.every(x=>x.id===id||doneOnDate(x,d));
@@ -1155,7 +1175,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     for(let i=1;i<=90;i++){
       const d=new Date(TODAY); d.setDate(TODAY.getDate()-i);
       const dStr=ds(d);
-      const myT=tasks.filter(t=>(t.personIds||[t.personId]).includes(meId)&&t.scheduledDates.includes(dStr));
+      const myT=tasks.filter(t=>(t.personIds||[t.personId]).includes(meId)&&isScheduledOn(t,dStr));
       if(myT.length===0){
         // no tasks this day — only skip if it's a gap in schedule, not a missed day
         continue;
@@ -1316,7 +1336,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <div style={{position:"relative",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             <svg width="32" height="32" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?C(0.9):pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round"/>
+                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?C(0.9):pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                             </svg>
                             <span style={{fontSize:12,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":pDay===100?"#34d399":C(0.55)}}>{d.getDate()}</span>
                           </div>
@@ -2177,7 +2197,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{marginBottom:12}}>
                     {SL("Streaks")}
                     {people.map(p=>{
-                      const pStreak=(()=>{let s=0;for(let i=1;i<=90;i++){const d=new Date(TODAY);d.setDate(TODAY.getDate()-i);const dStr=ds(d);const myT=tasks.filter(t=>(t.personIds||[t.personId]).includes(p.id)&&t.scheduledDates.includes(dStr));if(myT.length===0)continue;if(myT.every(t=>doneOnDateBy(t.doneOn,dStr,p.id)))s++;else break;}return s;})();
+                      const pStreak=(()=>{let s=0;for(let i=1;i<=90;i++){const d=new Date(TODAY);d.setDate(TODAY.getDate()-i);const dStr=ds(d);const myT=tasks.filter(t=>(t.personIds||[t.personId]).includes(p.id)&&isScheduledOn(t,dStr));if(myT.length===0)continue;if(myT.every(t=>doneOnDateBy(t.doneOn,dStr,p.id)))s++;else break;}return s;})();
                       return {p,pStreak};
                     }).sort((a,b)=>b.pStreak-a.pStreak).map(({p,pStreak},pi)=>{
                       const earned=getStreakMilestones(pStreak);
@@ -2349,7 +2369,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           const d=new Date(TODAY); d.setDate(TODAY.getDate()-i);
                           if((d.getDay()+6)%7!==dow) continue;
                           const dStr=ds(d);
-                          const dayAll=tasks.filter(t=>t.scheduledDates.includes(dStr));
+                          const dayAll=tasks.filter(t=>isScheduledOn(t,dStr));
                           total+=dayAll.length;
                           done+=dayAll.filter(t=>doneOnDate(t,dStr)).length;
                         }
