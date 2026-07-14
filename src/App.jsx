@@ -1673,7 +1673,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ ADD TASK ══════════════════════════════════════════ */}
           {taskFormOpen&&(
           <div style={{position:"fixed",inset:0,zIndex:400,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)"}}>
-            <div style={{width:"100%",height:"92%",background:isDark?BG_DARK:BG_LIGHT,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{width:"100%",height:"92%",background:THEME_COLORS[theme].bg,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
             <div style={{width:36,height:4,background:C(0.2),borderRadius:2,margin:"10px auto 0",flexShrink:0}}/>
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 20px 8px",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
