@@ -1235,8 +1235,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       <div style={{width:"100%",maxWidth:480,overflow:"hidden",display:"flex",flexDirection:"column",height:"100%",position:"relative",background:tc.bg}}>
 
         {/* Glows */}
-        <div style={{position:"absolute",top:-80,left:-60,width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,#6366f144,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
-        <div style={{position:"absolute",top:120,right:-80,width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle,#34d39922,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
+        {isDark&&<div style={{position:"absolute",top:-80,left:-60,width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,#6366f144,transparent 70%)",pointerEvents:"none",zIndex:0}}/>}
+        {isDark&&<div style={{position:"absolute",top:120,right:-80,width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle,#34d39922,transparent 70%)",pointerEvents:"none",zIndex:0}}/>}
 
         {/* Safe area spacer for notch/status bar */}
         <div style={{height:"env(safe-area-inset-top)",flexShrink:0}}/>
@@ -1462,7 +1462,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         setDragInfo(null);setDragOver(null);setDragActive(false);
                       }}
                       style={{...CARD,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",
-                        border:`1px solid ${C(0.08)}`,
+                        border:isDark?`1px solid ${C(0.08)}`:"1px solid rgba(255,255,255,0.6)",
                         animation:"fadeInUp 0.2s ease",
                         transform:dragActive&&dragInfo?.id===t.id?"scale(1.03)":"scale(1)",
                         boxShadow:dragActive&&dragInfo?.id===t.id?"0 8px 24px rgba(0,0,0,0.4)":"none",
@@ -2092,12 +2092,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{flexShrink:0,zIndex:10,margin:"0 24px 24px",height:64,boxSizing:"border-box",background:isDark?G(0.14,40).background:"rgba(255,255,255,0.5)",backdropFilter:"blur(40px) saturate(200%)",WebkitBackdropFilter:"blur(40px) saturate(200%)",border:isDark?`1px solid ${C(0.14)}`:"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3,boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?G(0.14,40).background:"rgba(255,255,255,0.5)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?`1px solid ${C(0.14)}`:"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             if(item.accent) return (
               <div key={item.id} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{width:38,height:38,borderRadius:20,border:"none",background:"linear-gradient(135deg,#B5A6F9,#9BB2FF,#8CFFC9)",boxShadow:"0 4px 14px rgba(155,178,255,0.5)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><img src="/icons/plus-outline.png" alt="+" style={{width:18,height:18,filter:"invert(1) brightness(2)"}}/></button>
+                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{width:38,height:38,borderRadius:20,border:"none",background:"linear-gradient(135deg,#8CFFC9,#9BB2FF,#B5A6F9)",boxShadow:"0 4px 14px rgba(155,178,255,0.5)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><img src="/icons/plus-outline.png" alt="+" style={{width:18,height:18,filter:"brightness(0) invert(1)"}}/></button>
               </div>
             );
             return (
