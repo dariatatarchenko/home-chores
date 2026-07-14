@@ -2092,18 +2092,18 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{flexShrink:0,zIndex:10,margin:"0 12px 10px",...G(0.14,40),borderRadius:26,padding:"8px 10px",display:"flex",gap:3,boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
+        <div key={theme} style={{flexShrink:0,zIndex:10,margin:"0 24px 24px",height:64,boxSizing:"border-box",background:isDark?G(0.14,40).background:"rgba(255,255,255,0.5)",backdropFilter:"blur(40px) saturate(200%)",WebkitBackdropFilter:"blur(40px) saturate(200%)",border:isDark?`1px solid ${C(0.14)}`:"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3,boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             if(item.accent) return (
               <div key={item.id} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{width:52,height:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#818cf8,#5eead4)",boxShadow:`0 6px 22px rgba(129,140,248,0.5),inset 0 1px 0 ${C(0.25)}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",marginTop:-18}}><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="11" y1="2" x2="11" y2="20" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><line x1="2" y1="11" x2="20" y2="11" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg></button>
+                <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{width:38,height:38,borderRadius:20,border:"none",background:"linear-gradient(135deg,#B5A6F9,#9BB2FF,#8CFFC9)",boxShadow:"0 4px 14px rgba(155,178,255,0.5)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><img src="/icons/plus-outline.png" alt="+" style={{width:18,height:18,filter:"invert(1) brightness(2)"}}/></button>
               </div>
             );
             return (
-              <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{flex:1,border:"none",padding:"5px 0",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,background:"transparent",transition:"all 0.2s"}}>
+              <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{flex:1,border:"none",padding:0,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"transparent",transition:"all 0.2s"}}>
                 <img src={`/icons/${item.icon}-${active?"fill":"outline"}.png`} alt="" style={{width:22,height:22,filter:active?"invert(37%) sepia(74%) saturate(1234%) hue-rotate(215deg) brightness(1.05) contrast(1.05)":isDark?"invert(1) brightness(0.75)":"grayscale(1) brightness(1.6) opacity(0.7)"}}/>
-                <span style={{fontSize:11,fontWeight:700,letterSpacing:0.2,color:active?"#818cf8":C(0.3)}}>{item.label}</span>
+                <span style={{fontFamily:"'SF Pro Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:700,letterSpacing:0.2,color:active?"#818cf8":C(0.3)}}>{item.label}</span>
               </button>
             );
           })}
