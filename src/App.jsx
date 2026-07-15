@@ -1291,18 +1291,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {showNotifs&&(
           <>
             <div style={{position:"absolute",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
-            <div style={{position:"absolute",top:76,right:12,zIndex:50,...G(0.2,30),borderRadius:20,padding:16,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.5)"}}>
-              <div style={{color:C(0.9),fontSize:14,fontWeight:700,marginBottom:12}}>Notifications</div>
-              {notifs.length===0&&<div style={{color:C(0.3),fontSize:13}}>All caught up!</div>}
-              {notifs.map(n=>(
-                <div key={n.id} style={{display:"flex",gap:10,marginBottom:12,opacity:n.readBy.includes(meId)?.5:1,cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);setShowNotifs(false);}}>
-                  <span style={{fontSize:22}}>{n.icon}</span>
-                  <div>
-                    <div style={{color:C(0.9),fontSize:12,fontWeight:600}}>{n.from}</div>
-                    <div style={{color:C(0.4),fontSize:11,marginTop:1}}>{n.text}</div>
+            <div style={{position:"absolute",top:76,right:12,zIndex:50,background:isDark?"#2A2D42":"#fff",border:`1px solid ${S(0.1)}`,borderRadius:16,padding:16,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.3)",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
+              <div style={{color:TEXT1,fontSize:16,fontWeight:700,marginBottom:12}}>Notifications</div>
+              {notifs.length===0&&<div style={{color:TEXT3,fontSize:13}}>All caught up!</div>}
+              {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
+                <div key={n.id} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"8px",marginBottom:4,borderRadius:12,background:isUnread?`${ACCENT}14`:"transparent",cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);setShowNotifs(false);}}>
+                  <span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:1}}>{n.icon}</span>
+                  <div style={{minWidth:0,flex:1}}>
+                    <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{n.from}</div>
+                    <div style={{color:TEXT3,fontSize:12,marginTop:2}}>{n.text}</div>
                   </div>
+                  {isUnread&&<div style={{width:8,height:8,borderRadius:"50%",background:ACCENT,flexShrink:0,marginTop:4}}/>}
                 </div>
-              ))}
+              );})}
             </div>
           </>
         )}
@@ -1325,7 +1326,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <button onClick={()=>setMyFilter(f=>!f)} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
                     <Avatar person={me} size={18}/>
-                    <span style={{color:myFilter?"#fff":TEXT3,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
+                    <span style={{color:myFilter?"#fff":TEXT2,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
                   </button>
                   )}
                   {people.length>1&&(
@@ -1417,16 +1418,22 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:"0 16px 18px",display:"flex",gap:8,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setWeekZoneFilter(null)} style={{
-                  flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${weekZoneFilter===null?ACCENT:"transparent"}`,cursor:"pointer",fontSize:13,fontWeight:weekZoneFilter===null?700:500,
-                  background:weekZoneFilter===null?"rgba(129,140,248,0.28)":S(0.06),
-                  color:weekZoneFilter===null?"#fff":C(0.4),
-                }}>{tr("all")}</button>
+                  position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                  background:weekZoneFilter===null?"rgba(129,140,248,0.28)":S(0.05),
+                  color:weekZoneFilter===null?"#fff":TEXT2,
+                }}>
+                  <div style={{position:"absolute",inset:0,borderRadius:20,border:`${weekZoneFilter===null?"2px":"1px"} solid ${weekZoneFilter===null?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                  {tr("all")}
+                </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
                   <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{
-                    flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${weekZoneFilter===z.id?ACCENT:"transparent"}`,cursor:"pointer",fontSize:13,fontWeight:weekZoneFilter===z.id?700:500,
-                    background:weekZoneFilter===z.id?"rgba(129,140,248,0.28)":S(0.06),
-                    color:weekZoneFilter===z.id?"#fff":C(0.4),
-                  }}>{z.emoji} {z.label}</button>
+                    position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                    background:weekZoneFilter===z.id?"rgba(129,140,248,0.28)":S(0.05),
+                    color:weekZoneFilter===z.id?"#fff":TEXT2,
+                  }}>
+                    <div style={{position:"absolute",inset:0,borderRadius:20,border:`${weekZoneFilter===z.id?"2px":"1px"} solid ${weekZoneFilter===z.id?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                    {z.emoji} {z.label}
+                  </button>
                 ))}
               </div>
 
@@ -1753,13 +1760,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <span style={labelSt}>{tr("zone")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-                    {zones.map(z=><button key={z.id} onClick={()=>setForm(f=>({...f,zone:z.id}))} style={{display:"flex",alignItems:"center",gap:6,background:form.zone===z.id?S(0.14):S(0.05),border:`1px solid ${form.zone===z.id?C(0.3):C(0.08)}`,borderRadius:12,padding:"8px 14px",cursor:"pointer",color:form.zone===z.id?"#fff":C(0.4),fontSize:13}}>{z.emoji} {z.label}</button>)}
+                    {zones.map(z=>{const sel=form.zone===z.id; return (
+                      <button key={z.id} onClick={()=>setForm(f=>({...f,zone:z.id}))} style={{position:"relative",display:"flex",alignItems:"center",gap:6,background:sel?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",color:sel?"#fff":TEXT2,fontSize:14}}>
+                        <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                        {z.emoji} {z.label}
+                      </button>
+                    );})}
                   </div>
                 </div>
                 <div>
                   <span style={labelSt}>{tr("frequency")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-                    {FREQ_OPTIONS.map(f=><button key={f.id} onClick={()=>setForm(fm=>({...fm,freq:(f.id==="custom"&&fm.freq==="custom")?"daily":f.id}))} style={{background:form.freq===f.id?FREQ_COLOR[f.id]+"25":S(0.05),border:`1px solid ${form.freq===f.id?FREQ_COLOR[f.id]+"60":C(0.08)}`,borderRadius:12,padding:"8px 14px",cursor:"pointer",color:form.freq===f.id?FREQ_COLOR[f.id]:C(0.4),fontSize:13,fontWeight:500}}>{f.label}</button>)}
+                    {FREQ_OPTIONS.map(f=>{const sel=form.freq===f.id; return (
+                      <button key={f.id} onClick={()=>setForm(fm=>({...fm,freq:(f.id==="custom"&&fm.freq==="custom")?"daily":f.id}))} style={{position:"relative",background:sel?FREQ_COLOR[f.id]+"25":S(0.05),border:"none",borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",color:sel?FREQ_COLOR[f.id]:TEXT2,fontSize:14,fontWeight:500}}>
+                        <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?FREQ_COLOR[f.id]+"60":S(0.1)}`,pointerEvents:"none"}}/>
+                        {f.label}
+                      </button>
+                    );})}
                   </div>
                   {form.freq==="custom"&&(
                     <div style={{display:"flex",alignItems:"center",gap:10,...G(0.08,20),borderRadius:14,padding:"12px 16px",marginTop:8,border:"1px solid rgba(232,121,249,0.3)"}}>
@@ -1783,25 +1800,31 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <span style={labelSt}>Estimated time (optional)</span>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {[null,5,10,15,30,45,60].map(min=>(
+                    {[null,5,10,15,30,45,60].map(min=>{const sel=!customTimeOpen&&form.estMinutes===min; return (
                       <button key={min??"none"} onClick={()=>{setCustomTimeOpen(false);setForm(f=>({...f,estMinutes:min}));}} style={{
-                        background:!customTimeOpen&&form.estMinutes===min?(ACCENT+"25"):S(0.05),
-                        border:`1px solid ${!customTimeOpen&&form.estMinutes===min?(ACCENT+"60"):C(0.08)}`,
-                        borderRadius:12,padding:"8px 14px",cursor:"pointer",
-                        color:!customTimeOpen&&form.estMinutes===min?ACCENT:C(0.4),fontSize:13,fontWeight:500,
-                      }}>{min==null?"None":min<60?`${min} min`:"1 hr"}</button>
-                    ))}
+                        position:"relative",background:sel?"rgba(129,140,248,0.28)":S(0.05),
+                        border:"none",height:40,boxSizing:"border-box",
+                        borderRadius:20,padding:"0 16px",cursor:"pointer",
+                        color:sel?"#fff":TEXT2,fontSize:14,fontWeight:500,
+                      }}>
+                        <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                        {min==null?"None":min<60?`${min} min`:"1 hr"}
+                      </button>
+                    );})}
                     <button onClick={()=>{
                       if(customTimeOpen){ setCustomTimeOpen(false); return; } // tap again to collapse
                       setCustomTimeOpen(true);
                       const presets=[null,5,10,15,30,45,60];
                       if(presets.includes(form.estMinutes)) setForm(f=>({...f,estMinutes:10}));
                     }} style={{
-                      background:customTimeOpen?(ACCENT+"25"):S(0.05),
-                      border:`1px solid ${customTimeOpen?(ACCENT+"60"):C(0.08)}`,
-                      borderRadius:12,padding:"8px 14px",cursor:"pointer",
-                      color:customTimeOpen?ACCENT:C(0.4),fontSize:13,fontWeight:500,
-                    }}>Custom</button>
+                      position:"relative",background:customTimeOpen?"rgba(129,140,248,0.28)":S(0.05),
+                      border:"none",height:40,boxSizing:"border-box",
+                      borderRadius:20,padding:"0 16px",cursor:"pointer",
+                      color:customTimeOpen?"#fff":TEXT2,fontSize:14,fontWeight:500,
+                    }}>
+                      <div style={{position:"absolute",inset:0,borderRadius:20,border:`${customTimeOpen?"2px":"1px"} solid ${customTimeOpen?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                      Custom
+                    </button>
                   </div>
                   {customTimeOpen&&(()=>{ const totalMin=form.estMinutes||10,h=Math.floor(totalMin/60),m=totalMin%60; return (
                     <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10}}>
@@ -1871,28 +1894,40 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ ALL TASKS ══════════════════════════════════════════ */}
           {tab==="tasks"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"18px 16px 16px"}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                 <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_alltasks")}</div>
-                <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}><div style={{width:15,height:15,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-outline.svg)",maskImage:"url(/icons/trophy-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats</button>
+                <button onClick={()=>setShowStats(true)} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"none",borderRadius:20,padding:"0 16px",color:"#fbbf24",fontSize:14,fontWeight:500,cursor:"pointer"}}>
+                  <div style={{position:"absolute",inset:0,borderRadius:20,border:"1.5px solid rgba(251,191,36,0.4)",pointerEvents:"none"}}/>
+                  <div style={{width:15,height:15,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-outline.svg)",maskImage:"url(/icons/trophy-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats
+                </button>
               </div>
-              <div style={{display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
+              <div style={{display:"flex",gap:8,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
                 <button onClick={()=>setTaskZoneFilter(null)} style={{
-                  flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${taskZoneFilter===null?ACCENT:"transparent"}`,cursor:"pointer",fontSize:13,fontWeight:taskZoneFilter===null?700:500,
-                  background:taskZoneFilter===null?"rgba(129,140,248,0.28)":S(0.06),
-                  color:taskZoneFilter===null?"#fff":C(0.4),
-                }}>{tr("all")}</button>
+                  position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                  background:taskZoneFilter===null?"rgba(129,140,248,0.28)":S(0.05),
+                  color:taskZoneFilter===null?"#fff":TEXT2,
+                }}>
+                  <div style={{position:"absolute",inset:0,borderRadius:20,border:`${taskZoneFilter===null?"2px":"1px"} solid ${taskZoneFilter===null?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                  {tr("all")}
+                </button>
                 {zones.map(z=>(
                   <button key={z.id} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)} style={{
-                    flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${taskZoneFilter===z.id?ACCENT:"transparent"}`,cursor:"pointer",fontSize:13,fontWeight:taskZoneFilter===z.id?700:500,
-                    background:taskZoneFilter===z.id?"rgba(129,140,248,0.28)":S(0.06),
-                    color:taskZoneFilter===z.id?"#fff":C(0.4),
-                  }}>{z.emoji} {z.label}</button>
+                    position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                    background:taskZoneFilter===z.id?"rgba(129,140,248,0.28)":S(0.05),
+                    color:taskZoneFilter===z.id?"#fff":TEXT2,
+                  }}>
+                    <div style={{position:"absolute",inset:0,borderRadius:20,border:`${taskZoneFilter===z.id?"2px":"1px"} solid ${taskZoneFilter===z.id?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                    {z.emoji} {z.label}
+                  </button>
                 ))}
                 <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");}} style={{
-                  flexShrink:0,height:34,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:17,padding:"0 14px",border:`1.5px solid ${C(0.15)}`,cursor:"pointer",fontSize:13,fontWeight:600,
+                  position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:"transparent",color:ACCENT,
-                }}>＋ Zone</button>
+                }}>
+                  <div style={{position:"absolute",inset:0,borderRadius:20,border:`1px solid ${S(0.1)}`,pointerEvents:"none"}}/>
+                  ＋ Zone
+                </button>
               </div>
               </div>
               <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}}>
@@ -1908,7 +1943,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {editing?(
                     <div style={{...CARD,marginBottom:12}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:`1px solid ${C(0.12)}`,borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
                         <input
                           value={zForm.label}
                           onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
@@ -2241,24 +2276,35 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {/* Leaderboard */}
                   <div style={{marginBottom:12}}>
                     {SL("Leaderboard")}
-                    {[...people].sort((a,b)=>computePts(tasks,b.id)-computePts(tasks,a.id)).map((p,i)=>{
-                      const pts=computePts(tasks,p.id);
-                      const rank=getRank(pts);
-                      return(
-                        <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"4px 0"}}>
-                          <span style={{fontSize:22,width:26,textAlign:"center"}}>{["🥇","🥈","🥉"][i]||"·"}</span>
-                          <Avatar person={p} size={32}/>
-                          <div style={{flex:1}}>
-                            <div style={{color:"rgba(255,255,255,0.88)",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
-                              {p.name}
-                              {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
+                    {(()=>{
+                      const ranked=[...people].sort((a,b)=>computePts(tasks,b.id)-computePts(tasks,a.id));
+                      const maxPts=Math.max(1,...ranked.map(p=>computePts(tasks,p.id)));
+                      return ranked.map((p,i)=>{
+                        const pts=computePts(tasks,p.id);
+                        const rank=getRank(pts);
+                        const pct=Math.max(6,Math.round(pts/maxPts*100));
+                        const medal=["🥇","🥈","🥉"][i];
+                        return(
+                          <div key={p.id} style={{marginBottom:16}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                              {medal?<span style={{fontSize:20,width:26,textAlign:"center",flexShrink:0}}>{medal}</span>:<span style={{fontSize:13,width:26,textAlign:"center",flexShrink:0,color:"rgba(255,255,255,0.3)",fontWeight:700}}>{i+1}</span>}
+                              <Avatar person={p} size={28}/>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{color:"rgba(255,255,255,0.88)",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
+                                  {p.name}
+                                  {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
+                                </div>
+                                <div style={{color:rank.color,fontSize:11}}>{rank.icon} {rank.label}</div>
+                              </div>
+                              <div style={{color:"#fff",fontSize:16,fontWeight:700,flexShrink:0}}>{pts}<span style={{color:"rgba(255,255,255,0.3)",fontSize:11}}> pts</span></div>
                             </div>
-                            <div style={{color:rank.color,fontSize:12,marginTop:1}}>{rank.label}</div>
+                            <div style={{height:8,borderRadius:4,background:"rgba(255,255,255,0.08)",overflow:"hidden",marginLeft:34}}>
+                              <div style={{height:"100%",width:`${pct}%`,borderRadius:4,background:i===0?"linear-gradient(90deg,#fbbf24,#fde68a)":`linear-gradient(90deg,${ACCENT},${ACCENT2})`,transition:"width 0.5s ease"}}/>
+                            </div>
                           </div>
-                          <div style={{color:"rgba(255,255,255,0.88)",fontSize:15,fontWeight:700}}>{pts}<span style={{color:"rgba(255,255,255,0.3)",fontSize:11}}> pts</span></div>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                   {DIV}
                   {/* Streak milestones */}
@@ -2562,7 +2608,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:340,background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:24,padding:"20px 16px",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.1)"}}>
               <div style={{color:"#fff",fontSize:16,fontWeight:700,marginBottom:16}}>{isNew?"New Zone":"Edit Zone"}</div>
               <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-                <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:`1px solid ${C(0.12)}`,borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <input
                   value={zForm.label}
                   onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
@@ -2680,7 +2726,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{width:34,height:4,background:S(0.18),borderRadius:2,margin:"0 auto"}}/>
               <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>New Zone</div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <button onClick={()=>setEmojiPicker(v=>!v)} style={{...G(0.12,20),border:`1px solid ${C(0.12)}`,borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <div style={{flex:1}}>
                   <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"12px 14px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":"2px solid transparent"}}/>
                 </div>
