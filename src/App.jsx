@@ -382,6 +382,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const isDark=theme==="dark";
   const ACCENT=isDark?"#7F72F6":"#7163F3";
   const ACCENT2=isDark?"#6B5EE0":"#5E51E0"; // slightly deeper shade of ACCENT, for gradients that previously used two purple tones
+  // Consolidated gray-text scale (was a scatter of one-off opacity values like
+  // 0.2, 0.38, 0.45, 0.55, 0.6 — now just 4 consistent levels)
+  const TEXT1=C(0.9);  // primary — headings, active state
+  const TEXT2=C(0.6);  // secondary — day numbers, normal-weight body text
+  const TEXT3=C(0.4);  // tertiary — labels, unselected buttons
+  const TEXT4=C(0.2);  // faint — placeholders, disabled/empty states
   const C=o=>isDark?`rgba(255,255,255,${o})`:`rgba(20,20,30,${o})`;
   const S=o=>`rgba(255,255,255,${o})`; // surface/background tint — always white, unlike C() which is theme-aware (also used for text)
   const G=(o=0.1,b=20)=>({
@@ -1312,18 +1318,18 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_hometasks")}</div>
                   {myStreak>0&&<div style={{color:"#fbbf24",fontSize:14,marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
-                  {myStreak===0&&<div style={{color:C(0.2),fontSize:14,marginTop:4}}>Start your streak today!</div>}
+                  {myStreak===0&&<div style={{color:TEXT4,fontSize:14,marginTop:4}}>Start your streak today!</div>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:16}}>
                   {people.length>1&&(
-                  <button onClick={()=>setMyFilter(f=>!f)} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),borderRadius:20,padding:"12px 16px 12px 10px",cursor:"pointer"}}>
+                  <button onClick={()=>setMyFilter(f=>!f)} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 10px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
                     <Avatar person={me} size={18}/>
-                    <span style={{color:myFilter?"#fff":C(0.45),fontSize:14,fontWeight:500}}>{tr("mine")}</span>
+                    <span style={{color:myFilter?"#fff":TEXT3,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
                   </button>
                   )}
                   {people.length>1&&(
-                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:40,height:40,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                     <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
@@ -1359,7 +1365,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
                         <div style={{position:"absolute",inset:0,borderRadius:12,border:`${isToday||active?"2px":"1px"} solid ${isToday?ACCENT:active?C(0.25):S(0.1)}`,pointerEvents:"none"}}/>
                         <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                        <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":C(0.38)}}>
+                        <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
                         {(isPast||isToday)&&cnt>0?(
@@ -1368,10 +1374,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={active?"#fff":isToday?ACCENT:pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                             </svg>
-                            <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?"#fff":pDay===100?"#34d399":C(0.55)}}>{d.getDate()}</span>
+                            <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?"#fff":pDay===100?"#34d399":TEXT2}}>{d.getDate()}</span>
                           </div>
                         ):(
-                          <div style={{width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:16,fontWeight:700,color:active?"#fff":isToday?"#fff":C(0.6)}}>{d.getDate()}</span></div>
+                          <div style={{width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:16,fontWeight:700,color:active?"#fff":isToday?"#fff":TEXT2}}>{d.getDate()}</span></div>
                         )}
                         {!isPast&&!isToday&&cnt>0&&<div style={{width:4,height:4,borderRadius:"50%",background:active?S(0.7):S(0.38)}}/>}
                         {(isPast||isToday||(!cnt&&!isToday))&&!((isPast||isToday)&&cnt>0)&&<div style={{height:4}}/>}
