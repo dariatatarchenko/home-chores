@@ -1350,14 +1350,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         onDrop={()=>{if(dragInfo)moveTask(dragInfo.id,dragInfo.from,dStr);setDragInfo(null);setDragOver(null);}}
                         data-date={dStr}
                         style={{
-                          flex:"0 0 46px",borderRadius:12,boxSizing:"border-box",
+                          position:"relative",flex:"0 0 46px",width:46,height:78,borderRadius:12,
                           background:active?`linear-gradient(160deg,${ACCENT},${ACCENT2})`:isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
-                          border:`2px solid ${isToday?ACCENT:active?C(0.25):"transparent"}`,
-                          boxShadow:active?`0 4px 18px ${ACCENT}73`:isToday?"none":`inset 0 0 0 1px ${S(0.1)}`,
-                          padding:"8px 0",cursor:"pointer",
-                          display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-                          transition:"background 0.15s,box-shadow 0.15s",
+                          boxShadow:active?`0 4px 18px ${ACCENT}73`:"none",
+                          cursor:"pointer",
                         }}>
+                        {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
+                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`2px solid ${isToday?ACCENT:active?C(0.25):S(0.1)}`,pointerEvents:"none"}}/>
+                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":C(0.38)}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
@@ -1374,6 +1374,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         )}
                         {!isPast&&!isToday&&cnt>0&&<div style={{width:4,height:4,borderRadius:"50%",background:active?S(0.7):S(0.38)}}/>}
                         {(isPast||isToday||(!cnt&&!isToday))&&!((isPast||isToday)&&cnt>0)&&<div style={{height:4}}/>}
+                        </div>
                       </div>
                     );
                   })}
