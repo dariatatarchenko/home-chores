@@ -395,7 +395,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       ?"inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.15)"
       :"inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.04)",
   });
-  const CARD={...G(0.08,24),...(isDark?{}:{background:"#fff",backdropFilter:"none",WebkitBackdropFilter:"none"}),borderRadius:12,padding:"12px"};
+  const CARD={...G(0.08,24),...(isDark?{}:{background:"rgba(255,255,255,0.7)"}),borderRadius:12,padding:"12px"};
   const [codeCopied,setCodeCopied]=useState(false);
   const [customTimeOpen,setCustomTimeOpen]=useState(false);
   const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
@@ -2150,7 +2150,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"#fff",backdropFilter:isDark?"blur(24px) saturate(120%)":"none",WebkitBackdropFilter:isDark?"blur(24px) saturate(120%)":"none",border:isDark?"1px solid #2D3346":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.7)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #2D3346":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             const accentColor=isDark?"#7F72F6":"#7163F3";
