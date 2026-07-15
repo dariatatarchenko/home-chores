@@ -1356,7 +1356,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           cursor:"pointer",
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
-                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`2px solid ${isToday?ACCENT:active?C(0.25):S(0.1)}`,pointerEvents:"none"}}/>
+                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`${isToday||active?"2px":"1px"} solid ${isToday?ACCENT:active?C(0.25):S(0.1)}`,pointerEvents:"none"}}/>
                         <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":C(0.38)}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
