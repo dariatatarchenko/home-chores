@@ -395,7 +395,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       ?"inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.15)"
       :"inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.04)",
   });
-  const CARD={...G(0.08,24),borderRadius:12,padding:"12px"};
+  const CARD={...G(0.08,24),...(isDark?{}:{background:"#fff",backdropFilter:"none",WebkitBackdropFilter:"none"}),borderRadius:12,padding:"12px"};
   const [codeCopied,setCodeCopied]=useState(false);
   const [customTimeOpen,setCustomTimeOpen]=useState(false);
   const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
@@ -872,11 +872,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     }
     if(becomingDone||wasFullyDone) setActivityOrder(o=>[key,...o.filter(k=>k!==key)]);
     const newDoneOn=isDone(t,d)
-      ? (()=>{
-          const arr=t.doneOn||[];
-          const lastIdx=arr.map((e,i)=>e.date===d?i:-1).filter(i=>i>=0).pop();
-          return lastIdx==null?arr:arr.filter((_,i)=>i!==lastIdx);
-        })()
+      ? (t.doneOn||[]).filter(e=>e.date!==d) // fully done — tapping again resets the whole day back to zero
       : [...(t.doneOn||[]),{date:d,by:meId,target:t.timesPerDay||1}];
     setTasks(ts=>ts.map(t=>t.id!==id?t:{...t,doneOn:newDoneOn}));
     persistTask(id,{doneOn:newDoneOn});
@@ -1516,7 +1512,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check-fill.svg)",maskImage:"url(/icons/check-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>
+                              ?<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>
                               :isFuture
                               ?<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2.2" strokeLinecap="round"/></svg>
                               :<span style={{fontSize:8,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
@@ -1530,7 +1526,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                       }}>
-                        {done&&<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check-fill.svg)",maskImage:"url(/icons/check-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>}
+                        {done&&<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>}
                         {!done&&isFuture&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
                       </button>
                       )}
@@ -1706,8 +1702,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <circle cx="9" cy="9" r={R} fill="none" stroke="#34d399" strokeWidth="1.8" strokeDasharray={`${frac*CIRC3} ${CIRC3}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                           </svg>
                           );})()}
-                          {done&&<div style={{width:10,height:10,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check-fill.svg)",maskImage:"url(/icons/check-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
-                          {missed&&<div style={{width:10,height:10,backgroundColor:"rgba(248,113,113,0.7)",WebkitMaskImage:"url(/icons/cross-fill.svg)",maskImage:"url(/icons/cross-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
+                          {done&&<div style={{width:10,height:10,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
+                          {missed&&<div style={{width:10,height:10,backgroundColor:"rgba(248,113,113,0.7)",WebkitMaskImage:"url(/icons/cross.svg)",maskImage:"url(/icons/cross.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
                           {!done&&!missed&&isFutureDay&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.45)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.45)} strokeWidth="2.2" strokeLinecap="round"/></svg>}
                         </button>
                         <div style={{flex:1}}>
@@ -2060,10 +2056,37 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"flex",gap:8}}>
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
                     <button key={opt.h} onClick={()=>{
+                      const computeEffectiveTodayStr=resetHour=>{
+                        const now=new Date();
+                        if(resetHour>0&&now.getHours()<resetHour) now.setDate(now.getDate()-1);
+                        now.setHours(0,0,0,0);
+                        return ds(now);
+                      };
+                      const oldTodayStr=computeEffectiveTodayStr(dayResetHour);
+                      const newTodayStr=computeEffectiveTodayStr(opt.h);
                       setDayResetHour(opt.h);
                       supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{
                         if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); }
                       });
+                      // If "today" just shifted backward (there's now more time
+                      // left to finish what was due on that day), un-move any
+                      // tasks that got auto-moved forward off of that day —
+                      // they still have time, no need to have bumped them.
+                      if(newTodayStr<oldTodayStr){
+                        const affected=tasks.filter(t=>t.rescheduledFrom===newTodayStr);
+                        affected.forEach(t=>{
+                          const dates=[...new Set([...t.scheduledDates.filter(d=>d!==oldTodayStr),newTodayStr])].sort();
+                          const excludedDates=(t.excludedDates||[]).filter(d=>d!==newTodayStr);
+                          const shiftAnchor=(t.freq&&t.freq!=="once")?newTodayStr:t.shiftAnchor;
+                          const newFields={scheduledDates:dates,excludedDates,shiftAnchor,rescheduledFrom:null};
+                          setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...newFields}));
+                          persistTask(t.id,newFields);
+                        });
+                        if(affected.length>0){
+                          setToast({icon:"↩️",from:`${affected.length} task${affected.length!==1?"s":""} moved back`,text:"There's still time to finish them today"});
+                          setTimeout(()=>setToast(null),4000);
+                        }
+                      }
                     }} style={{flex:1,height:34,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":S(0.06),border:`1.5px solid ${dayResetHour===opt.h?ACCENT:"transparent"}`,borderRadius:12,color:dayResetHour===opt.h?"#fff":C(0.4),fontSize:13,fontWeight:dayResetHour===opt.h?700:500,cursor:"pointer"}}>{opt.label}</button>
                   ))}
                 </div>
@@ -2127,7 +2150,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #2D3346":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"#fff",backdropFilter:isDark?"blur(24px) saturate(120%)":"none",WebkitBackdropFilter:isDark?"blur(24px) saturate(120%)":"none",border:isDark?"1px solid #2D3346":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             const accentColor=isDark?"#7F72F6":"#7163F3";
