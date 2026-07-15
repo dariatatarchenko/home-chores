@@ -1350,26 +1350,27 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         onDrop={()=>{if(dragInfo)moveTask(dragInfo.id,dragInfo.from,dStr);setDragInfo(null);setDragOver(null);}}
                         data-date={dStr}
                         style={{
-                          flex:"0 0 46px",borderRadius:18,boxSizing:"border-box",
-                          background:isDark?"rgba(255,255,255,0.05)":S(0.06),
-                          border:isToday?`2px solid ${ACCENT}`:active?`1px solid ${ACCENT}`:`1px solid ${S(0.1)}`,
+                          flex:"0 0 46px",borderRadius:16,boxSizing:"border-box",
+                          background:active?`linear-gradient(160deg,${ACCENT},${ACCENT2})`:isDark?"rgba(255,255,255,0.05)":S(0.06),
+                          border:isToday?`2px solid ${ACCENT}`:active?`2px solid ${C(0.25)}`:`1px solid ${S(0.1)}`,
+                          boxShadow:active?`0 4px 18px ${ACCENT}73`:"none",
                           padding:"8px 0",cursor:"pointer",
                           display:"flex",flexDirection:"column",alignItems:"center",gap:2,
                           transition:"background 0.15s,border 0.15s,box-shadow 0.15s",
                         }}>
-                        <span style={{fontSize:12,fontWeight:500,color:active?ACCENT:isToday?ACCENT:C(0.38)}}>
+                        <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?ACCENT:C(0.38)}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
                         {(isPast||isToday)&&cnt>0?(
                           <div style={{position:"relative",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             <svg width="32" height="32" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                              <circle cx="16" cy="16" r={R} fill="none" stroke={isToday?ACCENT:active?ACCENT:pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
+                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?"#fff":isToday?ACCENT:pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                             </svg>
-                            <span style={{fontSize:16,fontWeight:700,position:"relative",zIndex:1,color:isToday?ACCENT:active?ACCENT:pDay===100?"#34d399":C(0.55)}}>{d.getDate()}</span>
+                            <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?ACCENT:pDay===100?"#34d399":C(0.55)}}>{d.getDate()}</span>
                           </div>
                         ):(
-                          <span style={{fontSize:16,fontWeight:700,lineHeight:"32px",color:active?ACCENT:isToday?ACCENT:C(0.6)}}>{d.getDate()}</span>
+                          <span style={{fontSize:16,fontWeight:700,lineHeight:"32px",color:active?"#fff":isToday?ACCENT:C(0.6)}}>{d.getDate()}</span>
                         )}
                         {!isPast&&!isToday&&cnt>0&&<div style={{width:4,height:4,borderRadius:"50%",background:active?S(0.7):S(0.38)}}/>}
                         {(isPast||isToday||(!cnt&&!isToday))&&!((isPast||isToday)&&cnt>0)&&<div style={{height:4}}/>}
