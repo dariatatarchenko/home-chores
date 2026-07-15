@@ -382,14 +382,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const isDark=theme==="dark";
   const ACCENT=isDark?"#7F72F6":"#7163F3";
   const ACCENT2=isDark?"#6B5EE0":"#5E51E0"; // slightly deeper shade of ACCENT, for gradients that previously used two purple tones
+  const C=o=>isDark?`rgba(255,255,255,${o})`:`rgba(20,20,30,${o})`;
+  const S=o=>`rgba(255,255,255,${o})`; // surface/background tint — always white, unlike C() which is theme-aware (also used for text)
   // Consolidated gray-text scale (was a scatter of one-off opacity values like
   // 0.2, 0.38, 0.45, 0.55, 0.6 — now just 4 consistent levels)
   const TEXT1=C(0.9);  // primary — headings, active state
   const TEXT2=C(0.6);  // secondary — day numbers, normal-weight body text
   const TEXT3=C(0.4);  // tertiary — labels, unselected buttons
   const TEXT4=C(0.2);  // faint — placeholders, disabled/empty states
-  const C=o=>isDark?`rgba(255,255,255,${o})`:`rgba(20,20,30,${o})`;
-  const S=o=>`rgba(255,255,255,${o})`; // surface/background tint — always white, unlike C() which is theme-aware (also used for text)
   const G=(o=0.1,b=20)=>({
     background:isDark
       ?`linear-gradient(180deg, rgba(255,255,255,${o*1.4}), rgba(255,255,255,${o*0.7}))`
