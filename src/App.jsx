@@ -1352,11 +1352,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         style={{
                           flex:"0 0 46px",borderRadius:12,boxSizing:"border-box",
                           background:active?`linear-gradient(160deg,${ACCENT},${ACCENT2})`:isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
-                          border:isToday?`2px solid ${ACCENT}`:active?`2px solid ${C(0.25)}`:`1px solid ${S(0.1)}`,
-                          boxShadow:active?`0 4px 18px ${ACCENT}73`:"none",
+                          border:`2px solid ${isToday?ACCENT:active?C(0.25):"transparent"}`,
+                          boxShadow:active?`0 4px 18px ${ACCENT}73`:isToday?"none":`inset 0 0 0 1px ${S(0.1)}`,
                           padding:"8px 0",cursor:"pointer",
                           display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-                          transition:"background 0.15s,border 0.15s,box-shadow 0.15s",
+                          transition:"background 0.15s,box-shadow 0.15s",
                         }}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":C(0.38)}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
