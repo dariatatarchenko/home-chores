@@ -1318,11 +1318,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_hometasks")}</div>
                   {myStreak>0&&<div style={{color:"#fbbf24",fontSize:14,marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
-                  {myStreak===0&&<div style={{color:TEXT4,fontSize:14,marginTop:4}}>Start your streak today!</div>}
+                  {myStreak===0&&<div style={{color:TEXT2,fontSize:14,marginTop:4}}>Start your streak today!</div>}
                 </div>
-                <div style={{display:"flex",alignItems:"center",gap:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
                   {people.length>1&&(
-                  <button onClick={()=>setMyFilter(f=>!f)} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 10px",cursor:"pointer"}}>
+                  <button onClick={()=>setMyFilter(f=>!f)} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
                     <Avatar person={me} size={18}/>
                     <span style={{color:myFilter?"#fff":TEXT3,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
@@ -1338,8 +1338,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Week strip */}
-              <div style={{flexShrink:0,margin:"0 0 2px"}}>
-                <div ref={stripRef} onScroll={e=>{weekScrollLeftRef.current=e.currentTarget.scrollLeft;}} style={{display:"flex",gap:5,paddingLeft:20,paddingRight:20,paddingTop:20,paddingBottom:20,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",
+              <div style={{flexShrink:0,margin:"0"}}>
+                <div ref={stripRef} onScroll={e=>{weekScrollLeftRef.current=e.currentTarget.scrollLeft;}} style={{display:"flex",gap:5,paddingLeft:20,paddingRight:20,paddingTop:8,paddingBottom:20,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",
                   WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)",
                   maskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)"}}>
                   {visWeek.map(d=>{
