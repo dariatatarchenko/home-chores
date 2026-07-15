@@ -1285,7 +1285,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {showNotifs&&(
           <>
             <div style={{position:"absolute",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
-            <div style={{position:"absolute",top:64,right:12,zIndex:50,...G(0.2,30),borderRadius:20,padding:16,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.5)"}}>
+            <div style={{position:"absolute",top:76,right:12,zIndex:50,...G(0.2,30),borderRadius:20,padding:16,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.5)"}}>
               <div style={{color:C(0.9),fontSize:14,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:C(0.3),fontSize:13}}>All caught up!</div>}
               {notifs.map(n=>(
@@ -1311,12 +1311,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
                 <div>
                   <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_hometasks")}</div>
-                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:14,marginTop:8,display:"flex",alignItems:"center",gap:6}}><div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
-                  {myStreak===0&&<div style={{color:C(0.2),fontSize:14,marginTop:8}}>Start your streak today!</div>}
+                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:14,marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
+                  {myStreak===0&&<div style={{color:C(0.2),fontSize:14,marginTop:4}}>Start your streak today!</div>}
                 </div>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:16}}>
                   {people.length>1&&(
-                  <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:8,height:40,boxSizing:"border-box",background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,borderRadius:20,padding:"12px 16px 12px 8px",cursor:"pointer",transition:"all 0.2s"}}>
+                  <button onClick={()=>setMyFilter(f=>!f)} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),borderRadius:20,padding:"12px 16px 12px 10px",cursor:"pointer"}}>
+                    <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
                     <Avatar person={me} size={18}/>
                     <span style={{color:myFilter?"#fff":C(0.45),fontSize:14,fontWeight:500}}>{tr("mine")}</span>
                   </button>
