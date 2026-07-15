@@ -1234,14 +1234,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
   if(dataLoading){
     return (
-      <div style={{height:"100%",background:"#08080f",display:"flex",alignItems:"center",justifyContent:"center",color:C(0.4),fontFamily:"'Inter',system-ui,sans-serif"}}>
+      <div style={{height:"100%",background:"#08080f",display:"flex",alignItems:"center",justifyContent:"center",color:C(0.4),fontFamily:"'SF Pro Text',-apple-system,system-ui,sans-serif"}}>
         Loading your home…
       </div>
     );
   }
 
   return (
-    <div style={{height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
+    <div style={{height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'SF Pro Text',-apple-system,system-ui,sans-serif",overflow:"hidden"}}>
       <style>{`
         html,body,#root{height:100%;margin:0;background:#08080f;}
         html,body{position:fixed;inset:0;width:100%;}
@@ -1308,23 +1308,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {tab==="week"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               {/* Header */}
-              <div style={{flexShrink:0,padding:"18px 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
                 <div>
-                  <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_hometasks")}</div>
-                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:12,marginTop:2,display:"flex",alignItems:"center",gap:4}}><div style={{width:13,height:13,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
-                  {myStreak===0&&<div style={{color:C(0.2),fontSize:12,marginTop:2}}>Start your streak today!</div>}
+                  <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_hometasks")}</div>
+                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:14,marginTop:12,display:"flex",alignItems:"center",gap:4}}><div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
+                  {myStreak===0&&<div style={{color:C(0.2),fontSize:14,marginTop:12}}>Start your streak today!</div>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {people.length>1&&(
-                  <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:myFilter?"rgba(129,140,248,0.28)":S(0.1),border:`1.5px solid ${myFilter?ACCENT:C(0.1)}`,borderRadius:17,padding:"0 14px 0 6px",cursor:"pointer",transition:"all 0.2s"}}>
-                    <Avatar person={me} size={24}/>
-                    <span style={{color:myFilter?"#fff":C(0.45),fontSize:12,fontWeight:myFilter?700:500}}>{tr("mine")}</span>
+                  <button onClick={()=>setMyFilter(f=>!f)} style={{display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:S(0.05),border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",transition:"all 0.2s"}}>
+                    <Avatar person={me} size={18}/>
+                    <span style={{color:myFilter?"#fff":C(0.45),fontSize:14,fontWeight:myFilter?700:500}}>{tr("mine")}</span>
                   </button>
                   )}
                   {people.length>1&&(
-                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:34,height:34,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:22}}>
-                    <div style={{width:22,height:22,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    {unread>0&&<div style={{position:"absolute",top:2,right:2,width:9,height:9,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
+                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:40,height:40,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
                 </div>
@@ -1641,7 +1641,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             return (
               <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
                 <div style={{flexShrink:0,padding:"16px 16px 8px"}}>
-                <div style={{color:C(0.9),fontSize:22,fontWeight:650,letterSpacing:-0.4,marginBottom:16}}>{tr("header_calendar")}</div>
+                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:C(0.6),fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
                   <div style={{color:C(0.85),fontSize:16,fontWeight:700}}>{mName}</div>
@@ -1727,7 +1727,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div onClick={e=>e.stopPropagation()} style={{width:"100%",height:"92%",background:THEME_COLORS[theme].bg,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden",transform:`translateY(${sheetDragY}px)`,transition:sheetDragY===0?"transform 0.2s ease":"none"}}>
             <div onTouchStart={e=>{ sheetDragRef.current={startY:e.touches[0].clientY,dy:0}; }} onTouchMove={e=>{ if(!sheetDragRef.current) return; const dy=e.touches[0].clientY-sheetDragRef.current.startY; if(dy>0){ sheetDragRef.current.dy=dy; setSheetDragY(dy); } }} onTouchEnd={()=>{ if(sheetDragRef.current&&sheetDragRef.current.dy>90){ setForm(blankForm);setCustomTimeOpen(false);setEditTaskId(null);setTaskFormOpen(false); } setSheetDragY(0); sheetDragRef.current=null; }} style={{flexShrink:0,paddingTop:6,paddingBottom:4}}>
               <div style={{width:36,height:4,background:S(0.2),borderRadius:2,margin:"4px auto 0"}}/>
-              <div style={{padding:"10px 16px 0",color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
+              <div style={{padding:"10px 16px 0",color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",flex:1,minHeight:0}}>
               {editTaskId&&(()=>{const et=tasks.find(x=>x.id===editTaskId);return et?.rescheduledFrom?(
@@ -1866,7 +1866,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"18px 16px 16px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-                <div style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{tr("header_alltasks")}</div>
+                <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_alltasks")}</div>
                 <button onClick={()=>setShowStats(true)} style={{display:"flex",alignItems:"center",gap:6,height:34,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"1.5px solid rgba(251,191,36,0.4)",borderRadius:17,padding:"0 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}><div style={{width:15,height:15,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-outline.svg)",maskImage:"url(/icons/trophy-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats</button>
               </div>
               <div style={{display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
@@ -2004,7 +2004,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 {settingsView==="account"&&(
                   <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",color:ACCENT,fontSize:22,cursor:"pointer",padding:0,lineHeight:1}}>‹</button>
                 )}
-                <span style={{color:C(0.88),fontSize:22,fontWeight:650,letterSpacing:-0.4}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
+                <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
               </div>
               <div ref={settingsScrollRef} style={{flex:1,overflowY:"auto",padding:"8px 16px 110px"}}>
               {settingsView==="main"&&(<>
@@ -2702,7 +2702,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 // Auth + household onboarding
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SHELL_STYLE={height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"};
+const SHELL_STYLE={height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'SF Pro Text',-apple-system,system-ui,sans-serif",overflow:"hidden"};
 const CARD_BG="linear-gradient(160deg,#1a1035 0%,#0d1f3c 45%,#0a2a1f 100%)";
 const AUTH_INPUT={background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"13px 16px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:"none"};
 const AUTH_BTN={background:"linear-gradient(135deg,#7163F3,#5E51E0)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",width:"100%"};
