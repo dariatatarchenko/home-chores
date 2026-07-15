@@ -1351,26 +1351,25 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         data-date={dStr}
                         style={{
                           flex:"0 0 46px",borderRadius:18,boxSizing:"border-box",
-                          background:active?`linear-gradient(160deg,${ACCENT},${ACCENT2})`:isToday?"rgba(99,102,241,0.14)":S(0.06),
-                          border:active?`2px solid ${C(0.25)}`:isToday?"2px solid rgba(129,140,248,0.6)":`2px solid ${C(0.06)}`,
-                          boxShadow:active?"0 4px 18px rgba(99,102,241,0.45)":isToday?"0 0 14px rgba(99,102,241,0.2)":"none",
+                          background:isDark?"rgba(255,255,255,0.05)":S(0.06),
+                          border:isToday?`2px solid ${ACCENT}`:active?`1px solid ${ACCENT}`:`1px solid ${S(0.1)}`,
                           padding:"8px 0",cursor:"pointer",
                           display:"flex",flexDirection:"column",alignItems:"center",gap:2,
                           transition:"background 0.15s,border 0.15s,box-shadow 0.15s",
                         }}>
-                        <span style={{fontSize:11,fontWeight:500,color:active?C(0.85):isToday?"#a5b4fc":C(0.38)}}>
+                        <span style={{fontSize:12,fontWeight:500,color:active?ACCENT:isToday?ACCENT:C(0.38)}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
                         {(isPast||isToday)&&cnt>0?(
                           <div style={{position:"relative",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             <svg width="32" height="32" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?C(0.9):pDay===100?"#34d399":isToday?ACCENT:"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
+                              <circle cx="16" cy="16" r={R} fill="none" stroke={isToday?ACCENT:active?ACCENT:pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                             </svg>
-                            <span style={{fontSize:12,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":pDay===100?"#34d399":isToday?"#fff":C(0.55)}}>{d.getDate()}</span>
+                            <span style={{fontSize:16,fontWeight:700,position:"relative",zIndex:1,color:isToday?ACCENT:active?ACCENT:pDay===100?"#34d399":C(0.55)}}>{d.getDate()}</span>
                           </div>
                         ):(
-                          <span style={{fontSize:17,fontWeight:800,lineHeight:"32px",color:active?"#fff":isToday?"#fff":C(0.6)}}>{d.getDate()}</span>
+                          <span style={{fontSize:16,fontWeight:700,lineHeight:"32px",color:active?ACCENT:isToday?ACCENT:C(0.6)}}>{d.getDate()}</span>
                         )}
                         {!isPast&&!isToday&&cnt>0&&<div style={{width:4,height:4,borderRadius:"50%",background:active?S(0.7):S(0.38)}}/>}
                         {(isPast||isToday||(!cnt&&!isToday))&&!((isPast||isToday)&&cnt>0)&&<div style={{height:4}}/>}
@@ -2150,7 +2149,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.7)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #2D3346":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #3C435A":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             const accentColor=isDark?"#7F72F6":"#7163F3";
