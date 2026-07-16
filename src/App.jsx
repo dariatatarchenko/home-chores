@@ -1640,16 +1640,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             return (
               <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
                 <div style={{flexShrink:0,padding:"16px 16px 8px"}}>
-                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
+                <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-                  <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:C(0.6),fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
-                  <div style={{color:C(0.85),fontSize:16,fontWeight:700}}>{mName}</div>
-                  <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:C(0.6),fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+                  <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:TEXT2,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+                  <div style={{color:TEXT1,fontSize:16,fontWeight:700}}>{mName}</div>
+                  <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:TEXT2,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
                 </div>
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
-                  {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:C(0.38),fontSize:11,fontWeight:700}}>{d}</div>)}
+                  {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:TEXT3,fontSize:11,fontWeight:700}}>{d}</div>)}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:14}}>
                   {cells.map((d,i)=>{
@@ -1673,12 +1673,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {[["#34d399","All done"],["#f87171","Missed"],[ACCENT,"Planned"]].map(([c,l])=>(
                     <div key={l} style={{display:"flex",alignItems:"center",gap:5}}>
                       <div style={{width:6,height:6,borderRadius:"50%",background:c}}/>
-                      <span style={{color:C(0.38),fontSize:11}}>{l}</span>
+                      <span style={{color:TEXT3,fontSize:11}}>{l}</span>
                     </div>
                   ))}
                 </div>
                 <div style={{...CARD}}>
-                  <div style={{marginBottom:10}}><span style={{color:C(0.5),fontSize:12}}>{dayLabel(selDay)}</span></div>
+                  <div style={{marginBottom:10}}><span style={{color:TEXT2,fontSize:12}}>{dayLabel(selDay)}</span></div>
                   {sTotal>0&&(sPast||sToday)&&(
                     <div style={{marginBottom:10}}>
                       <div style={{background:S(0.06),borderRadius:4,height:4,overflow:"hidden"}}>
@@ -1690,7 +1690,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       </div>
                     </div>
                   )}
-                  {sDayTasks.length===0?<div style={{color:C(0.2),fontSize:13,textAlign:"center",padding:"10px 0"}}>No tasks</div>
+                  {sDayTasks.length===0?<div style={{color:TEXT4,fontSize:13,textAlign:"center",padding:"10px 0"}}>No tasks</div>
                   :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
@@ -1708,7 +1708,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         </button>
                         <div style={{flex:1}}>
                           <div style={{color:done?C(0.38):missed?"rgba(248,113,113,0.6)":C(0.82),fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
-                          <div style={{color:C(0.38),fontSize:11,marginTop:1}}>{zone?.label}</div>
+                          <div style={{color:TEXT3,fontSize:11,marginTop:1}}>{zone?.label}</div>
                         </div>
                         <Avatar person={person} size={22}/>
                       </div>
@@ -1765,9 +1765,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </div>
                   {form.freq==="custom"&&(
                     <div style={{display:"flex",alignItems:"center",gap:10,...G(0.08,20),borderRadius:14,padding:"12px 16px",marginTop:8,border:"1px solid rgba(232,121,249,0.3)"}}>
-                      <span style={{color:C(0.5),fontSize:14}}>Every</span>
+                      <span style={{color:TEXT2,fontSize:14}}>Every</span>
                       <input type="number" min="1" max="365" value={form.customDays===0?"":form.customDays} onChange={e=>{const v=e.target.value;setForm(f=>({...f,customDays:v===""?0:Math.max(1,parseInt(v)||1)}));}} onBlur={e=>{if(!form.customDays||form.customDays<1)setForm(f=>({...f,customDays:2}));}} style={{background:"rgba(255,255,255,0.9)",borderRadius:10,border:"none",padding:"6px 10px",color:"#111",fontWeight:700,fontSize:16,width:60,textAlign:"center"}}/>
-                      <span style={{color:C(0.5),fontSize:14}}>days</span>
+                      <span style={{color:TEXT2,fontSize:14}}>days</span>
                     </div>
                   )}
                 </div>
@@ -1775,9 +1775,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div>
                   <span style={labelSt}>How many times per day?</span>
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
-                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.max(1,(f.timesPerDay||1)-1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:S(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
+                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.max(1,(f.timesPerDay||1)-1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:S(0.08),color:TEXT2,fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
                     <span style={{color:"#fff",fontSize:16,fontWeight:700,minWidth:20,textAlign:"center"}}>{form.timesPerDay||1}</span>
-                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.min(5,(f.timesPerDay||1)+1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:S(0.08),color:C(0.7),fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
+                    <button onClick={()=>setForm(f=>({...f,timesPerDay:Math.min(5,(f.timesPerDay||1)+1)}))} style={{width:34,height:34,borderRadius:10,border:"none",background:S(0.08),color:TEXT2,fontSize:18,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
                     {(form.timesPerDay||1)>1&&<span style={{color:C(0.4),fontSize:12}}>Shows as {form.timesPerDay} checkmarks per day</span>}
                   </div>
                 </div>
@@ -1814,14 +1814,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {customTimeOpen&&(()=>{ const totalMin=form.estMinutes||10,h=Math.floor(totalMin/60),m=totalMin%60; return (
                     <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10}}>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <button onClick={()=>setForm(f=>({...f,estMinutes:Math.max(0,totalMin-60)}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:Math.max(0,totalMin-60)}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:TEXT2,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
                         <span style={{color:"#fff",fontSize:14,fontWeight:700,minWidth:44,textAlign:"center"}}>{h}h</span>
-                        <button onClick={()=>setForm(f=>({...f,estMinutes:totalMin+60}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:totalMin+60}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:TEXT2,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <button onClick={()=>setForm(f=>({...f,estMinutes:Math.max(0,totalMin-5)}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:Math.max(0,totalMin-5)}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:TEXT2,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>−</button>
                         <span style={{color:"#fff",fontSize:14,fontWeight:700,minWidth:44,textAlign:"center"}}>{m}m</span>
-                        <button onClick={()=>setForm(f=>({...f,estMinutes:totalMin+5}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:C(0.7),fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
+                        <button onClick={()=>setForm(f=>({...f,estMinutes:totalMin+5}))} style={{width:30,height:30,borderRadius:8,border:"none",background:S(0.08),color:TEXT2,fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1}}>+</button>
                       </div>
                     </div>
                   );})()}
@@ -1861,7 +1861,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         return {...f,personIds:next};
                       })} style={{display:"flex",alignItems:"center",gap:7,height:34,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:`2px solid ${sel?p.color+"90":C(0.08)}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",position:"relative"}}>
                         <Avatar person={p} size={20}/>
-                        <span style={{color:sel?p.color:C(0.45),fontSize:13,fontWeight:500}}>{p.name}</span>
+                        <span style={{color:sel?p.color:TEXT3,fontSize:13,fontWeight:500}}>{p.name}</span>
                       </button>;
                     })}
                   </div>
