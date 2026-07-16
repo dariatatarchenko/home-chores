@@ -720,7 +720,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [personNameError,setPersonNameError]= useState(false);
   const [zoneNameError,setZoneNameError]= useState(false);
   const [assigneeError,setAssigneeError]= useState(false);
-  const [assigneePopover,setAssigneePopover]= useState(null);
 
   const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32,timesPerDay:1,estMinutes:null};
   const [form,setForm]= useState(blankForm);
@@ -836,9 +835,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const wasFullyDone=t&&isDone(t,d);
     const currentCount=t?doneCountOn(t,d):0;
     const target=t?.timesPerDay||1;
-    if(target>1){
-      window.alert(`DIAGNOSTIC toggleDone:\ntask="${t?.text}"\nd=${d}\nt.timesPerDay=${JSON.stringify(t?.timesPerDay)} (type: ${typeof t?.timesPerDay})\ncurrentCount=${currentCount}\ntarget=${target}\nwasFullyDone=${wasFullyDone}\nt.doneOn for this date=${JSON.stringify((t?.doneOn||[]).filter(e=>e.date===d))}`);
-    }
     // For multi-times-per-day tasks, only the tap that actually reaches the
     // target should behave like "becoming done" (reorder animation, day
     // celebration) — intermediate taps (e.g. 2 of 4) shouldn't move the card
@@ -1360,7 +1356,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         style={{
                           position:"relative",flex:"0 0 46px",width:46,height:78,borderRadius:12,
                           background:active?`linear-gradient(160deg,${ACCENT},${ACCENT2})`:isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
-                          boxShadow:active?`0 4px 18px ${ACCENT}73`:"none",
+                          boxShadow:"none",
                           cursor:"pointer",
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
@@ -1391,10 +1387,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Progress */}
               {dayAllTasks.length>0&&(
-                <div style={{flexShrink:0,padding:"0 16px 18px"}}>
+                <div style={{flexShrink:0,padding:"24px 16px 18px 16px"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}>
-                    <span style={{color:C(0.4),fontSize:12}}>{dayLabel(selDay)}</span>
-                    <span style={{color:pct===100?"#34d399":C(0.3),fontSize:11,fontWeight:600}}>
+                    <span style={{color:TEXT3,fontSize:12}}>{dayLabel(selDay)}</span>
+                    <span style={{color:pct===100?"#34d399":TEXT3,fontSize:12,fontWeight:600}}>
                       {pct===100?"🎉 All done!":`${dayAllDone} of ${dayAllTasks.length}`}
                     </span>
                   </div>
@@ -1505,8 +1501,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(toDate&&dragInfo) moveTask(dragInfo.id,dragInfo.from,toDate);
                         setDragInfo(null);setDragOver(null);setDragActive(false);
                       }}
-                      style={{...CARD,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",
-                        border:isDark?`1px solid ${C(0.08)}`:"1px solid rgba(255,255,255,0.6)",
+                      style={{...CARD,padding:"12px",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",
+                        border:`1px solid ${S(0.1)}`,
                         animation:"fadeInUp 0.2s ease",
                         transform:dragActive&&dragInfo?.id===t.id?"scale(1.03)":"scale(1)",
                         boxShadow:dragActive&&dragInfo?.id===t.id?"0 8px 24px rgba(0,0,0,0.4)":"none",
@@ -1527,9 +1523,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>
+                              ?<div style={{width:13,height:13,backgroundColor:isDark?"#211c3d":"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>
                               :isFuture
-                              ?<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2.2" strokeLinecap="round"/></svg>
+                              ?<div style={{width:13,height:13,backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                               :<span style={{fontSize:8,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
@@ -1541,14 +1537,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                       }}>
-                        {done&&<div style={{width:13,height:13,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>}
-                        {!done&&isFuture&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none">             <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.35)} strokeWidth="2"/>             <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.35)} strokeWidth="2" strokeLinecap="round"/>            </svg>}
+                        {done&&<div style={{width:13,height:13,backgroundColor:isDark?"#211c3d":"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>}
+                        {!done&&isFuture&&<div style={{width:13,height:13,backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>}
                       </button>
                       )}
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
-                        <div style={{color:C(0.9),fontSize:15,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
-                        <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
+                        <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
+                        <div style={{display:"flex",gap:6,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
                             if(pIds.length===people.length) return <span style={{fontSize:12,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
@@ -1559,22 +1555,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             const p=getPerson(pIds[0]);
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
-                          {people.length>1&&<span style={{fontSize:14,color:C(0.32),flexShrink:0}}>·</span>}
+                          {people.length>1&&<div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
                           <span style={{fontSize:12,color:C(0.5),maxWidth:streak>1||t.rescheduledFrom?80:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
-                          {t.estMinutes&&<span style={{fontSize:11,color:C(0.35),flexShrink:0}}>· {formatEstMinutes(t.estMinutes)}</span>}
+                          {t.estMinutes&&<>
+                            <div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
+                            <span style={{fontSize:12,color:C(0.35),flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
+                          </>}
                           {streak>1&&<>
-                            <span style={{fontSize:13,color:C(0.32),flexShrink:0}}>·</span>
+                            <div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
                             <span style={{fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:12,height:12,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
                           </>}
                           {t.rescheduledFrom&&<>
-                            <span style={{fontSize:13,color:C(0.32),flexShrink:0}}>·</span>
-                            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{flexShrink:0}}>
-                              <path d="M3 5h8m0 0L8.5 2.5M11 5L8.5 7.5" stroke="rgba(251,191,36,0.8)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M13 11H5m0 0l2.5 2.5M5 11l2.5-2.5" stroke="rgba(251,191,36,0.8)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+                            <div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
+                            <div style={{width:12,height:12,backgroundColor:"rgba(251,191,36,0.8)",flexShrink:0,WebkitMaskImage:"url(/icons/move-outline.svg)",maskImage:"url(/icons/move-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                           </>}
                         </div>
                       </div>
+                      <Avatar person={person} size={24}/>
                       {/* Like */}
                       <button onClick={e=>{e.stopPropagation();likeTask(t.id,selDay);}} style={{
                         position:"relative",
@@ -1605,7 +1602,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           </div>
                         );
                         return(
-                          <div onClick={e=>{e.stopPropagation();setAssigneePopover(assigneePopover===t.id?null:t.id);}} style={{opacity:done?.4:1,width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+                          <div style={{opacity:done?.4:1,width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                             <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
                               <circle cx="15.5" cy="8.5" r="4.2" fill="#94a3b8" opacity="0.55"/>
                               <path d="M15.5 14.3c-3.6 0-6.5 2.4-6.9 5.7h13.8c-0.4-3.3-3.3-5.7-6.9-5.7z" fill="#94a3b8" opacity="0.55"/>
@@ -1613,22 +1610,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <path d="M9 15.7c-4.1 0-7.5 2.7-7.9 6.5h15.8c-0.4-3.8-3.8-6.5-7.9-6.5z" fill="#94a3b8"/>
                             </svg>
                           </div>
-                        );
-                      })()}
-                      {assigneePopover===t.id&&(()=>{
-                        const pIds=(t.personIds||[t.personId]).filter(Boolean);
-                        return (
-                          <>
-                            <div onClick={e=>{e.stopPropagation();setAssigneePopover(null);}} style={{position:"absolute",inset:0,zIndex:400}}/>
-                            <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:"100%",right:0,marginTop:6,...G(0.2,30),borderRadius:14,padding:"10px 12px",zIndex:401,boxShadow:"0 8px 24px rgba(0,0,0,0.4)",minWidth:120}}>
-                              {pIds.map(pid=>{const p=getPerson(pid);return(
-                                <div key={pid} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 0"}}>
-                                  <Avatar person={p} size={20}/>
-                                  <span style={{color:C(0.85),fontSize:12,fontWeight:500}}>{p?.name}</span>
-                                </div>
-                              );})}
-                            </div>
-                          </>
                         );
                       })()}
                     </div>
