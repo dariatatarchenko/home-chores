@@ -1292,7 +1292,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {showNotifs&&(
           <>
             <div style={{position:"absolute",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
-            <div style={{position:"absolute",top:76,right:12,zIndex:50,background:isDark?"#2A2D42":"#fff",border:`1px solid ${S(0.1)}`,borderRadius:16,padding:16,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.3)",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
+            <div style={{position:"absolute",top:76,right:12,zIndex:50,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:12,padding:12,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.3)",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
               <div style={{color:TEXT1,fontSize:16,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:TEXT3,fontSize:13}}>All caught up!</div>}
               {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
@@ -1393,10 +1393,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Progress */}
               {dayAllTasks.length>0&&(
                 <div style={{flexShrink:0,padding:`4px 16px ${SPACE_MD}px 16px`}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
                     <span style={{color:TEXT3,fontSize:12}}>{dayLabel(selDay)}</span>
                     <span style={{color:pct===100?"#34d399":TEXT3,fontSize:12,fontWeight:600}}>
-                      {pct===100?"🎉 All done!":`${dayAllDone} of ${dayAllTasks.length}`}
+                      {pct===100?(<span style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:12,height:12,backgroundColor:"#34d399",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>All done!</span>):`${dayAllDone} of ${dayAllTasks.length}`}
                     </span>
                   </div>
                   <div style={{background:S(0.07),borderRadius:4,height:3,overflow:"hidden"}}>
@@ -1678,10 +1678,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   ))}
                 </div>
                 <div style={{...CARD}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
                     <span style={{color:TEXT3,fontSize:12}}>{dayLabel(selDay)}</span>
                     {sTotal>0&&<span style={{color:sPct===100?"#34d399":TEXT3,fontSize:12,fontWeight:600}}>
-                      {sPct===100?"🎉 All done!":`${sDone} of ${sTotal}`}
+                      {sPct===100?(<span style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:12,height:12,backgroundColor:"#34d399",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>All done!</span>):`${sDone} of ${sTotal}`}
                     </span>}
                   </div>
                   {sTotal>0&&(sPast||sToday)&&(
@@ -1695,7 +1695,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
-                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:"12px",marginBottom:8,borderRadius:12,background:isDark?"rgba(255,255,255,0.084)":"rgba(255,255,255,0.5)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:`1px solid ${S(0.1)}`,cursor:isFutureDay?"default":"pointer"}}>
+                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${S(0.08)}`:"none",cursor:isFutureDay?"default":"pointer"}}>
                         <button onClick={e=>{e.stopPropagation();if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=8.1,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
@@ -2179,7 +2179,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #565A78":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             const accentColor=isDark?"#7F72F6":"#7163F3";
