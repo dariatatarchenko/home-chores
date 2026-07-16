@@ -1549,7 +1549,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
                         <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
-                        <div style={{display:"flex",gap:6,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
+                        <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
                             if(pIds.length===people.length) return <span style={{fontSize:12,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
@@ -1561,7 +1561,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
                           {people.length>1&&<div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
-                          <span style={{fontSize:12,color:C(0.5),maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
+                          <span style={{fontSize:12,color:C(0.5),maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",flex:"0 1 auto"}}>{zone?.label}</span>
                           {t.estMinutes&&<>
                             <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
                             <span style={{fontSize:12,color:C(0.35),flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
