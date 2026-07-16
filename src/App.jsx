@@ -1555,19 +1555,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             const p=getPerson(pIds[0]);
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
-                          {people.length>1&&<div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
+                          {people.length>1&&<div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
                           <span style={{fontSize:12,color:C(0.5),maxWidth:streak>1||t.rescheduledFrom?80:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
                           {t.estMinutes&&<>
-                            <div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
+                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
                             <span style={{fontSize:12,color:C(0.35),flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
                           </>}
                           {streak>1&&<>
-                            <div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
+                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
                             <span style={{fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:12,height:12,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
                           </>}
                           {t.rescheduledFrom&&<>
-                            <div style={{width:2,height:2,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
-                            <div style={{width:12,height:12,backgroundColor:"rgba(251,191,36,0.8)",flexShrink:0,WebkitMaskImage:"url(/icons/move-outline.svg)",maskImage:"url(/icons/move-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
+                            <div style={{width:12,height:12,backgroundColor:"rgba(251,191,36,0.8)",flexShrink:0,WebkitMaskImage:"url(/icons/moved-outline.svg)",maskImage:"url(/icons/moved-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                           </>}
                         </div>
                       </div>
