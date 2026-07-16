@@ -1695,7 +1695,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
-                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${S(0.08)}`:"none",cursor:isFutureDay?"default":"pointer"}}>
+                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:ti===sDayTasks.length-1?"8px 0 0":"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${S(0.08)}`:"none",cursor:isFutureDay?"default":"pointer"}}>
                         <button onClick={e=>{e.stopPropagation();if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=8.1,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
@@ -1932,8 +1932,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
                         <input
                           value={zForm.label}
-                          onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
+                          onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,30)}));if(e.target.value.trim())setZoneNameError(false);}}
                           placeholder="Zone name"
+                          maxLength={30}
                           autoFocus
                           style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:10}}
                         />
