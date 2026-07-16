@@ -390,6 +390,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const TEXT2=C(0.6);  // secondary — day numbers, normal-weight body text
   const TEXT3=C(0.4);  // tertiary — labels, unselected buttons
   const TEXT4=C(0.2);  // faint — placeholders, disabled/empty states
+  // Spacing scale (was a scatter of 24/20/18/16/14/12/10/8/6/5/4/3/2 one-offs)
+  const SPACE_LG=24;  // between major sections (header → week strip)
+  const SPACE_MD=18;  // between secondary sections (progress → filters → tasks)
+  const SPACE=12;      // standalone/medium gaps
+  const SPACE_SM=8;    // within a group (cards in a list, chips in a row)
   const G=(o=0.1,b=20)=>({
     background:isDark
       ?`rgba(255,255,255,${o*1.05})`
@@ -1387,7 +1392,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Progress */}
               {dayAllTasks.length>0&&(
-                <div style={{flexShrink:0,padding:"4px 16px 18px 16px"}}>
+                <div style={{flexShrink:0,padding:`4px 16px ${SPACE_MD}px 16px`}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}>
                     <span style={{color:TEXT3,fontSize:12}}>{dayLabel(selDay)}</span>
                     <span style={{color:pct===100?"#34d399":TEXT3,fontSize:12,fontWeight:600}}>
@@ -1412,7 +1417,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               )}
 
               {/* Filter bar */}
-              <div style={{flexShrink:0,padding:"0 16px 18px",display:"flex",gap:8,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+              <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`,display:"flex",gap:SPACE_SM,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setWeekZoneFilter(null)} style={{
                   position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:weekZoneFilter===null?"rgba(129,140,248,0.28)":S(0.05),
@@ -1434,7 +1439,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
 
               {/* Task cards */}
-              <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 16px",display:"flex",flexDirection:"column",gap:8,paddingBottom:110}}>
+              <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 16px",display:"flex",flexDirection:"column",gap:SPACE_SM,paddingBottom:110}}>
                 {selTasks.length===0?(
                   <div style={{textAlign:"center",padding:"40px 0"}}>
                     <div style={{fontSize:44}}>✨</div>
@@ -1511,7 +1516,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Check */}
                       {(t.timesPerDay||1)>1?(
                         <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
-                          width:24,height:24,borderRadius:"50%",flexShrink:0,padding:0,border:isFuture?`2px solid ${C(0.07)}`:"none",boxSizing:"border-box",
+                          width:24,height:24,borderRadius:"50%",flexShrink:0,padding:0,border:isFuture?`2px solid ${C(0.2)}`:"none",boxSizing:"border-box",
                           background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":"none",cursor:isFuture?"not-allowed":"pointer",
                           position:"relative",transition:"all 0.2s",
                         }}>
@@ -1532,7 +1537,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       ):(
                       <button onClick={e=>{ if(isFuture) return; e.currentTarget.blur(); toggleDone(t.id,selDay); }} style={{
                         width:24,height:24,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",overflow:"hidden",
-                        border:done?"none":`2px solid ${isFuture?C(0.07):C(0.2)}`,
+                        border:done?"none":`2px solid ${C(0.2)}`,
                         background:done?"linear-gradient(135deg,#34d399,#6ee7b7)":S(0.04),
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
@@ -1556,7 +1561,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
                           {people.length>1&&<div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
-                          <span style={{fontSize:12,color:C(0.5),flex:"1 1 auto",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom"}}>{zone?.label}</span>
+                          <span style={{fontSize:12,color:C(0.5),maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
                           {t.estMinutes&&<>
                             <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
                             <span style={{fontSize:12,color:C(0.35),flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
