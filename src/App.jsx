@@ -380,7 +380,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const tr=key=>STRINGS[lang]?.[key]||STRINGS.en[key]||key;
   const tc=THEME_COLORS[theme];
   const isDark=theme==="dark";
-  const ACCENT=isDark?"#7F72F6":"#7163F3";
+  const ACCENT=isDark?"#9488F8":"#7163F3";
   const ACCENT2=isDark?"#6B5EE0":"#5E51E0"; // slightly deeper shade of ACCENT, for gradients that previously used two purple tones
   const C=o=>isDark?`rgba(255,255,255,${o})`:`rgba(20,20,30,${o})`;
   const S=o=>`rgba(255,255,255,${o})`; // surface/background tint — always white, unlike C() which is theme-aware (also used for text)
