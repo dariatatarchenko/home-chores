@@ -1654,7 +1654,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}} onScroll={e=>{
                   const gridBottom=calGridRef.current?calGridRef.current.offsetTop+calGridRef.current.offsetHeight:0;
-                  setCalScrolled(e.currentTarget.scrollTop>gridBottom-70);
+                  setCalScrolled(e.currentTarget.scrollTop>gridBottom-140);
                 }}>
                 <div ref={calGridRef}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
