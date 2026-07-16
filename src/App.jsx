@@ -1642,16 +1642,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{flexShrink:0,padding:"16px 16px 8px"}}>
                 <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-                  <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:TEXT2,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+                  <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                   <div style={{color:TEXT1,fontSize:16,fontWeight:700}}>{mName}</div>
-                  <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{...G(0.1,20),border:`1px solid ${C(0.1)}`,borderRadius:12,width:36,height:36,cursor:"pointer",color:TEXT2,fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+                  <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 </div>
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
-                  {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:TEXT3,fontSize:11,fontWeight:700}}>{d}</div>)}
+                  {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:TEXT3,fontSize:12,fontWeight:700}}>{d}</div>)}
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:14}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:12}}>
                   {cells.map((d,i)=>{
                     if(!d) return <div key={"e"+i}/>;
                     const dStr=ds(d),cnt=dayTasks(dStr).length;
@@ -1663,30 +1663,31 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         background:iS?`linear-gradient(135deg,${ACCENT},${ACCENT2})`:isT?"rgba(99,102,241,0.18)":S(0.04),
                         border:iS?`1px solid ${C(0.2)}`:isT?"1px solid rgba(99,102,241,0.4)":"1px solid transparent",
                         boxShadow:iS?"0 4px 16px rgba(99,102,241,0.35)":"none"}}>
-                        <span style={{fontSize:13,fontWeight:iS||isT?700:400,color:iS?"#fff":isT?ACCENT:iP?C(0.38):C(0.7)}}>{d.getDate()}</span>
+                        <span style={{fontSize:14,fontWeight:iS||isT?700:400,color:iS?"#fff":isT?ACCENT:iP?C(0.38):C(0.7)}}>{d.getDate()}</span>
                         {cnt>0&&<div style={{width:6,height:6,borderRadius:"50%",background:iS?S(0.8):allD?"#34d399":hasMiss?"#f87171":ACCENT}}/>}
                       </div>
                     );
                   })}
                 </div>
-                <div style={{display:"flex",gap:14,marginBottom:14,justifyContent:"center"}}>
+                <div style={{display:"flex",gap:14,marginBottom:18,justifyContent:"center"}}>
                   {[["#34d399","All done"],["#f87171","Missed"],[ACCENT,"Planned"]].map(([c,l])=>(
-                    <div key={l} style={{display:"flex",alignItems:"center",gap:5}}>
+                    <div key={l} style={{display:"flex",alignItems:"center",gap:6}}>
                       <div style={{width:6,height:6,borderRadius:"50%",background:c}}/>
-                      <span style={{color:TEXT3,fontSize:11}}>{l}</span>
+                      <span style={{color:TEXT3,fontSize:12}}>{l}</span>
                     </div>
                   ))}
                 </div>
                 <div style={{...CARD}}>
-                  <div style={{marginBottom:10}}><span style={{color:TEXT2,fontSize:12}}>{dayLabel(selDay)}</span></div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}>
+                    <span style={{color:TEXT3,fontSize:12}}>{dayLabel(selDay)}</span>
+                    {sTotal>0&&<span style={{color:sPct===100?"#34d399":TEXT3,fontSize:12,fontWeight:600}}>
+                      {sPct===100?"🎉 All done!":`${sDone} of ${sTotal}`}
+                    </span>}
+                  </div>
                   {sTotal>0&&(sPast||sToday)&&(
                     <div style={{marginBottom:10}}>
                       <div style={{background:S(0.06),borderRadius:4,height:4,overflow:"hidden"}}>
                         <div style={{height:"100%",width:`${sPct}%`,borderRadius:4,transition:"width 0.4s ease",background:sPct===100?"linear-gradient(90deg,#34d399,#6ee7b7)":sPast?"linear-gradient(90deg,#f87171,#fca5a5)":`linear-gradient(90deg,${ACCENT},#a78bfa)`}}/>
-                      </div>
-                      <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
-                        <span style={{color:"#34d399",fontSize:11}}>✓ {sDone} done</span>
-                        {sPast&&sDayTasks.filter(t=>!isDone(t,selDay)).length>0&&<span style={{color:"#f87171",fontSize:11}}>✗ {sDayTasks.filter(t=>!isDone(t,selDay)).length} missed</span>}
                       </div>
                     </div>
                   )}
@@ -1694,7 +1695,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
-                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${C(0.05)}`:"none",cursor:isFutureDay?"default":"pointer"}}>
+                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:"12px",marginBottom:8,borderRadius:12,background:isDark?"rgba(255,255,255,0.084)":"rgba(255,255,255,0.5)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:`1px solid ${S(0.1)}`,cursor:isFutureDay?"default":"pointer"}}>
                         <button onClick={e=>{e.stopPropagation();if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=8.1,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
@@ -2029,7 +2030,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 16px 8px",display:"flex",alignItems:"center",gap:10}}>
                 {settingsView==="account"&&(
-                  <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",color:ACCENT,fontSize:22,cursor:"pointer",padding:0,lineHeight:1}}>‹</button>
+                  <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center"}}><div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 )}
                 <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
               </div>
@@ -2062,7 +2063,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           </div>
                           <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{count} task{count!==1?"s":""}</div>
                         </div>
-                        {p.id===meId&&<span style={{color:C(0.2),fontSize:17}}>›</span>}
+                        {p.id===meId&&<div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>}
                       </div>
                     );
                   })}
@@ -2127,7 +2128,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{color:C(0.82),fontSize:14,fontWeight:500}}>Account</div>
                   <div style={{color:C(0.4),fontSize:11,marginTop:1}}>Invite code, sign out, delete account</div>
                 </div>
-                <span style={{color:C(0.2),fontSize:17}}>›</span>
+                <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               </div>
               </>)}
 
@@ -2178,7 +2179,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(59,62,107,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #3C435A":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
+        <div key={theme} style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,height:64,boxSizing:"border-box",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #565A78":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
           {TABS.map(item=>{
             const active=tab===item.id;
             const accentColor=isDark?"#7F72F6":"#7163F3";
@@ -2443,7 +2444,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <div style={{color:C(0.4),fontSize:11}}>Last week</div>
                             <div style={{color:C(0.6),fontSize:22,fontWeight:700}}>{lastW}</div>
                           </div>
-                          <div style={{color:C(0.2),fontSize:20}}>→</div>
+                          <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                           <div style={{textAlign:"center"}}>
                             <div style={{color:C(0.4),fontSize:11}}>This week</div>
                             <div style={{color:"#fff",fontSize:22,fontWeight:700}}>{thisW}</div>
@@ -2913,7 +2914,7 @@ function HouseholdGate({session,onReady}){
   return (
     <div style={SHELL_STYLE}>
       <div style={{width:"100%",maxWidth:480,display:"flex",flexDirection:"column",justifyContent:"center",padding:"32px 28px",background:CARD_BG,gap:12,overflowY:"auto"}}>
-        <button onClick={()=>{setMode(null);setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",fontSize:14,cursor:"pointer",textAlign:"left",padding:0,marginBottom:8}}>‹ Back</button>
+        <button onClick={()=>{setMode(null);setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",fontSize:14,cursor:"pointer",textAlign:"left",padding:0,marginBottom:8,display:"flex",alignItems:"center",gap:4}}><div style={{width:24,height:24,backgroundColor:"rgba(255,255,255,0.4)",WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Back</button>
         <div style={{color:"#fff",fontSize:20,fontWeight:700,marginBottom:8}}>{mode==="create"?"Create your home":"Join a home"}</div>
 
         {mode==="join"&&(
