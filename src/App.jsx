@@ -1705,7 +1705,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           );})()}
                           {done&&<div style={{width:10,height:10,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
                           {missed&&<div style={{width:10,height:10,backgroundColor:"rgba(248,113,113,0.7)",WebkitMaskImage:"url(/icons/cross.svg)",maskImage:"url(/icons/cross.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
-                          {!done&&!missed&&isFutureDay&&<div style={{width:10,height:10,backgroundColor:C(0.45),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
+                          {!done&&!missed&&isFutureDay&&<div style={{width:8,height:8,backgroundColor:C(0.45),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
                         </button>
                         <div style={{flex:1}}>
                           <div style={{color:done?C(0.38):missed?"rgba(248,113,113,0.6)":C(0.82),fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
@@ -1932,9 +1932,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
                         <input
                           value={zForm.label}
-                          onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,30)}));if(e.target.value.trim())setZoneNameError(false);}}
+                          onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                           placeholder="Zone name"
-                          maxLength={30}
+                          maxLength={38}
                           autoFocus
                           style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:10}}
                         />
@@ -2598,9 +2598,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <input
                   value={zForm.label}
-                  onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,30)}));if(e.target.value.trim())setZoneNameError(false);}}
+                  onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                   placeholder="Zone name"
-                  maxLength={30}
+                  maxLength={38}
                   autoFocus
                   style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
                 />
