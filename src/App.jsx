@@ -1705,13 +1705,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           );})()}
                           {done&&<div style={{width:10,height:10,backgroundColor:"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
                           {missed&&<div style={{width:10,height:10,backgroundColor:"rgba(248,113,113,0.7)",WebkitMaskImage:"url(/icons/cross.svg)",maskImage:"url(/icons/cross.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
-                          {!done&&!missed&&isFutureDay&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke={C(0.45)} strokeWidth="2.2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke={C(0.45)} strokeWidth="2.2" strokeLinecap="round"/></svg>}
+                          {!done&&!missed&&isFutureDay&&<div style={{width:10,height:10,backgroundColor:C(0.45),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",position:"relative"}}/>}
                         </button>
                         <div style={{flex:1}}>
-                          <div style={{color:done?C(0.38):missed?"rgba(248,113,113,0.6)":C(0.82),fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
-                          <div style={{color:TEXT3,fontSize:11,marginTop:1}}>{zone?.label}</div>
+                          <div style={{color:done?C(0.38):missed?"rgba(248,113,113,0.6)":C(0.82),fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
+                          <div style={{color:TEXT3,fontSize:12,marginTop:2}}>{zone?.label}</div>
                         </div>
-                        <Avatar person={person} size={22}/>
+                        <Avatar person={person} size={24}/>
                       </div>
                     );
                   })}
@@ -1945,8 +1945,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       </div>
                     </div>
                   ):(
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-                    <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{zone.label}</span>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:700,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{zone.label}</span>
                     {zone.id!=="__orphaned__"&&(
                       <button onClick={()=>{setZoneNameError(false);setZForm({label:zone.label,emoji:zone.emoji});setEmojiPicker(false);setZoneExpandId(zone.id);}} style={{background:"none",border:"none",width:26,height:26,cursor:"pointer",flexShrink:0,padding:0}}><div style={{width:"100%",height:"100%",backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/edit-outline.svg)",maskImage:"url(/icons/edit-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                     )}
