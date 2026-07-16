@@ -1224,10 +1224,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   })();
 
   const dayLabel=d=>{
-    if(d===todayStr) return "Today";
+    const dateStr=new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
+    if(d===todayStr) return `Today, ${dateStr}`;
+    const yest=new Date(TODAY); yest.setDate(TODAY.getDate()-1);
+    if(d===ds(yest)) return `Yesterday, ${dateStr}`;
     const tom=new Date(TODAY); tom.setDate(TODAY.getDate()+1);
-    if(d===ds(tom)) return "Tomorrow";
-    return new Date(d+"T00:00:00").toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
+    if(d===ds(tom)) return `Tomorrow, ${dateStr}`;
+    return new Date(d+"T00:00:00").toLocaleDateString("en-US",{weekday:"long"});
   };
 
   const inputSt={...G(0.1,20),borderRadius:14,padding:"12px 14px",color:C(0.9),fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:`1px solid ${C(0.1)}`};
@@ -1651,7 +1654,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}} onScroll={e=>{
                   const gridBottom=calGridRef.current?calGridRef.current.offsetTop+calGridRef.current.offsetHeight:0;
-                  setCalScrolled(e.currentTarget.scrollTop>gridBottom-20);
+                  setCalScrolled(e.currentTarget.scrollTop>gridBottom);
                 }}>
                 <div ref={calGridRef}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
