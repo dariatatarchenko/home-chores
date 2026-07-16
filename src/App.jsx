@@ -1365,7 +1365,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           cursor:"pointer",
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
-                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`${isToday||active?"2px":"1px"} solid ${isToday?ACCENT:active?C(0.25):S(0.1)}`,pointerEvents:"none"}}/>
+                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`${isToday||active?"2px":"1px"} solid ${isToday?(isDark?"#7F72F6":"#7163F3"):active?C(0.25):S(0.1)}`,pointerEvents:"none"}}/>
                         <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
@@ -1374,7 +1374,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           <div style={{position:"relative",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             <svg width="32" height="32" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
-                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?"#fff":isToday?ACCENT:pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
+                              <circle cx="16" cy="16" r={R} fill="none" stroke={active?"#fff":isToday?(isDark?"#7F72F6":"#7163F3"):pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                             </svg>
                             <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?"#fff":pDay===100?"#34d399":TEXT2}}>{d.getDate()}</span>
                           </div>
