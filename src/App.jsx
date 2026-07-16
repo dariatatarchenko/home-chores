@@ -1561,7 +1561,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
                           {people.length>1&&<div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
-                          <span style={{fontSize:12,color:C(0.5),maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",flex:"0 1 auto"}}>{zone?.label}</span>
+                          <span style={{fontSize:12,color:C(0.5),minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",flex:"0 1 auto"}}>{zone?.label}</span>
                           {t.estMinutes&&<>
                             <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
                             <span style={{fontSize:12,color:C(0.35),flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
