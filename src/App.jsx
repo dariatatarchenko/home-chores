@@ -1387,7 +1387,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Progress */}
               {dayAllTasks.length>0&&(
-                <div style={{flexShrink:0,padding:"24px 16px 18px 16px"}}>
+                <div style={{flexShrink:0,padding:"4px 16px 18px 16px"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}>
                     <span style={{color:TEXT3,fontSize:12}}>{dayLabel(selDay)}</span>
                     <span style={{color:pct===100?"#34d399":TEXT3,fontSize:12,fontWeight:600}}>
@@ -1571,7 +1571,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           </>}
                         </div>
                       </div>
-                      <Avatar person={person} size={24}/>
                       {/* Like */}
                       <button onClick={e=>{e.stopPropagation();likeTask(t.id,selDay);}} style={{
                         position:"relative",
