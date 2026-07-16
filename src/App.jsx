@@ -392,7 +392,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const TEXT4=C(0.2);  // faint — placeholders, disabled/empty states
   const G=(o=0.1,b=20)=>({
     background:isDark
-      ?`linear-gradient(180deg, rgba(255,255,255,${o*1.4}), rgba(255,255,255,${o*0.7}))`
+      ?`rgba(255,255,255,${o*1.05})`
       :"rgba(255,255,255,0.5)",
     backdropFilter:`blur(${b}px) saturate(200%)`,
     WebkitBackdropFilter:`blur(${b}px) saturate(200%)`,
@@ -829,7 +829,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const toggleDone=(id,d)=>{
     const key0=id+"|"+d;
     const now=Date.now();
-    if(lastToggleRef.current[key0]&&now-lastToggleRef.current[key0]<350) return; // ignore accidental rapid double-tap
+    if(lastToggleRef.current[key0]&&now-lastToggleRef.current[key0]<450) return; // ignore accidental rapid double-tap
     lastToggleRef.current[key0]=now;
     const t=tasks.find(x=>x.id===id);
     const wasFullyDone=t&&isDone(t,d);
@@ -1355,7 +1355,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         data-date={dStr}
                         style={{
                           position:"relative",flex:"0 0 46px",width:46,height:78,borderRadius:12,
-                          background:active?`linear-gradient(160deg,${ACCENT},${ACCENT2})`:isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
+                          background:active?"rgba(129,140,248,0.28)":isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
                           boxShadow:"none",
                           cursor:"pointer",
                         }}>
@@ -1556,7 +1556,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
                           {people.length>1&&<div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
-                          <span style={{fontSize:12,color:C(0.5),maxWidth:streak>1||t.rescheduledFrom?80:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom",flexShrink:1}}>{zone?.label}</span>
+                          <span style={{fontSize:12,color:C(0.5),flex:"1 1 auto",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-block",verticalAlign:"bottom"}}>{zone?.label}</span>
                           {t.estMinutes&&<>
                             <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
                             <span style={{fontSize:12,color:C(0.35),flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
@@ -2591,8 +2591,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <input
                   value={zForm.label}
-                  onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}}
+                  onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,30)}));if(e.target.value.trim())setZoneNameError(false);}}
                   placeholder="Zone name"
+                  maxLength={30}
                   autoFocus
                   style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
                 />
