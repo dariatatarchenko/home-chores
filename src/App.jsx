@@ -678,6 +678,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [weekOff, setWeekOff] = useState(0);
   const [calYear, setCalYear] = useState(TODAY.getFullYear());
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
+  const [calScrolled,setCalScrolled]=useState(false);
+  const calGridRef=useRef(null);
   const [dragInfo,setDragInfo]= useState(null);
   const [dragActive,setDragActive]= useState(false);
   const activeDragHandlerRef=useRef(null);
@@ -1643,11 +1645,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
-                  <div style={{color:TEXT1,fontSize:16,fontWeight:700}}>{mName}</div>
+                  <div style={{color:TEXT1,fontSize:16,fontWeight:700}}>{calScrolled?dayLabel(selDay):mName}</div>
                   <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 </div>
                 </div>
-                <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}}>
+                <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}} onScroll={e=>{
+                  const gridBottom=calGridRef.current?calGridRef.current.offsetTop+calGridRef.current.offsetHeight:0;
+                  setCalScrolled(e.currentTarget.scrollTop>gridBottom-20);
+                }}>
+                <div ref={calGridRef}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
                   {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:TEXT3,fontSize:12,fontWeight:700}}>{d}</div>)}
                 </div>
@@ -1677,6 +1683,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     </div>
                   ))}
                 </div>
+                </div>
                 <div style={{...CARD}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
                     <span style={{color:TEXT3,fontSize:12}}>{dayLabel(selDay)}</span>
@@ -1684,7 +1691,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {sPct===100?(<span style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:12,height:12,backgroundColor:"#34d399",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>All done!</span>):`${sDone} of ${sTotal}`}
                     </span>}
                   </div>
-                  {sTotal>0&&(sPast||sToday)&&(
+                  {sTotal>0&&(
                     <div style={{marginBottom:10}}>
                       <div style={{background:S(0.06),borderRadius:4,height:4,overflow:"hidden"}}>
                         <div style={{height:"100%",width:`${sPct}%`,borderRadius:4,transition:"width 0.4s ease",background:sPct===100?"linear-gradient(90deg,#34d399,#6ee7b7)":sPast?"linear-gradient(90deg,#f87171,#fca5a5)":`linear-gradient(90deg,${ACCENT},#a78bfa)`}}/>
