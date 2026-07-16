@@ -1360,7 +1360,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         data-date={dStr}
                         style={{
                           position:"relative",flex:"0 0 46px",width:46,height:78,borderRadius:12,
-                          background:active?"rgba(129,140,248,0.5)":isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
+                          background:active?"rgba(129,140,248,0.28)":isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
                           boxShadow:"none",
                           cursor:"pointer",
                         }}>
