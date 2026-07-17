@@ -1422,25 +1422,27 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               )}
 
               {/* Filter bar */}
-              <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`,display:"flex",gap:SPACE_SM,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+              <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
+                <div style={{display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:24,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setWeekZoneFilter(null)} style={{
                   position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
-                  background:weekZoneFilter===null?"rgba(129,140,248,0.28)":S(0.05),
+                  background:"transparent",
                   color:weekZoneFilter===null?"#fff":TEXT2,
                 }}>
-                  <div style={{position:"absolute",inset:0,borderRadius:20,border:`${weekZoneFilter===null?"2px":"1px"} solid ${weekZoneFilter===null?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                  {tr("all")}
+                  {weekZoneFilter===null&&<div style={{position:"absolute",inset:0,borderRadius:20,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`}}/>}
+                  <span style={{position:"relative"}}>{tr("all")}</span>
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
                   <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{
                     position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
-                    background:weekZoneFilter===z.id?"rgba(129,140,248,0.28)":S(0.05),
+                    background:"transparent",
                     color:weekZoneFilter===z.id?"#fff":TEXT2,
                   }}>
-                    <div style={{position:"absolute",inset:0,borderRadius:20,border:`${weekZoneFilter===z.id?"2px":"1px"} solid ${weekZoneFilter===z.id?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                    {z.emoji} {z.label}
+                    {weekZoneFilter===z.id&&<div style={{position:"absolute",inset:0,borderRadius:20,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`}}/>}
+                    <span style={{position:"relative"}}>{z.emoji} {z.label}</span>
                   </button>
                 ))}
+              </div>
               </div>
 
               {/* Task cards */}
@@ -2190,7 +2192,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div style={{position:"absolute",left:24,right:24,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:16}}>
+        <div style={{position:"absolute",left:16,right:16,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:12}}>
           <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
             {TABS.filter(item=>!item.accent).map(item=>{
               const active=tab===item.id;
