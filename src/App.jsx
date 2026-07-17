@@ -1455,7 +1455,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
                 <div ref={weekFilterBarRef} onScroll={measureWeekFilter} style={{position:"relative",display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:weekFilterEllipse.left,width:weekFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
-                <button ref={el=>{weekFilterRefs.current["__all__"]=el;}} onClick={e=>{setWeekZoneFilter(null);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
+                <button ref={el=>{weekFilterRefs.current["__all__"]=el;}} onClick={()=>setWeekZoneFilter(null)} style={{
                   position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:"transparent",
                   color:weekZoneFilter===null?"#fff":TEXT2,
@@ -1463,7 +1463,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={{position:"relative"}}>{tr("all")}</span>
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
-                  <button key={z.id} ref={el=>{weekFilterRefs.current[z.id]=el;}} onClick={e=>{setWeekZoneFilter(weekZoneFilter===z.id?null:z.id);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
+                  <button key={z.id} ref={el=>{weekFilterRefs.current[z.id]=el;}} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{
                     position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                     background:"transparent",
                     color:weekZoneFilter===z.id?"#fff":TEXT2,
@@ -1932,7 +1932,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div onScroll={measureTaskFilter} style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
                 <div ref={taskFilterBarRef} style={{position:"relative",display:"flex",gap:2,padding:2,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:taskFilterEllipse.left,width:taskFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
-                <button ref={el=>{taskFilterRefs.current["__all__"]=el;}} onClick={e=>{setTaskZoneFilter(null);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
+                <button ref={el=>{taskFilterRefs.current["__all__"]=el;}} onClick={()=>setTaskZoneFilter(null)} style={{
                   position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:"transparent",
                   color:taskZoneFilter===null?"#fff":TEXT2,
@@ -1940,7 +1940,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={{position:"relative"}}>{tr("all")}</span>
                 </button>
                 {zones.map(z=>(
-                  <button key={z.id} ref={el=>{taskFilterRefs.current[z.id]=el;}} onClick={e=>{setTaskZoneFilter(taskZoneFilter===z.id?null:z.id);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
+                  <button key={z.id} ref={el=>{taskFilterRefs.current[z.id]=el;}} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)} style={{
                     position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                     background:"transparent",
                     color:taskZoneFilter===z.id?"#fff":TEXT2,
@@ -2224,11 +2224,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:16,right:16,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:12}}>
           <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 4px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            {TABS.filter(item=>!item.accent).map(item=>{
+            {TABS.filter(item=>!item.accent).map((item,idx,arr)=>{
               const active=tab===item.id&&!taskFormOpen;
+              const isFirst=idx===0,isLast=idx===arr.length-1;
               return (
                 <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{position:"relative",height:60,border:"none",padding:"0 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",overflow:"visible"}}>
-                  <div style={{position:"absolute",top:2,bottom:2,left:-8,right:-8,borderRadius:40,background:active?"rgba(129,140,248,0.28)":"transparent",border:`1.5px solid ${active?ACCENT:"transparent"}`,transition:"background-color 0.15s ease, border-color 0.15s ease",zIndex:0}}/>
+                  <div style={{position:"absolute",top:2,bottom:2,left:isFirst?2:-8,right:isLast?2:-8,borderRadius:40,background:active?"rgba(129,140,248,0.28)":"transparent",border:`1.5px solid ${active?ACCENT:"transparent"}`,transition:"background-color 0.2s ease, border-color 0.2s ease",zIndex:0}}/>
                   <div style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4,zIndex:1}}>
                     <div style={{width:28,height:28,backgroundColor:active?"#fff":"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
                     <span style={{fontFamily:"'SF Compact Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:400,letterSpacing:0.2,color:active?"#fff":"#868C93",whiteSpace:"nowrap"}}>{item.label}</span>
