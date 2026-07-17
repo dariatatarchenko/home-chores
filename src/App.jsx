@@ -422,18 +422,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [meId,    setMeId]    = useState(initialMe.id);
   const meIdRef=useRef(meId);
   useEffect(()=>{ meIdRef.current=meId; },[meId]);
-  useEffect(()=>{
+  useLayoutEffect(()=>{
     if(taskFormOpen){ setTabEllipse(e=>({...e,width:0})); return; }
-    const el=tabContentRefs.current[tab];
-    const settingsEl=tabContentRefs.current["settings"];
     const bar=tabBarRef.current;
-    if(el&&bar){
-      const elRect=el.getBoundingClientRect();
+    if(bar){
+      const nonAccentTabs=TABS.filter(t=>!t.accent);
+      const idx=nonAccentTabs.findIndex(t=>t.id===tab);
+      if(idx<0) return;
       const barRect=bar.getBoundingClientRect();
-      const pad=14,edge=3;
-      const width=settingsEl?settingsEl.getBoundingClientRect().width+pad*2:elRect.width+pad*2;
-      const center=elRect.left+elRect.width/2-barRect.left;
-      let left=center-width/2;
+      const n=nonAccentTabs.length;
+      const edge=3;
+      const slotWidth=barRect.width/n;
+      const slotCenter=idx*slotWidth+slotWidth/2;
+      const width=84;
+      let left=slotCenter-width/2;
       if(left<edge) left=edge;
       if(left+width>barRect.width-edge) left=barRect.width-edge-width;
       setTabEllipse({left,width});
@@ -703,7 +705,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       setWeekFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
     }
   };
-  useEffect(measureWeekFilter,[weekZoneFilter,selDay]);
+  useLayoutEffect(measureWeekFilter,[weekZoneFilter,selDay]);
 
   const measureTaskFilter=()=>{
     const key=taskZoneFilter??"__all__";
@@ -715,7 +717,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       setTaskFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
     }
   };
-  useEffect(measureTaskFilter,[taskZoneFilter]);
+  useLayoutEffect(measureTaskFilter,[taskZoneFilter]);
   const [weekOff, setWeekOff] = useState(0);
   const [calYear, setCalYear] = useState(TODAY.getFullYear());
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
@@ -1475,7 +1477,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
                 <div ref={weekFilterBarRef} onScroll={measureWeekFilter} style={{position:"relative",display:"flex",gap:2,padding:3,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:weekFilterEllipse.left,width:weekFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
-                <button ref={el=>{weekFilterRefs.current["__all__"]=el;}} onClick={()=>setWeekZoneFilter(null)} style={{
+                <button ref={el=>{weekFilterRefs.current["__all__"]=el;}} onClick={e=>{setWeekZoneFilter(null);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
                   position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:"transparent",
                   color:weekZoneFilter===null?"#fff":TEXT2,
@@ -1483,7 +1485,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={{position:"relative"}}>{tr("all")}</span>
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
-                  <button key={z.id} ref={el=>{weekFilterRefs.current[z.id]=el;}} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{
+                  <button key={z.id} ref={el=>{weekFilterRefs.current[z.id]=el;}} onClick={e=>{setWeekZoneFilter(weekZoneFilter===z.id?null:z.id);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
                     position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                     background:"transparent",
                     color:weekZoneFilter===z.id?"#fff":TEXT2,
@@ -1952,7 +1954,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div onScroll={measureTaskFilter} style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
                 <div ref={taskFilterBarRef} style={{position:"relative",display:"flex",gap:2,padding:3,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:taskFilterEllipse.left,width:taskFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
-                <button ref={el=>{taskFilterRefs.current["__all__"]=el;}} onClick={()=>setTaskZoneFilter(null)} style={{
+                <button ref={el=>{taskFilterRefs.current["__all__"]=el;}} onClick={e=>{setTaskZoneFilter(null);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
                   position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:"transparent",
                   color:taskZoneFilter===null?"#fff":TEXT2,
@@ -1960,7 +1962,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={{position:"relative"}}>{tr("all")}</span>
                 </button>
                 {zones.map(z=>(
-                  <button key={z.id} ref={el=>{taskFilterRefs.current[z.id]=el;}} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)} style={{
+                  <button key={z.id} ref={el=>{taskFilterRefs.current[z.id]=el;}} onClick={e=>{setTaskZoneFilter(taskZoneFilter===z.id?null:z.id);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
                     position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                     background:"transparent",
                     color:taskZoneFilter===z.id?"#fff":TEXT2,
@@ -2251,7 +2253,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{position:"relative",flex:1,height:64,border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                   <div ref={el=>{tabContentRefs.current[item.id]=el;}} style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                     <div style={{width:28,height:28,backgroundColor:active?"#fff":"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
-                    <span style={{fontFamily:"'SF Compact Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:700,letterSpacing:0.2,color:active?"#fff":"#868C93"}}>{item.label}</span>
+                    <span style={{fontFamily:"'SF Compact Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:400,letterSpacing:0.2,color:active?"#fff":"#868C93"}}>{item.label}</span>
                   </div>
                 </button>
               );
