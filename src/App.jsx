@@ -2193,12 +2193,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:16,right:16,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:12}}>
-          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 10px",display:"flex",alignItems:"center",gap:3}}>
-            {TABS.filter(item=>!item.accent).map(item=>{
+          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,display:"flex",alignItems:"center",gap:0}}>
+            {TABS.filter(item=>!item.accent).map((item,idx,arr)=>{
               const active=tab===item.id;
+              const isFirst=idx===0,isLast=idx===arr.length-1;
               return (
                 <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{position:"relative",flex:1,height:64,border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
-                  {active&&<div style={{position:"absolute",inset:"2px 4px",borderRadius:28,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`}}/>}
+                  {active&&<div style={{position:"absolute",top:2,bottom:2,width:68,borderRadius:28,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,
+                    ...(isFirst?{left:2}:isLast?{right:2}:{left:"50%",transform:"translateX(-50%)"})
+                  }}/>}
                   <div style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                     <div style={{width:28,height:28,backgroundColor:active?ACCENT:"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
                     <span style={{fontFamily:"'SF Pro Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:700,letterSpacing:0.2,color:active?ACCENT:"#868C93"}}>{item.label}</span>
