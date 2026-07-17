@@ -2223,7 +2223,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:16,right:16,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:12}}>
-          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:"0 2px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             {TABS.filter(item=>!item.accent).map(item=>{
               const active=tab===item.id&&!taskFormOpen;
               return (
