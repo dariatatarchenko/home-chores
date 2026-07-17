@@ -442,28 +442,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   },[tab,taskFormOpen]);
 
   useEffect(()=>{
-    const key=weekZoneFilter??"__all__";
-    const el=weekFilterRefs.current[key];
-    const bar=weekFilterBarRef.current;
-    if(el&&bar){
-      const elRect=el.getBoundingClientRect();
-      const barRect=bar.getBoundingClientRect();
-      setWeekFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
-    }
-  },[weekZoneFilter,selDay]);
-
-  useEffect(()=>{
-    const key=taskZoneFilter??"__all__";
-    const el=taskFilterRefs.current[key];
-    const bar=taskFilterBarRef.current;
-    if(el&&bar){
-      const elRect=el.getBoundingClientRect();
-      const barRect=bar.getBoundingClientRect();
-      setTaskFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
-    }
-  },[taskZoneFilter]);
-
-  useEffect(()=>{
     supabase.from("google_calendar_tokens").select("person_id").eq("person_id",meId).maybeSingle()
       .then(({data})=>setGoogleConnected(!!data))
       .catch(()=>setGoogleConnected(false));
@@ -715,6 +693,28 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [myFilter,setMyFilter]= useState(false);
   const [weekZoneFilter,setWeekZoneFilter]= useState(null);
   const [taskZoneFilter,setTaskZoneFilter]= useState(null);
+
+  useEffect(()=>{
+    const key=weekZoneFilter??"__all__";
+    const el=weekFilterRefs.current[key];
+    const bar=weekFilterBarRef.current;
+    if(el&&bar){
+      const elRect=el.getBoundingClientRect();
+      const barRect=bar.getBoundingClientRect();
+      setWeekFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
+    }
+  },[weekZoneFilter,selDay]);
+
+  useEffect(()=>{
+    const key=taskZoneFilter??"__all__";
+    const el=taskFilterRefs.current[key];
+    const bar=taskFilterBarRef.current;
+    if(el&&bar){
+      const elRect=el.getBoundingClientRect();
+      const barRect=bar.getBoundingClientRect();
+      setTaskFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
+    }
+  },[taskZoneFilter]);
   const [weekOff, setWeekOff] = useState(0);
   const [calYear, setCalYear] = useState(TODAY.getFullYear());
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
