@@ -431,12 +431,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const elRect=el.getBoundingClientRect();
       const barRect=bar.getBoundingClientRect();
       const pad=14,edge=3;
-      const uniformWidth=settingsEl?settingsEl.getBoundingClientRect().width+pad*2:elRect.width+pad*2;
+      const width=settingsEl?settingsEl.getBoundingClientRect().width+pad*2:elRect.width+pad*2;
       const center=elRect.left+elRect.width/2-barRect.left;
-      let left=center-uniformWidth/2;
-      let width=uniformWidth;
-      if(left<edge){ width-=(edge-left); left=edge; }
-      if(left+width>barRect.width-edge){ width=barRect.width-edge-left; }
+      let left=center-width/2;
+      if(left<edge) left=edge;
+      if(left+width>barRect.width-edge) left=barRect.width-edge-width;
       setTabEllipse({left,width});
     }
   },[tab,taskFormOpen]);
@@ -694,7 +693,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [weekZoneFilter,setWeekZoneFilter]= useState(null);
   const [taskZoneFilter,setTaskZoneFilter]= useState(null);
 
-  useEffect(()=>{
+  const measureWeekFilter=()=>{
     const key=weekZoneFilter??"__all__";
     const el=weekFilterRefs.current[key];
     const bar=weekFilterBarRef.current;
@@ -703,9 +702,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const barRect=bar.getBoundingClientRect();
       setWeekFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
     }
-  },[weekZoneFilter,selDay]);
+  };
+  useEffect(measureWeekFilter,[weekZoneFilter,selDay]);
 
-  useEffect(()=>{
+  const measureTaskFilter=()=>{
     const key=taskZoneFilter??"__all__";
     const el=taskFilterRefs.current[key];
     const bar=taskFilterBarRef.current;
@@ -714,7 +714,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       const barRect=bar.getBoundingClientRect();
       setTaskFilterEllipse({left:elRect.left-barRect.left,width:elRect.width});
     }
-  },[taskZoneFilter]);
+  };
+  useEffect(measureTaskFilter,[taskZoneFilter]);
   const [weekOff, setWeekOff] = useState(0);
   const [calYear, setCalYear] = useState(TODAY.getFullYear());
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
@@ -1472,7 +1473,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
-                <div ref={weekFilterBarRef} style={{position:"relative",display:"flex",gap:2,padding:3,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+                <div ref={weekFilterBarRef} onScroll={measureWeekFilter} style={{position:"relative",display:"flex",gap:2,padding:3,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:weekFilterEllipse.left,width:weekFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
                 <button ref={el=>{weekFilterRefs.current["__all__"]=el;}} onClick={()=>setWeekZoneFilter(null)} style={{
                   position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
@@ -1948,7 +1949,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{width:15,height:15,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-outline.svg)",maskImage:"url(/icons/trophy-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats
                 </button>
               </div>
-              <div style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
+              <div onScroll={measureTaskFilter} style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
                 <div ref={taskFilterBarRef} style={{position:"relative",display:"flex",gap:2,padding:3,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:taskFilterEllipse.left,width:taskFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
                 <button ref={el=>{taskFilterRefs.current["__all__"]=el;}} onClick={()=>setTaskZoneFilter(null)} style={{
