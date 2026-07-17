@@ -422,22 +422,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [meId,    setMeId]    = useState(initialMe.id);
   const meIdRef=useRef(meId);
   useEffect(()=>{ meIdRef.current=meId; },[meId]);
-  useLayoutEffect(()=>{
-    if(taskFormOpen){ setTabEllipse(e=>({...e,width:0})); return; }
-    const bar=tabBarRef.current;
-    if(bar){
-      const nonAccentTabs=TABS.filter(t=>!t.accent);
-      const idx=nonAccentTabs.findIndex(t=>t.id===tab);
-      if(idx<0) return;
-      const barRect=bar.getBoundingClientRect();
-      const n=nonAccentTabs.length;
-      const margin=2;
-      const slotWidth=barRect.width/n;
-      const width=slotWidth-margin*2;
-      const left=idx*slotWidth+margin;
-      setTabEllipse({left,width});
-    }
-  },[tab,taskFormOpen]);
 
   useEffect(()=>{
     supabase.from("google_calendar_tokens").select("person_id").eq("person_id",meId).maybeSingle()
@@ -775,9 +759,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const stripRef = useRef(null);
   const taskListRef = useRef(null);
   const cardRefs = useRef({});
-  const tabContentRefs=useRef({});
-  const tabBarRef=useRef(null);
-  const [tabEllipse,setTabEllipse]=useState({left:0,width:68});
   const weekFilterRefs=useRef({});
   const weekFilterBarRef=useRef(null);
   const [weekFilterEllipse,setWeekFilterEllipse]=useState({left:0,width:0});
@@ -2243,14 +2224,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:16,right:16,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:12}}>
           <div key={theme} ref={tabBarRef} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,display:"flex",alignItems:"center",gap:0}}>
-            <div style={{position:"absolute",top:2,bottom:2,left:tabEllipse.left,width:tabEllipse.width,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease"}}/>
             {TABS.filter(item=>!item.accent).map(item=>{
               const active=tab===item.id&&!taskFormOpen;
               return (
                 <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{position:"relative",flex:1,height:64,border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
-                  <div ref={el=>{tabContentRefs.current[item.id]=el;}} style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                  <div style={{display:"inline-flex",flexDirection:"column",alignItems:"center",gap:4,padding:"8px 14px",boxSizing:"border-box",borderRadius:40,background:active?"rgba(129,140,248,0.28)":"transparent",border:`1.5px solid ${active?ACCENT:"transparent"}`,transition:"background-color 0.15s ease, border-color 0.15s ease"}}>
                     <div style={{width:28,height:28,backgroundColor:active?"#fff":"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
-                    <span style={{fontFamily:"'SF Compact Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:400,letterSpacing:0.2,color:active?"#fff":"#868C93"}}>{item.label}</span>
+                    <span style={{fontFamily:"'SF Compact Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:400,letterSpacing:0.2,color:active?"#fff":"#868C93",whiteSpace:"nowrap"}}>{item.label}</span>
                   </div>
                 </button>
               );
