@@ -422,6 +422,21 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [meId,    setMeId]    = useState(initialMe.id);
   const meIdRef=useRef(meId);
   useEffect(()=>{ meIdRef.current=meId; },[meId]);
+  useEffect(()=>{
+    if(taskFormOpen){ setTabEllipse(e=>({...e,width:0})); return; }
+    const el=tabContentRefs.current[tab];
+    const bar=tabBarRef.current;
+    if(el&&bar){
+      const elRect=el.getBoundingClientRect();
+      const barRect=bar.getBoundingClientRect();
+      const pad=14,edge=3;
+      let left=elRect.left-barRect.left-pad;
+      let width=elRect.width+pad*2;
+      if(left<edge){ width-=(edge-left); left=edge; }
+      if(left+width>barRect.width-edge){ width=barRect.width-edge-left; }
+      setTabEllipse({left,width});
+    }
+  },[tab,taskFormOpen]);
 
   useEffect(()=>{
     supabase.from("google_calendar_tokens").select("person_id").eq("person_id",meId).maybeSingle()
@@ -735,6 +750,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const stripRef = useRef(null);
   const taskListRef = useRef(null);
   const cardRefs = useRef({});
+  const tabContentRefs=useRef({});
+  const tabBarRef=useRef(null);
+  const [tabEllipse,setTabEllipse]=useState({left:0,width:68});
   const lastToggleRef = useRef({});
   const prevRects = useRef({});
   const taskNameRef = useRef(null);
@@ -1423,22 +1441,22 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
-                <div style={{display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:24,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+                <div style={{display:"flex",gap:2,padding:3,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setWeekZoneFilter(null)} style={{
-                  position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                  position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:"transparent",
                   color:weekZoneFilter===null?"#fff":TEXT2,
                 }}>
-                  {weekZoneFilter===null&&<div style={{position:"absolute",inset:0,borderRadius:20,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`}}/>}
+                  {weekZoneFilter===null&&<div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`}}/>}
                   <span style={{position:"relative"}}>{tr("all")}</span>
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
                   <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{
-                    position:"relative",flexShrink:0,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:20,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                    position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
                     background:"transparent",
                     color:weekZoneFilter===z.id?"#fff":TEXT2,
                   }}>
-                    {weekZoneFilter===z.id&&<div style={{position:"absolute",inset:0,borderRadius:20,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`}}/>}
+                    {weekZoneFilter===z.id&&<div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`}}/>}
                     <span style={{position:"relative"}}>{z.emoji} {z.label}</span>
                   </button>
                 ))}
@@ -2193,18 +2211,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:16,right:16,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:12}}>
-          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,display:"flex",alignItems:"center",gap:0}}>
-            {TABS.filter(item=>!item.accent).map((item,idx,arr)=>{
-              const active=tab===item.id;
-              const isFirst=idx===0,isLast=idx===arr.length-1;
+          <div key={theme} ref={tabBarRef} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,display:"flex",alignItems:"center",gap:0}}>
+            <div style={{position:"absolute",top:2,bottom:2,left:tabEllipse.left,width:tabEllipse.width,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease"}}/>
+            {TABS.filter(item=>!item.accent).map(item=>{
+              const active=tab===item.id&&!taskFormOpen;
               return (
                 <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{position:"relative",flex:1,height:64,border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
-                  {active&&<div style={{position:"absolute",top:2,bottom:2,width:68,borderRadius:28,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,
-                    ...(isFirst?{left:2}:isLast?{right:2}:{left:"50%",transform:"translateX(-50%)"})
-                  }}/>}
-                  <div style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-                    <div style={{width:28,height:28,backgroundColor:active?ACCENT:"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
-                    <span style={{fontFamily:"'SF Pro Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:700,letterSpacing:0.2,color:active?ACCENT:"#868C93"}}>{item.label}</span>
+                  <div ref={el=>{tabContentRefs.current[item.id]=el;}} style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                    <div style={{width:28,height:28,backgroundColor:active?"#fff":"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
+                    <span style={{fontFamily:"'SF Compact Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:700,letterSpacing:0.2,color:active?"#fff":"#868C93"}}>{item.label}</span>
                   </div>
                 </button>
               );
