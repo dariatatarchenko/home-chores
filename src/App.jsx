@@ -1426,16 +1426,18 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
                 <div style={{display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setWeekZoneFilter(null)} style={{
-                  flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                  flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:weekZoneFilter===null?"rgba(129,140,248,0.28)":"transparent",
+                  border:`1.5px solid ${weekZoneFilter===null?ACCENT:"transparent"}`,
                   color:weekZoneFilter===null?"#fff":TEXT2,
                 }}>
                   {tr("all")}
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
                   <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{
-                    flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                    flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",cursor:"pointer",fontSize:14,fontWeight:500,
                     background:weekZoneFilter===z.id?"rgba(129,140,248,0.28)":"transparent",
+                    border:`1.5px solid ${weekZoneFilter===z.id?ACCENT:"transparent"}`,
                     color:weekZoneFilter===z.id?"#fff":TEXT2,
                   }}>
                     {z.emoji} {z.label}
@@ -1902,16 +1904,18 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
                 <div style={{display:"flex",gap:2,padding:2,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
                 <button onClick={()=>setTaskZoneFilter(null)} style={{
-                  flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                  flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",cursor:"pointer",fontSize:14,fontWeight:500,
                   background:taskZoneFilter===null?"rgba(129,140,248,0.28)":"transparent",
+                  border:`1.5px solid ${taskZoneFilter===null?ACCENT:"transparent"}`,
                   color:taskZoneFilter===null?"#fff":TEXT2,
                 }}>
                   {tr("all")}
                 </button>
                 {zones.map(z=>(
                   <button key={z.id} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)} style={{
-                    flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
+                    flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",cursor:"pointer",fontSize:14,fontWeight:500,
                     background:taskZoneFilter===z.id?"rgba(129,140,248,0.28)":"transparent",
+                    border:`1.5px solid ${taskZoneFilter===z.id?ACCENT:"transparent"}`,
                     color:taskZoneFilter===z.id?"#fff":TEXT2,
                   }}>
                     {z.emoji} {z.label}
@@ -2191,12 +2195,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
-        <div style={{position:"absolute",left:16,right:16,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:12}}>
-          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:2,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{position:"absolute",left:8,right:8,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:8}}>
+          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:2,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:12}}>
             {TABS.filter(item=>!item.accent).map(item=>{
               const active=tab===item.id&&!taskFormOpen;
               return (
-                <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{position:"relative",width:82,height:60,border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",flexShrink:0}}>
+                <button key={item.id} onClick={()=>{setTaskFormOpen(false);setTab(item.id);}} style={{position:"relative",flex:"1 1 82px",minWidth:82,height:60,border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                   <div style={{position:"absolute",top:0,bottom:0,left:0,right:0,borderRadius:40,background:active?"rgba(129,140,248,0.28)":"transparent",border:`1.5px solid ${active?ACCENT:"transparent"}`,transition:"background-color 0.2s ease, border-color 0.2s ease"}}/>
                   <div style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                     <div style={{width:28,height:28,backgroundColor:active?"#fff":"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"background-color 0.2s"}}/>
