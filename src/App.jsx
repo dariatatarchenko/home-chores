@@ -431,13 +431,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       if(idx<0) return;
       const barRect=bar.getBoundingClientRect();
       const n=nonAccentTabs.length;
-      const edge=3;
+      const margin=2;
       const slotWidth=barRect.width/n;
-      const slotCenter=idx*slotWidth+slotWidth/2;
-      const width=84;
-      let left=slotCenter-width/2;
-      if(left<edge) left=edge;
-      if(left+width>barRect.width-edge) left=barRect.width-edge-width;
+      const width=slotWidth-margin*2;
+      const left=idx*slotWidth+margin;
       setTabEllipse({left,width});
     }
   },[tab,taskFormOpen]);
@@ -1475,7 +1472,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
-                <div ref={weekFilterBarRef} onScroll={measureWeekFilter} style={{position:"relative",display:"flex",gap:2,padding:3,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+                <div ref={weekFilterBarRef} onScroll={measureWeekFilter} style={{position:"relative",display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:weekFilterEllipse.left,width:weekFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
                 <button ref={el=>{weekFilterRefs.current["__all__"]=el;}} onClick={e=>{setWeekZoneFilter(null);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
                   position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
@@ -1952,7 +1949,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </button>
               </div>
               <div onScroll={measureTaskFilter} style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
-                <div ref={taskFilterBarRef} style={{position:"relative",display:"flex",gap:2,padding:3,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
+                <div ref={taskFilterBarRef} style={{position:"relative",display:"flex",gap:2,padding:2,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
                 <div style={{position:"absolute",top:3,bottom:3,left:taskFilterEllipse.left,width:taskFilterEllipse.width,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.25s ease, width 0.25s ease",pointerEvents:"none"}}/>
                 <button ref={el=>{taskFilterRefs.current["__all__"]=el;}} onClick={e=>{setTaskZoneFilter(null);e.currentTarget.scrollIntoView({behavior:"instant",inline:"center",block:"nearest"});}} style={{
                   position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
