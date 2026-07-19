@@ -2197,10 +2197,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 const n=nonAccentTabs.length;
                 const activeIdx=nonAccentTabs.findIndex(t=>t.id===tab);
                 if(activeIdx<0||taskFormOpen||tabBarWidth<=0) return null;
-                const slotWidth=Math.round(tabBarWidth/n);
-                const left=activeIdx*slotWidth;
+                const slotWidth=tabBarWidth/n;
+                let left=Math.round(activeIdx*slotWidth);
+                let width=Math.round((activeIdx+1)*slotWidth)-left;
                 return (
-                  <div style={{position:"absolute",top:0,bottom:0,left,width:slotWidth,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)"}}/>
+                  <div style={{position:"absolute",top:0,bottom:0,left,width,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)"}}/>
                 );
               })()}
             </div>
@@ -2225,8 +2226,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               );
             })}
           </div>
-          <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{flex:"0 1 64px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:64,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <div style={{width:26,height:26,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+          <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{flex:"0 1 52px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <div style={{width:22,height:22,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
           </button>
         </div>
 
