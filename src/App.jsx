@@ -2189,22 +2189,22 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:8,right:8,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:8}}>
-          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:0}}>
-            {/* Track: inset 2px from the bar on all sides — the ellipse moves within THIS, so no extra margin math is needed anywhere else */}
-            <div ref={tabBarMeasureRef} style={{position:"absolute",top:2,bottom:2,left:2,right:2,pointerEvents:"none"}}>
-              {(()=>{
-                const nonAccentTabs=TABS.filter(t=>!t.accent);
-                const n=nonAccentTabs.length;
-                const activeIdx=nonAccentTabs.findIndex(t=>t.id===tab);
-                if(activeIdx<0||taskFormOpen||tabBarWidth<=0) return null;
-                const slotWidth=tabBarWidth/n;
-                let left=Math.round(activeIdx*slotWidth);
-                let width=Math.round((activeIdx+1)*slotWidth)-left;
-                return (
-                  <div style={{position:"absolute",top:0,bottom:0,left,width,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)"}}/>
-                );
-              })()}
-            </div>
+          <div key={theme} ref={tabBarMeasureRef} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:0}}>
+            {(()=>{
+              const nonAccentTabs=TABS.filter(t=>!t.accent);
+              const n=nonAccentTabs.length;
+              const activeIdx=nonAccentTabs.findIndex(t=>t.id===tab);
+              if(activeIdx<0||taskFormOpen||tabBarWidth<=0) return null;
+              const edge=2; // fixed 2px margin from the bar's own measured edge, explicit, no CSS inset involved
+              const trackWidth=tabBarWidth-edge*2;
+              const slotWidth=trackWidth/n;
+              const boundaries=Array.from({length:n+1},(_,i)=>edge+Math.round(i*slotWidth));
+              const left=boundaries[activeIdx];
+              const width=boundaries[activeIdx+1]-boundaries[activeIdx];
+              return (
+                <div style={{position:"absolute",top:edge,bottom:edge,left,width,boxSizing:"border-box",borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)",pointerEvents:"none"}}/>
+              );
+            })()}
             {TABS.filter(item=>!item.accent).map(item=>{
               const active=tab===item.id&&!taskFormOpen;
               const pressed=pressedTab===item.id;
