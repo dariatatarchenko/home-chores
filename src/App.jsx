@@ -2198,7 +2198,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               const edge=2; // fixed 2px margin from the bar's own measured edge, explicit, no CSS inset involved
               const trackWidth=tabBarWidth-edge*2;
               const slotWidth=trackWidth/n;
-              const boundaries=Array.from({length:n+1},(_,i)=>edge+Math.round(i*slotWidth));
+              const boundaries=Array.from({length:n+1},(_,i)=>{
+                if(i===0) return edge;
+                if(i===n) return tabBarWidth-edge; // force exact right edge, no rounding drift
+                return edge+Math.round(i*slotWidth);
+              });
               const left=boundaries[activeIdx];
               const width=boundaries[activeIdx+1]-boundaries[activeIdx];
               return (
