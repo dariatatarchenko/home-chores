@@ -743,7 +743,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     measure();
     window.addEventListener("resize",measure);
     return ()=>window.removeEventListener("resize",measure);
-  },[]);
+  },[tab,dataLoading]);
   const cardRefs = useRef({});
   const lastToggleRef = useRef({});
   const prevRects = useRef({});
