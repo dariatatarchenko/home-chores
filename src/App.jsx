@@ -2203,10 +2203,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 if(i===n) return tabBarWidth-edge; // force exact right edge, no rounding drift
                 return edge+Math.round(i*slotWidth);
               });
+              const isLast=activeIdx===n-1;
               const left=boundaries[activeIdx];
-              const width=boundaries[activeIdx+1]-boundaries[activeIdx];
+              const width=isLast?undefined:boundaries[activeIdx+1]-boundaries[activeIdx];
               return (
-                <div style={{position:"absolute",top:edge,bottom:edge,left,width,boxSizing:"border-box",borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)",pointerEvents:"none"}}/>
+                <div style={{position:"absolute",top:edge,bottom:edge,left,...(isLast?{right:edge}:{width}),boxSizing:"border-box",borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)",pointerEvents:"none"}}/>
               );
             })()}
             {TABS.filter(item=>!item.accent).map(item=>{
