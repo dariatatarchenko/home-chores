@@ -2189,21 +2189,21 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:8,right:8,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:8}}>
-          <div key={theme} ref={tabBarMeasureRef} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:0}}>
-            {(()=>{
-              const nonAccentTabs=TABS.filter(t=>!t.accent);
-              const n=nonAccentTabs.length;
-              const activeIdx=nonAccentTabs.findIndex(t=>t.id===tab);
-              if(activeIdx<0||taskFormOpen||tabBarWidth<=0) return null;
-              const innerWidth=tabBarWidth-2; // subtract the 2px total border (1px each side)
-              const slotWidth=innerWidth/n;
-              const margin=2;
-              const left=activeIdx*slotWidth+margin;
-              const width=slotWidth-margin*2;
-              return (
-                <div style={{position:"absolute",top:2,bottom:2,left,width,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)",pointerEvents:"none"}}/>
-              );
-            })()}
+          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:0}}>
+            {/* Track: inset 2px from the bar on all sides — the ellipse moves within THIS, so no extra margin math is needed anywhere else */}
+            <div ref={tabBarMeasureRef} style={{position:"absolute",top:2,bottom:2,left:2,right:2,pointerEvents:"none"}}>
+              {(()=>{
+                const nonAccentTabs=TABS.filter(t=>!t.accent);
+                const n=nonAccentTabs.length;
+                const activeIdx=nonAccentTabs.findIndex(t=>t.id===tab);
+                if(activeIdx<0||taskFormOpen||tabBarWidth<=0) return null;
+                const slotWidth=Math.round(tabBarWidth/n);
+                const left=activeIdx*slotWidth;
+                return (
+                  <div style={{position:"absolute",top:0,bottom:0,left,width:slotWidth,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)"}}/>
+                );
+              })()}
+            </div>
             {TABS.filter(item=>!item.accent).map(item=>{
               const active=tab===item.id&&!taskFormOpen;
               const pressed=pressedTab===item.id;
@@ -2226,7 +2226,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             })}
           </div>
           <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{flex:"0 1 64px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:64,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <div style={{width:18,height:18,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+            <div style={{width:26,height:26,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
           </button>
         </div>
 
