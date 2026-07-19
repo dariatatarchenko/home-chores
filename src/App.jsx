@@ -739,7 +739,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const tabBarMeasureRef=useRef(null);
   const [tabBarWidth,setTabBarWidth]=useState(0);
   useLayoutEffect(()=>{
-    const measure=()=>{ if(tabBarMeasureRef.current) setTabBarWidth(tabBarMeasureRef.current.getBoundingClientRect().width); };
+    const measure=()=>{ if(tabBarMeasureRef.current) setTabBarWidth(Math.round(tabBarMeasureRef.current.getBoundingClientRect().width)); };
     measure();
     window.addEventListener("resize",measure);
     return ()=>window.removeEventListener("resize",measure);
