@@ -736,6 +736,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const stripRef = useRef(null);
   const taskListRef = useRef(null);
   const [pressedTab,setPressedTab]=useState(null);
+  const tabBarMeasureRef=useRef(null);
+  const [tabBarWidth,setTabBarWidth]=useState(0);
+  useLayoutEffect(()=>{
+    const measure=()=>{ if(tabBarMeasureRef.current) setTabBarWidth(tabBarMeasureRef.current.getBoundingClientRect().width); };
+    measure();
+    window.addEventListener("resize",measure);
+    return ()=>window.removeEventListener("resize",measure);
+  },[]);
   const cardRefs = useRef({});
   const lastToggleRef = useRef({});
   const prevRects = useRef({});
@@ -2181,13 +2189,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
         <div style={{position:"absolute",left:8,right:8,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:8}}>
-          <div key={theme} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:0}}>
+          <div key={theme} ref={tabBarMeasureRef} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:0}}>
             {(()=>{
               const nonAccentTabs=TABS.filter(t=>!t.accent);
               const n=nonAccentTabs.length;
               const activeIdx=nonAccentTabs.findIndex(t=>t.id===tab);
-              return activeIdx>=0&&!taskFormOpen&&(
-                <div style={{position:"absolute",top:2,bottom:2,left:`calc(${activeIdx}*100%/${n} + 2px)`,width:`calc(100%/${n} - 4px)`,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)",pointerEvents:"none"}}/>
+              if(activeIdx<0||taskFormOpen||tabBarWidth<=0) return null;
+              const innerWidth=tabBarWidth-2; // subtract the 2px total border (1px each side)
+              const slotWidth=innerWidth/n;
+              const margin=2;
+              const left=activeIdx*slotWidth+margin;
+              const width=slotWidth-margin*2;
+              return (
+                <div style={{position:"absolute",top:2,bottom:2,left,width,borderRadius:40,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,transition:"left 0.3s cubic-bezier(0.34,1.2,0.64,1)",pointerEvents:"none"}}/>
               );
             })()}
             {TABS.filter(item=>!item.accent).map(item=>{
