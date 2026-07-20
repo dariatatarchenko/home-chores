@@ -411,6 +411,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [customTimeOpen,setCustomTimeOpen]=useState(false);
   const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
   const [settingsView,setSettingsView]=useState("main");
+  const [newPassword,setNewPassword]=useState("");
+  const [settingPassword,setSettingPassword]=useState(false);
+  const [passwordMsg,setPasswordMsg]=useState("");
   const settingsScrollRef=useRef(null);
   const settingsMainScrollPos=useRef(0);
   const [zoneExpandId,setZoneExpandId]=useState(null);
@@ -1921,7 +1924,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </div>
                 </div>
                 )}
-                <button onClick={saveTask} disabled={savingTask} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:savingTask?"default":"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
+                <button onClick={saveTask} disabled={savingTask} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:savingTask?"default":"pointer",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
                 <button onClick={closeTaskForm} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
               </div>
@@ -2196,6 +2199,28 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </button>
                 </div>
                 <div style={{color:C(0.3),fontSize:11,marginBottom:20}}>{tr("share_code")}</div>
+                <div style={{...CARD,marginBottom:14}}>
+                  <div style={{color:C(0.85),fontSize:14,fontWeight:700,marginBottom:4}}>Set a password</div>
+                  <div style={{color:C(0.4),fontSize:12,marginBottom:10}}>Optional — lets you sign in faster next time, without waiting for an email code.</div>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={e=>{setNewPassword(e.target.value);setPasswordMsg("");}}
+                    style={{...inputSt,marginBottom:8}}
+                  />
+                  {passwordMsg&&<div style={{color:passwordMsg.startsWith("✓")?"#34d399":"#f87171",fontSize:12,marginBottom:8}}>{passwordMsg}</div>}
+                  <button onClick={async()=>{
+                    if(newPassword.length<6){setPasswordMsg("Password must be at least 6 characters");return;}
+                    setSettingPassword(true);
+                    const {error}=await supabase.auth.updateUser({password:newPassword});
+                    setSettingPassword(false);
+                    if(error){ setPasswordMsg(error.message||"Couldn't set password"); return; }
+                    setPasswordMsg("✓ Password set");
+                    setNewPassword("");
+                  }} disabled={settingPassword} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",width:"100%",opacity:settingPassword?0.6:1}}>{settingPassword?"Saving…":"Set password"}</button>
+                </div>
                 <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>{tr("sign_out")}</button>
                 <button onClick={async()=>{
                   if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
@@ -2765,7 +2790,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 </div>
               </div>
-              <button onClick={savePerson} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>{personModal.mode==="new"?"Add":"Save"}</button>
+              <button onClick={savePerson} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
               <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",color:C(0.4),fontSize:13,cursor:"pointer",padding:"4px 0"}}>Cancel</button>
             </div>
           </div>
@@ -2796,7 +2821,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"12px 14px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":"2px solid transparent"}}/>
                 </div>
               </div>
-              <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 18px rgba(99,102,241,0.38)"}}>Add</button>
+              <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Add</button>
             </div>
           </div>
         )}
@@ -2823,7 +2848,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 const SHELL_STYLE={height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'SF Pro Text',-apple-system,system-ui,sans-serif",overflow:"hidden"};
 const CARD_BG="linear-gradient(160deg,#1a1035 0%,#0d1f3c 45%,#0a2a1f 100%)";
 const AUTH_INPUT={background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"13px 16px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:"none"};
-const AUTH_BTN={background:"linear-gradient(135deg,#7163F3,#5E51E0)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(99,102,241,0.4)",width:"100%"};
+const AUTH_BTN={background:"linear-gradient(135deg,#7163F3,#5E51E0)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%"};
 
 function LoginScreen(){
   const [email,setEmail]=useState("");
@@ -2831,6 +2856,8 @@ function LoginScreen(){
   const [code,setCode]=useState("");
   const [error,setError]=useState("");
   const [loading,setLoading]=useState(false);
+  const [usePassword,setUsePassword]=useState(false);
+  const [password,setPassword]=useState("");
 
   const sendCode=async()=>{
     if(!email.trim()||!email.includes("@")){setError("Enter a valid email");return;}
@@ -2851,6 +2878,21 @@ function LoginScreen(){
     setError(""); setLoading(true);
     try{
       const {error}=await withRetry(()=>supabase.auth.verifyOtp({ email:email.trim(), token:code.trim(), type:"email" }));
+      setLoading(false);
+      if(error){setError(`${error.status||""} ${error.message||error.error_description||String(error)}`.trim());return;}
+      // on success, the auth listener in Root picks up the new session automatically
+    }catch(err){
+      setLoading(false);
+      setError("Network error: "+String(err?.message||err)+" — please try again.");
+    }
+  };
+
+  const loginWithPassword=async()=>{
+    if(!email.trim()||!email.includes("@")){setError("Enter a valid email");return;}
+    if(!password){setError("Enter your password");return;}
+    setError(""); setLoading(true);
+    try{
+      const {error}=await withRetry(()=>supabase.auth.signInWithPassword({ email:email.trim(), password }));
       setLoading(false);
       if(error){setError(`${error.status||""} ${error.message||error.error_description||String(error)}`.trim());return;}
       // on success, the auth listener in Root picks up the new session automatically
@@ -2889,6 +2931,37 @@ function LoginScreen(){
             </button>
             <button onClick={()=>{setSent(false);setCode("");setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"12px",width:"100%"}}>Use a different email</button>
           </>
+        ):usePassword?(
+          <>
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e=>{setEmail(e.target.value);setError("");}}
+              style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"2px solid transparent"}}
+            />
+            <input
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              placeholder="Password"
+              value={password}
+              onChange={e=>{setPassword(e.target.value);setError("");}}
+              style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"2px solid transparent"}}
+            />
+            <div style={{minHeight:16,marginBottom:8}}>
+              {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
+            </div>
+            <button onClick={loginWithPassword} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
+              {loading?"Signing in…":"Sign in"}
+            </button>
+            <button onClick={()=>{setUsePassword(false);setPassword("");setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"12px",width:"100%"}}>Use a login code instead</button>
+          </>
         ):(
           <>
             <input
@@ -2909,6 +2982,7 @@ function LoginScreen(){
             <button onClick={sendCode} disabled={loading} style={{...AUTH_BTN,opacity:loading?0.6:1}}>
               {loading?"Sending…":"Send login code"}
             </button>
+            <button onClick={()=>{setUsePassword(true);setError("");}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.35)",fontSize:13,cursor:"pointer",padding:"12px",width:"100%"}}>Have a password? Sign in instead</button>
           </>
         )}
       </div>
