@@ -1348,7 +1348,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onMouseDown={()=>setPressedMyTasks(true)} onMouseUp={()=>setPressedMyTasks(false)} onMouseLeave={()=>setPressedMyTasks(false)}
                     style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedMyTasks?"scale(1.1)":"scale(1)",transition:pressedMyTasks?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedMyTasks?"scale(1.22)":"scale(1)",transition:pressedMyTasks?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                       <Avatar person={me} size={18}/>
                       <span style={{color:myFilter?"#fff":TEXT2,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
                     </div>
@@ -1359,7 +1359,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onTouchStart={()=>setPressedBell(true)} onTouchEnd={()=>setPressedBell(false)} onTouchCancel={()=>setPressedBell(false)}
                     onMouseDown={()=>setPressedBell(true)} onMouseUp={()=>setPressedBell(false)} onMouseLeave={()=>setPressedBell(false)}
                     style={{position:"relative",background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -1395,7 +1395,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
                         <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.1)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.22)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
@@ -2237,7 +2237,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   onMouseLeave={()=>setPressedTab(null)}
                   style={{position:"relative",flex:1,height:60,border:"none",padding:4,boxSizing:"border-box",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                   <div style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-                    <div style={{width:28,height:28,backgroundColor:active?"#fff":"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressed?"scale(1.22)":"scale(1)",transition:pressed?"transform 0.1s ease-out, background-color 0.2s":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background-color 0.2s"}}/>
+                    <div style={{width:28,height:28,backgroundColor:active?"#fff":"#868C93",WebkitMaskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,maskImage:`url(/icons/${item.icon}-${active?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressed?"scale(1.22)":"scale(1)",transition:pressed?"transform 0.1s ease-out, background-color 0.2s":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1), background-color 0.2s"}}/>
                     <span style={{fontFamily:"'SF Compact Text',-apple-system,sans-serif",fontSize:10,lineHeight:"12px",fontWeight:400,letterSpacing:0.2,color:active?"#fff":"#868C93",whiteSpace:"nowrap"}}>{item.label}</span>
                   </div>
                 </button>
@@ -2247,8 +2247,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}}
             onTouchStart={()=>setPressedPlus(true)} onTouchEnd={()=>setPressedPlus(false)} onTouchCancel={()=>setPressedPlus(false)}
             onMouseDown={()=>setPressedPlus(true)} onMouseUp={()=>setPressedPlus(false)} onMouseLeave={()=>setPressedPlus(false)}
-            style={{flex:"0 1 52px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <div style={{width:22,height:22,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedPlus?"scale(1.22)":"scale(1)",transition:pressedPlus?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+            style={{flex:"0 1 52px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transform:pressedPlus?"scale(1.22)":"scale(1)",transition:pressedPlus?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
+            <div style={{width:22,height:22,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
           </button>
         </div>
 
