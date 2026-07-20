@@ -2868,6 +2868,11 @@ function LoginScreen(){
           <>
             <input
               type="email"
+              name="email"
+              autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
               placeholder="you@example.com"
               value={email}
               onChange={e=>{setEmail(e.target.value);setError("");}}
