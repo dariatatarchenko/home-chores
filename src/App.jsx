@@ -756,6 +756,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedBell,setPressedBell]=useState(false);
   const [pressedMyTasks,setPressedMyTasks]=useState(false);
   const [pressedDay,setPressedDay]=useState(null);
+  const [pressedFilter,setPressedFilter]=useState(null);
   const pressStartRef=useRef({});
   const MIN_PRESS_MS=140;
   const pressStart=(key,setter,value)=>{
@@ -1376,7 +1377,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onMouseDown={()=>pressStart("mytasks",setPressedMyTasks,true)} onMouseUp={()=>pressEnd("mytasks",setPressedMyTasks,false)} onMouseLeave={()=>pressEnd("mytasks",setPressedMyTasks,false)}
                     style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedMyTasks?"scale(1.22)":"scale(1)",transition:pressedMyTasks?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedMyTasks?"scale(1.06)":"scale(1)",transition:pressedMyTasks?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                       <Avatar person={me} size={18}/>
                       <span style={{color:myFilter?"#fff":TEXT2,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
                     </div>
@@ -1423,7 +1424,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
                         <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.22)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
@@ -1433,10 +1434,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={active?"#fff":isToday?ACCENT:pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                             </svg>
-                            <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?"#fff":pDay===100?"#34d399":TEXT2}}>{d.getDate()}</span>
+                            <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?"#fff":pDay===100?"#34d399":TEXT2,display:"inline-block",transform:pressedDay===dStr?"scale(1.22)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{d.getDate()}</span>
                           </div>
                         ):(
-                          <div style={{width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:16,fontWeight:700,color:active?"#fff":isToday?"#fff":TEXT2}}>{d.getDate()}</span></div>
+                          <div style={{width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:16,fontWeight:700,color:active?"#fff":isToday?"#fff":TEXT2,display:"inline-block",transform:pressedDay===dStr?"scale(1.22)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{d.getDate()}</span></div>
                         )}
                         {!isPast&&!isToday&&cnt>0&&<div style={{width:4,height:4,borderRadius:"50%",background:active?S(0.7):S(0.38)}}/>}
                         {(isPast||isToday||(!cnt&&!isToday))&&!((isPast||isToday)&&cnt>0)&&<div style={{height:4}}/>}
@@ -1476,14 +1477,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
                 <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
-                <button onClick={()=>setWeekZoneFilter(null)} style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
+                <button onClick={()=>setWeekZoneFilter(null)}
+                  onTouchStart={()=>pressStart("wf-all",setPressedFilter,"wf-all")} onTouchEnd={()=>pressEnd("wf-all",setPressedFilter,null)} onTouchCancel={()=>pressEnd("wf-all",setPressedFilter,null)}
+                  onMouseDown={()=>pressStart("wf-all",setPressedFilter,"wf-all")} onMouseUp={()=>pressEnd("wf-all",setPressedFilter,null)} onMouseLeave={()=>pressEnd("wf-all",setPressedFilter,null)}
+                  style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                   <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:weekZoneFilter===null?1:0,transition:"opacity 0.2s ease"}}/>
-                  <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===null?"#fff":TEXT2,whiteSpace:"nowrap"}}>{tr("all")}</span>
+                  <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===null?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-block",transform:pressedFilter==="wf-all"?"scale(1.1)":"scale(1)",transition:pressedFilter==="wf-all"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{tr("all")}</span>
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
-                  <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)} style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
+                  <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)}
+                    onTouchStart={()=>pressStart("wf"+z.id,setPressedFilter,"wf"+z.id)} onTouchEnd={()=>pressEnd("wf"+z.id,setPressedFilter,null)} onTouchCancel={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
+                    onMouseDown={()=>pressStart("wf"+z.id,setPressedFilter,"wf"+z.id)} onMouseUp={()=>pressEnd("wf"+z.id,setPressedFilter,null)} onMouseLeave={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
+                    style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:weekZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
-                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap"}}>{z.emoji} {z.label}</span>
+                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-block",transform:pressedFilter==="wf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="wf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{z.emoji} {z.label}</span>
                   </button>
                 ))}
               </div>
@@ -1946,14 +1953,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
                 <div style={{display:"flex",gap:0,padding:2,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
-                <button onClick={()=>setTaskZoneFilter(null)} style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
+                <button onClick={()=>setTaskZoneFilter(null)}
+                  onTouchStart={()=>pressStart("tf-all",setPressedFilter,"tf-all")} onTouchEnd={()=>pressEnd("tf-all",setPressedFilter,null)} onTouchCancel={()=>pressEnd("tf-all",setPressedFilter,null)}
+                  onMouseDown={()=>pressStart("tf-all",setPressedFilter,"tf-all")} onMouseUp={()=>pressEnd("tf-all",setPressedFilter,null)} onMouseLeave={()=>pressEnd("tf-all",setPressedFilter,null)}
+                  style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                   <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:taskZoneFilter===null?1:0,transition:"opacity 0.2s ease"}}/>
-                  <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===null?"#fff":TEXT2,whiteSpace:"nowrap"}}>{tr("all")}</span>
+                  <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===null?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-block",transform:pressedFilter==="tf-all"?"scale(1.1)":"scale(1)",transition:pressedFilter==="tf-all"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{tr("all")}</span>
                 </button>
                 {zones.map(z=>(
-                  <button key={z.id} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)} style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
+                  <button key={z.id} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)}
+                    onTouchStart={()=>pressStart("tf"+z.id,setPressedFilter,"tf"+z.id)} onTouchEnd={()=>pressEnd("tf"+z.id,setPressedFilter,null)} onTouchCancel={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
+                    onMouseDown={()=>pressStart("tf"+z.id,setPressedFilter,"tf"+z.id)} onMouseUp={()=>pressEnd("tf"+z.id,setPressedFilter,null)} onMouseLeave={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
+                    style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:taskZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
-                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap"}}>{z.emoji} {z.label}</span>
+                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-block",transform:pressedFilter==="tf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="tf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{z.emoji} {z.label}</span>
                   </button>
                 ))}
                 </div>
@@ -2061,7 +2074,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               )}
                               <div style={{display:"flex",gap:8}}>
                                 {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormOpen(true);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
@@ -2294,7 +2307,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               );
             })}
           </div>
-          <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}}
+          <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormVisible(false);setTaskFormOpen(true);}}
             onTouchStart={()=>pressStart("plus",setPressedPlus,true)} onTouchEnd={()=>pressEnd("plus",setPressedPlus,false)} onTouchCancel={()=>pressEnd("plus",setPressedPlus,false)}
             onMouseDown={()=>pressStart("plus",setPressedPlus,true)} onMouseUp={()=>pressEnd("plus",setPressedPlus,false)} onMouseLeave={()=>pressEnd("plus",setPressedPlus,false)}
             style={{flex:"0 1 52px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transform:pressedPlus?"scale(1.22)":"scale(1)",transition:pressedPlus?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
