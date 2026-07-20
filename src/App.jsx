@@ -757,16 +757,21 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedMyTasks,setPressedMyTasks]=useState(false);
   const [pressedDay,setPressedDay]=useState(null);
   const [pressedFilter,setPressedFilter]=useState(null);
+  const [pressedCalArrow,setPressedCalArrow]=useState(null);
   const pressStartRef=useRef({});
   const MIN_PRESS_MS=140;
   const pressStart=(key,setter,value)=>{
-    pressStartRef.current[key]=Date.now();
+    const gen=(pressStartRef.current[key]?.gen||0)+1;
+    pressStartRef.current[key]={time:Date.now(),gen};
     setter(value);
   };
   const pressEnd=(key,setter,offValue)=>{
-    const elapsed=Date.now()-(pressStartRef.current[key]||0);
-    if(elapsed>=MIN_PRESS_MS){ setter(offValue); }
-    else { setTimeout(()=>setter(offValue),MIN_PRESS_MS-elapsed); }
+    const entry=pressStartRef.current[key]||{time:0,gen:0};
+    const myGen=entry.gen;
+    const elapsed=Date.now()-entry.time;
+    const release=()=>{ if(pressStartRef.current[key]?.gen===myGen) setter(offValue); };
+    if(elapsed>=MIN_PRESS_MS){ release(); }
+    else { setTimeout(release,MIN_PRESS_MS-elapsed); }
   };
   const tabBarMeasureRef=useRef(null);
   const [tabBarWidth,setTabBarWidth]=useState(0);
@@ -1358,7 +1363,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         )}
 
         {/* Body */}
-        <div style={{flex:1,overflow:"hidden",position:"relative",zIndex:1,display:"flex",flexDirection:"column"}}>
+        <div style={{flex:1,overflow:"hidden",position:"relative",display:"flex",flexDirection:"column"}}>
 
           {/* ══ WEEK ══════════════════════════════════════════════ */}
           {tab==="week"&&(
@@ -1424,7 +1429,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
                         <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.1)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
@@ -1434,10 +1439,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <circle cx="16" cy="16" r={R} fill="none" stroke={C(0.08)} strokeWidth="2.5"/>
                               <circle cx="16" cy="16" r={R} fill="none" stroke={active?"#fff":isToday?ACCENT:pDay===100?"#34d399":"#f87171"} strokeWidth="2.5" strokeDasharray={`${DA} ${CIRC}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.3s ease"}}/>
                             </svg>
-                            <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?"#fff":pDay===100?"#34d399":TEXT2,display:"inline-block",transform:pressedDay===dStr?"scale(1.22)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{d.getDate()}</span>
+                            <span style={{fontSize:14,fontWeight:700,position:"relative",zIndex:1,color:active?"#fff":isToday?"#fff":pDay===100?"#34d399":TEXT2}}>{d.getDate()}</span>
                           </div>
                         ):(
-                          <div style={{width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:16,fontWeight:700,color:active?"#fff":isToday?"#fff":TEXT2,display:"inline-block",transform:pressedDay===dStr?"scale(1.22)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{d.getDate()}</span></div>
+                          <div style={{width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:16,fontWeight:700,color:active?"#fff":isToday?"#fff":TEXT2}}>{d.getDate()}</span></div>
                         )}
                         {!isPast&&!isToday&&cnt>0&&<div style={{width:4,height:4,borderRadius:"50%",background:active?S(0.7):S(0.38)}}/>}
                         {(isPast||isToday||(!cnt&&!isToday))&&!((isPast||isToday)&&cnt>0)&&<div style={{height:4}}/>}
@@ -1700,9 +1705,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{flexShrink:0,padding:"16px 16px 8px"}}>
                 <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-                  <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                  <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}}
+                    onTouchStart={()=>pressStart("cal-prev",setPressedCalArrow,"prev")} onTouchEnd={()=>pressEnd("cal-prev",setPressedCalArrow,null)} onTouchCancel={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
+                    onMouseDown={()=>pressStart("cal-prev",setPressedCalArrow,"prev")} onMouseUp={()=>pressEnd("cal-prev",setPressedCalArrow,null)} onMouseLeave={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
+                    style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedCalArrow==="prev"?"scale(1.2)":"scale(1)",transition:pressedCalArrow==="prev"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/></button>
                   <div style={{color:TEXT1,fontSize:16,fontWeight:700}}>{calScrolled?dayLabel(selDay):mName}</div>
-                  <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                  <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}}
+                    onTouchStart={()=>pressStart("cal-next",setPressedCalArrow,"next")} onTouchEnd={()=>pressEnd("cal-next",setPressedCalArrow,null)} onTouchCancel={()=>pressEnd("cal-next",setPressedCalArrow,null)}
+                    onMouseDown={()=>pressStart("cal-next",setPressedCalArrow,"next")} onMouseUp={()=>pressEnd("cal-next",setPressedCalArrow,null)} onMouseLeave={()=>pressEnd("cal-next",setPressedCalArrow,null)}
+                    style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedCalArrow==="next"?"scale(1.2)":"scale(1)",transition:pressedCalArrow==="next"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/></button>
                 </div>
                 </div>
                 <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}} onScroll={e=>{
