@@ -717,6 +717,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [justLiked,setJustLiked]= useState(null);
   const [activityOrder,setActivityOrder]= useState([]); // array of "id|date" keys, most recent action first (either direction)
   const [showStats,setShowStats]= useState(false);
+  const [statsVisible,setStatsVisible]=useState(false);
+  useEffect(()=>{
+    if(showStats){
+      setStatsVisible(false);
+      const raf=requestAnimationFrame(()=>requestAnimationFrame(()=>setStatsVisible(true)));
+      return ()=>cancelAnimationFrame(raf);
+    } else {
+      setStatsVisible(false);
+    }
+  },[showStats]);
+  const closeStats=()=>{
+    setStatsVisible(false);
+    setTimeout(()=>setShowStats(false),320);
+  };
   const [celebration,setCelebration]= useState(null);
   const [showNotifs,setShowNotifs]= useState(false);
   const [notifs,setNotifs]= useState([]);
@@ -758,6 +772,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedDay,setPressedDay]=useState(null);
   const [pressedFilter,setPressedFilter]=useState(null);
   const [pressedCalArrow,setPressedCalArrow]=useState(null);
+  const [pressedAddZone,setPressedAddZone]=useState(false);
+  const [pressedStats,setPressedStats]=useState(false);
   const pressStartRef=useRef({});
   const MIN_PRESS_MS=140;
   const pressStart=(key,setter,value)=>{
@@ -1378,7 +1394,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   {people.length>1&&(
                   <button onClick={()=>setMyFilter(f=>!f)}
-                    onTouchStart={()=>pressStart("mytasks",setPressedMyTasks,true)} onTouchEnd={()=>pressEnd("mytasks",setPressedMyTasks,false)} onTouchCancel={()=>pressEnd("mytasks",setPressedMyTasks,false)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("mytasks",setPressedMyTasks,true);}} onTouchEnd={()=>pressEnd("mytasks",setPressedMyTasks,false)} onTouchCancel={()=>pressEnd("mytasks",setPressedMyTasks,false)}
                     onMouseDown={()=>pressStart("mytasks",setPressedMyTasks,true)} onMouseUp={()=>pressEnd("mytasks",setPressedMyTasks,false)} onMouseLeave={()=>pressEnd("mytasks",setPressedMyTasks,false)}
                     style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
@@ -1390,7 +1406,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   )}
                   {people.length>1&&(
                   <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}}
-                    onTouchStart={()=>pressStart("bell",setPressedBell,true)} onTouchEnd={()=>pressEnd("bell",setPressedBell,false)} onTouchCancel={()=>pressEnd("bell",setPressedBell,false)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("bell",setPressedBell,true);}} onTouchEnd={()=>pressEnd("bell",setPressedBell,false)} onTouchCancel={()=>pressEnd("bell",setPressedBell,false)}
                     onMouseDown={()=>pressStart("bell",setPressedBell,true)} onMouseUp={()=>pressEnd("bell",setPressedBell,false)} onMouseLeave={()=>pressEnd("bell",setPressedBell,false)}
                     style={{position:"relative",background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                     <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
@@ -1418,7 +1434,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         onDragOver={e=>{e.preventDefault();setDragOver(dStr);}}
                         onDragLeave={()=>setDragOver(null)}
                         onDrop={()=>{if(dragInfo)moveTask(dragInfo.id,dragInfo.from,dStr);setDragInfo(null);setDragOver(null);}}
-                        onTouchStart={()=>pressStart("day"+dStr,setPressedDay,dStr)} onTouchEnd={()=>pressEnd("day"+dStr,setPressedDay,null)} onTouchCancel={()=>pressEnd("day"+dStr,setPressedDay,null)}
+                        onTouchStart={e=>{e.preventDefault();pressStart("day"+dStr,setPressedDay,dStr);}} onTouchEnd={()=>pressEnd("day"+dStr,setPressedDay,null)} onTouchCancel={()=>pressEnd("day"+dStr,setPressedDay,null)}
                         onMouseDown={()=>pressStart("day"+dStr,setPressedDay,dStr)} onMouseUp={()=>pressEnd("day"+dStr,setPressedDay,null)} onMouseLeave={()=>pressEnd("day"+dStr,setPressedDay,null)}
                         data-date={dStr}
                         style={{
@@ -1483,7 +1499,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
                 <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setWeekZoneFilter(null)}
-                  onTouchStart={()=>pressStart("wf-all",setPressedFilter,"wf-all")} onTouchEnd={()=>pressEnd("wf-all",setPressedFilter,null)} onTouchCancel={()=>pressEnd("wf-all",setPressedFilter,null)}
+                  onTouchStart={e=>{e.preventDefault();pressStart("wf-all",setPressedFilter,"wf-all");}} onTouchEnd={()=>pressEnd("wf-all",setPressedFilter,null)} onTouchCancel={()=>pressEnd("wf-all",setPressedFilter,null)}
                   onMouseDown={()=>pressStart("wf-all",setPressedFilter,"wf-all")} onMouseUp={()=>pressEnd("wf-all",setPressedFilter,null)} onMouseLeave={()=>pressEnd("wf-all",setPressedFilter,null)}
                   style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                   <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:weekZoneFilter===null?1:0,transition:"opacity 0.2s ease"}}/>
@@ -1491,7 +1507,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
                   <button key={z.id} onClick={()=>setWeekZoneFilter(weekZoneFilter===z.id?null:z.id)}
-                    onTouchStart={()=>pressStart("wf"+z.id,setPressedFilter,"wf"+z.id)} onTouchEnd={()=>pressEnd("wf"+z.id,setPressedFilter,null)} onTouchCancel={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("wf"+z.id,setPressedFilter,"wf"+z.id);}} onTouchEnd={()=>pressEnd("wf"+z.id,setPressedFilter,null)} onTouchCancel={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
                     onMouseDown={()=>pressStart("wf"+z.id,setPressedFilter,"wf"+z.id)} onMouseUp={()=>pressEnd("wf"+z.id,setPressedFilter,null)} onMouseLeave={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
                     style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:weekZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
@@ -1706,12 +1722,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <button onClick={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}}
-                    onTouchStart={()=>pressStart("cal-prev",setPressedCalArrow,"prev")} onTouchEnd={()=>pressEnd("cal-prev",setPressedCalArrow,null)} onTouchCancel={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("cal-prev",setPressedCalArrow,"prev");}} onTouchEnd={()=>pressEnd("cal-prev",setPressedCalArrow,null)} onTouchCancel={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
                     onMouseDown={()=>pressStart("cal-prev",setPressedCalArrow,"prev")} onMouseUp={()=>pressEnd("cal-prev",setPressedCalArrow,null)} onMouseLeave={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
                     style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedCalArrow==="prev"?"scale(1.2)":"scale(1)",transition:pressedCalArrow==="prev"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/></button>
                   <div style={{color:TEXT1,fontSize:16,fontWeight:700}}>{calScrolled?dayLabel(selDay):mName}</div>
                   <button onClick={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());}}
-                    onTouchStart={()=>pressStart("cal-next",setPressedCalArrow,"next")} onTouchEnd={()=>pressEnd("cal-next",setPressedCalArrow,null)} onTouchCancel={()=>pressEnd("cal-next",setPressedCalArrow,null)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("cal-next",setPressedCalArrow,"next");}} onTouchEnd={()=>pressEnd("cal-next",setPressedCalArrow,null)} onTouchCancel={()=>pressEnd("cal-next",setPressedCalArrow,null)}
                     onMouseDown={()=>pressStart("cal-next",setPressedCalArrow,"next")} onMouseUp={()=>pressEnd("cal-next",setPressedCalArrow,null)} onMouseLeave={()=>pressEnd("cal-next",setPressedCalArrow,null)}
                     style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedCalArrow==="next"?"scale(1.2)":"scale(1)",transition:pressedCalArrow==="next"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/></button>
                 </div>
@@ -1798,7 +1814,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ ADD TASK ══════════════════════════════════════════ */}
           {taskFormOpen&&(
           <div onClick={closeTaskForm} style={{position:"absolute",inset:0,zIndex:400,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)"}}>
-            <div onClick={e=>e.stopPropagation()} style={{width:"100%",height:"92%",background:THEME_COLORS[theme].bg,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden",transform:`translateY(${taskFormVisible?sheetDragY:1000}px)`,transition:sheetDragY===0?"transform 0.32s cubic-bezier(0.32,0.72,0,1)":"none"}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:"100%",height:"96%",background:THEME_COLORS[theme].bg,borderRadius:"24px 24px 0 0",boxShadow:"0 -20px 60px rgba(0,0,0,0.5)",display:"flex",flexDirection:"column",overflow:"hidden",transform:`translateY(${taskFormVisible?sheetDragY:1000}px)`,transition:sheetDragY===0?"transform 0.32s cubic-bezier(0.32,0.72,0,1)":"none"}}>
             <div onTouchStart={e=>{ sheetDragRef.current={startY:e.touches[0].clientY,dy:0}; }} onTouchMove={e=>{ if(!sheetDragRef.current) return; const dy=e.touches[0].clientY-sheetDragRef.current.startY; if(dy>0){ sheetDragRef.current.dy=dy; setSheetDragY(dy); } }} onTouchEnd={()=>{ if(sheetDragRef.current&&sheetDragRef.current.dy>90){ closeTaskForm(); } setSheetDragY(0); sheetDragRef.current=null; }} style={{flexShrink:0,paddingTop:6,paddingBottom:4}}>
               <div style={{width:36,height:4,background:S(0.2),borderRadius:2,margin:"4px auto 0"}}/>
               <div style={{padding:"10px 16px 0",color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{editTaskId?tr("edit_task"):tr("new_task")}</div>
@@ -1957,15 +1973,30 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:"16px 16px 16px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                 <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_alltasks")}</div>
-                <button onClick={()=>setShowStats(true)} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:"rgba(251,191,36,0.15)",border:"none",borderRadius:20,padding:"0 16px",color:"#fbbf24",fontSize:14,fontWeight:500,cursor:"pointer"}}>
-                  <div style={{position:"absolute",inset:0,borderRadius:20,border:"1.5px solid rgba(251,191,36,0.4)",pointerEvents:"none"}}/>
-                  <div style={{width:15,height:15,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-outline.svg)",maskImage:"url(/icons/trophy-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats
-                </button>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");}}
+                    onTouchStart={e=>{e.preventDefault();pressStart("addzone",setPressedAddZone,true);}} onTouchEnd={()=>pressEnd("addzone",setPressedAddZone,false)} onTouchCancel={()=>pressEnd("addzone",setPressedAddZone,false)}
+                    onMouseDown={()=>pressStart("addzone",setPressedAddZone,true)} onMouseUp={()=>pressEnd("addzone",setPressedAddZone,false)} onMouseLeave={()=>pressEnd("addzone",setPressedAddZone,false)}
+                    style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
+                    <div style={{position:"absolute",inset:0,borderRadius:20,border:`1px solid ${S(0.1)}`,pointerEvents:"none"}}/>
+                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedAddZone?"scale(1.06)":"scale(1)",transition:pressedAddZone?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                      <div style={{width:18,height:18,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                      <span style={{color:ACCENT,fontSize:14,fontWeight:500}}>Zone</span>
+                    </div>
+                  </button>
+                  <button onClick={()=>setShowStats(true)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("stats",setPressedStats,true);}} onTouchEnd={()=>pressEnd("stats",setPressedStats,false)} onTouchCancel={()=>pressEnd("stats",setPressedStats,false)}
+                    onMouseDown={()=>pressStart("stats",setPressedStats,true)} onMouseUp={()=>pressEnd("stats",setPressedStats,false)} onMouseLeave={()=>pressEnd("stats",setPressedStats,false)}
+                    style={{position:"relative",background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                    <div style={{width:24,height:24,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-fill.svg)",maskImage:"url(/icons/trophy-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedStats?"scale(1.22)":"scale(1)",transition:pressedStats?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+                  </button>
+                </div>
               </div>
-              <div style={{display:"flex",gap:8,alignItems:"center",overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",paddingBottom:2}}>
-                <div style={{display:"flex",gap:0,padding:2,flexShrink:0,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
+              </div>
+              <div style={{flexShrink:0,padding:"0 16px 24px"}}>
+              <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button onClick={()=>setTaskZoneFilter(null)}
-                  onTouchStart={()=>pressStart("tf-all",setPressedFilter,"tf-all")} onTouchEnd={()=>pressEnd("tf-all",setPressedFilter,null)} onTouchCancel={()=>pressEnd("tf-all",setPressedFilter,null)}
+                  onTouchStart={e=>{e.preventDefault();pressStart("tf-all",setPressedFilter,"tf-all");}} onTouchEnd={()=>pressEnd("tf-all",setPressedFilter,null)} onTouchCancel={()=>pressEnd("tf-all",setPressedFilter,null)}
                   onMouseDown={()=>pressStart("tf-all",setPressedFilter,"tf-all")} onMouseUp={()=>pressEnd("tf-all",setPressedFilter,null)} onMouseLeave={()=>pressEnd("tf-all",setPressedFilter,null)}
                   style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                   <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:taskZoneFilter===null?1:0,transition:"opacity 0.2s ease"}}/>
@@ -1973,7 +2004,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </button>
                 {zones.map(z=>(
                   <button key={z.id} onClick={()=>setTaskZoneFilter(taskZoneFilter===z.id?null:z.id)}
-                    onTouchStart={()=>pressStart("tf"+z.id,setPressedFilter,"tf"+z.id)} onTouchEnd={()=>pressEnd("tf"+z.id,setPressedFilter,null)} onTouchCancel={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("tf"+z.id,setPressedFilter,"tf"+z.id);}} onTouchEnd={()=>pressEnd("tf"+z.id,setPressedFilter,null)} onTouchCancel={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
                     onMouseDown={()=>pressStart("tf"+z.id,setPressedFilter,"tf"+z.id)} onMouseUp={()=>pressEnd("tf"+z.id,setPressedFilter,null)} onMouseLeave={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
                     style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:taskZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
@@ -1981,14 +2012,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </button>
                 ))}
                 </div>
-                <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");}} style={{
-                  position:"relative",flexShrink:0,height:36,boxSizing:"border-box",display:"flex",alignItems:"center",borderRadius:18,padding:"0 16px",border:"none",cursor:"pointer",fontSize:14,fontWeight:500,
-                  background:"transparent",color:ACCENT,
-                }}>
-                  <div style={{position:"absolute",inset:0,borderRadius:18,border:`1px solid ${S(0.1)}`,pointerEvents:"none"}}/>
-                  ＋ Zone
-                </button>
-              </div>
               </div>
               <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}}>
               {groupedZones.length===0?(
@@ -2010,13 +2033,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           placeholder="Zone name"
                           maxLength={38}
                           autoFocus
-                          style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:10}}
+                          style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:12}}
                         />
                       </div>
                       <div style={{display:"flex",gap:8}}>
-                        <button onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:10,padding:"10px",color:C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancel</button>
-                        <button onClick={()=>{deleteZone(zone.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:10,padding:"10px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
-                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:10,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
+                        <button onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"10px",color:C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancel</button>
+                        <button onClick={()=>{deleteZone(zone.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"10px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
                       </div>
                     </div>
                   ):(
@@ -2303,7 +2326,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               return (
                 <button key={item.id}
                   onClick={()=>{setTaskFormOpen(false);setTab(item.id);}}
-                  onTouchStart={()=>pressStart("tab",setPressedTab,item.id)}
+                  onTouchStart={e=>{e.preventDefault();pressStart("tab",setPressedTab,item.id);}}
                   onTouchEnd={()=>pressEnd("tab",setPressedTab,null)}
                   onTouchCancel={()=>pressEnd("tab",setPressedTab,null)}
                   onMouseDown={()=>pressStart("tab",setPressedTab,item.id)}
@@ -2319,7 +2342,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             })}
           </div>
           <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormVisible(false);setTaskFormOpen(true);}}
-            onTouchStart={()=>pressStart("plus",setPressedPlus,true)} onTouchEnd={()=>pressEnd("plus",setPressedPlus,false)} onTouchCancel={()=>pressEnd("plus",setPressedPlus,false)}
+            onTouchStart={e=>{e.preventDefault();pressStart("plus",setPressedPlus,true);}} onTouchEnd={()=>pressEnd("plus",setPressedPlus,false)} onTouchCancel={()=>pressEnd("plus",setPressedPlus,false)}
             onMouseDown={()=>pressStart("plus",setPressedPlus,true)} onMouseUp={()=>pressEnd("plus",setPressedPlus,false)} onMouseLeave={()=>pressEnd("plus",setPressedPlus,false)}
             style={{flex:"0 1 52px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transform:pressedPlus?"scale(1.22)":"scale(1)",transition:pressedPlus?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
             <div style={{width:22,height:22,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
@@ -2329,8 +2352,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {/* ── STATS MODAL ───────────────────────────────────────── */}
 
         {showStats&&(
-          <div style={{position:"absolute",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={()=>setShowStats(false)}>
-            <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:"28px 28px 0 0",height:"88%",display:"flex",flexDirection:"column",boxShadow:"0 -20px 60px rgba(0,0,0,0.6)",border:`1px solid rgba(255,255,255,0.1)`}}>
+          <div style={{position:"absolute",inset:0,zIndex:300,display:"flex",alignItems:"flex-end",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={closeStats}>
+            <div onClick={e=>e.stopPropagation()} style={{width:"100%",background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:"28px 28px 0 0",height:"94%",display:"flex",flexDirection:"column",boxShadow:"0 -20px 60px rgba(0,0,0,0.6)",border:`1px solid rgba(255,255,255,0.1)`,transform:`translateY(${statsVisible?0:1000}px)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
               {/* Sticky header */}
               <div style={{flexShrink:0,padding:"16px 16px 12px",borderBottom:`1px solid rgba(255,255,255,0.07)`}}>
                 <div style={{width:36,height:4,background:"rgba(255,255,255,0.38)",borderRadius:2,margin:"0 auto 14px"}}/>
