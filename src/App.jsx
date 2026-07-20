@@ -736,6 +736,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const stripRef = useRef(null);
   const taskListRef = useRef(null);
   const [pressedTab,setPressedTab]=useState(null);
+  const [pressedPlus,setPressedPlus]=useState(false);
+  const [pressedBell,setPressedBell]=useState(false);
+  const [pressedMyTasks,setPressedMyTasks]=useState(false);
+  const [pressedDay,setPressedDay]=useState(null);
   const tabBarMeasureRef=useRef(null);
   const [tabBarWidth,setTabBarWidth]=useState(0);
   useLayoutEffect(()=>{
@@ -1307,7 +1311,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {showNotifs&&(
           <>
             <div style={{position:"absolute",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
-            <div style={{position:"absolute",top:76,right:12,zIndex:50,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:12,padding:12,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.3)",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
+            <div style={{position:"absolute",top:96,right:12,zIndex:50,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:12,padding:12,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.3)",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
               <div style={{color:TEXT1,fontSize:16,fontWeight:700,marginBottom:12}}>Notifications</div>
               {notifs.length===0&&<div style={{color:TEXT3,fontSize:13}}>All caught up!</div>}
               {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
@@ -1339,15 +1343,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   {people.length>1&&(
-                  <button onClick={()=>setMyFilter(f=>!f)} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
+                  <button onClick={()=>setMyFilter(f=>!f)}
+                    onTouchStart={()=>setPressedMyTasks(true)} onTouchEnd={()=>setPressedMyTasks(false)} onTouchCancel={()=>setPressedMyTasks(false)}
+                    onMouseDown={()=>setPressedMyTasks(true)} onMouseUp={()=>setPressedMyTasks(false)} onMouseLeave={()=>setPressedMyTasks(false)}
+                    style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                    <Avatar person={me} size={18}/>
-                    <span style={{color:myFilter?"#fff":TEXT2,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedMyTasks?"scale(1.1)":"scale(1)",transition:pressedMyTasks?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                      <Avatar person={me} size={18}/>
+                      <span style={{color:myFilter?"#fff":TEXT2,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
+                    </div>
                   </button>
                   )}
                   {people.length>1&&(
-                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}} style={{position:"relative",background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                  <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}}
+                    onTouchStart={()=>setPressedBell(true)} onTouchEnd={()=>setPressedBell(false)} onTouchCancel={()=>setPressedBell(false)}
+                    onMouseDown={()=>setPressedBell(true)} onMouseUp={()=>setPressedBell(false)} onMouseLeave={()=>setPressedBell(false)}
+                    style={{position:"relative",background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -1372,6 +1384,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         onDragOver={e=>{e.preventDefault();setDragOver(dStr);}}
                         onDragLeave={()=>setDragOver(null)}
                         onDrop={()=>{if(dragInfo)moveTask(dragInfo.id,dragInfo.from,dStr);setDragInfo(null);setDragOver(null);}}
+                        onTouchStart={()=>setPressedDay(dStr)} onTouchEnd={()=>setPressedDay(null)} onTouchCancel={()=>setPressedDay(null)}
+                        onMouseDown={()=>setPressedDay(dStr)} onMouseUp={()=>setPressedDay(null)} onMouseLeave={()=>setPressedDay(null)}
                         data-date={dStr}
                         style={{
                           position:"relative",flex:"0 0 46px",width:46,height:78,borderRadius:12,
@@ -1381,7 +1395,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
                         <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                        <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.1)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
                         </span>
@@ -2230,8 +2244,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               );
             })}
           </div>
-          <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}} style={{flex:"0 1 52px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <div style={{width:22,height:22,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+          <button onClick={()=>{setTaskNameError(false);setAssigneeError(false);setEditTaskId(null);setForm(blankForm);setCustomTimeOpen(false);setTaskFormOpen(true);}}
+            onTouchStart={()=>setPressedPlus(true)} onTouchEnd={()=>setPressedPlus(false)} onTouchCancel={()=>setPressedPlus(false)}
+            onMouseDown={()=>setPressedPlus(true)} onMouseUp={()=>setPressedPlus(false)} onMouseLeave={()=>setPressedPlus(false)}
+            style={{flex:"0 1 52px",minWidth:36,aspectRatio:"1",height:"auto",maxHeight:52,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#5EF9B0,#6388FF,#7B61FF)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <div style={{width:22,height:22,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedPlus?"scale(1.22)":"scale(1)",transition:pressedPlus?"transform 0.1s ease-out":"transform 0.2s cubic-bezier(0.34,1.56,0.64,1)"}}/>
           </button>
         </div>
 
