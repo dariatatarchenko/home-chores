@@ -1440,14 +1440,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         data-date={dStr}
                         style={{
                           position:"relative",flex:"0 0 46px",width:46,height:78,borderRadius:12,
-                          background:active?"rgba(129,140,248,0.28)":isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
+                          background:isDark?"rgba(255,255,255,0.05)":S(0.06),
                           boxShadow:"none",
                           cursor:"pointer",
                           touchAction:"manipulation",
-                          transition:"background-color 0.2s ease",
                         }}>
-                        {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
-                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active||isToday?ACCENT:S(0.1)}`,pointerEvents:"none",transition:"border-width 0.2s ease, border-color 0.2s ease"}}/>
+                        {/* Selection indicator: fixed shape, just fades in/out via opacity — never snaps a border-width or swaps a background color directly */}
+                        <div style={{position:"absolute",inset:0,borderRadius:12,background:"rgba(129,140,248,0.28)",border:`2px solid ${ACCENT}`,opacity:active?1:0,transition:"opacity 0.2s ease",pointerEvents:"none"}}/>
+                        {isToday&&<div style={{position:"absolute",inset:0,borderRadius:12,border:`2px solid ${ACCENT}`,opacity:active?0:1,transition:"opacity 0.2s ease",pointerEvents:"none"}}/>}
+                        {!isToday&&<div style={{position:"absolute",inset:0,borderRadius:12,border:`1px solid ${S(0.1)}`,opacity:active?0:1,transition:"opacity 0.2s ease",pointerEvents:"none"}}/>}
                         <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.1)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
