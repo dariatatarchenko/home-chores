@@ -1431,12 +1431,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     const pDay=cnt===0?0:Math.round(doneCnt/cnt*100);
                     const R=13,CIRC=2*Math.PI*R,DA=CIRC*(pDay/100);
                     return (
-                      <div key={dStr} onClick={()=>setSelDay(dStr)}
+                      <div key={dStr}
                         onDragOver={e=>{e.preventDefault();setDragOver(dStr);}}
                         onDragLeave={()=>setDragOver(null)}
                         onDrop={()=>{if(dragInfo)moveTask(dragInfo.id,dragInfo.from,dStr);setDragInfo(null);setDragOver(null);}}
-                        onTouchStart={e=>{e.preventDefault();pressStart("day"+dStr,setPressedDay,dStr);}} onTouchEnd={()=>pressEnd("day"+dStr,setPressedDay,null)} onTouchCancel={()=>pressEnd("day"+dStr,setPressedDay,null)}
-                        onMouseDown={()=>pressStart("day"+dStr,setPressedDay,dStr)} onMouseUp={()=>pressEnd("day"+dStr,setPressedDay,null)} onMouseLeave={()=>pressEnd("day"+dStr,setPressedDay,null)}
+                        onTouchStart={e=>{e.preventDefault();pressStart("day"+dStr,setPressedDay,dStr);}}
+                        onTouchEnd={e=>{e.preventDefault();setSelDay(dStr);pressEnd("day"+dStr,setPressedDay,null);}}
+                        onTouchCancel={()=>pressEnd("day"+dStr,setPressedDay,null)}
+                        onMouseDown={()=>pressStart("day"+dStr,setPressedDay,dStr)}
+                        onMouseUp={()=>{setSelDay(dStr);pressEnd("day"+dStr,setPressedDay,null);}}
+                        onMouseLeave={()=>pressEnd("day"+dStr,setPressedDay,null)}
                         data-date={dStr}
                         style={{
                           position:"relative",flex:"0 0 46px",width:46,height:78,borderRadius:12,
