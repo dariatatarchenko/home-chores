@@ -1409,7 +1409,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <button onClick={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));}}
                     onTouchStart={e=>{e.preventDefault();pressStart("bell",setPressedBell,true);}} onTouchEnd={()=>pressEnd("bell",setPressedBell,false)} onTouchCancel={()=>pressEnd("bell",setPressedBell,false)}
                     onMouseDown={()=>pressStart("bell",setPressedBell,true)} onMouseUp={()=>pressEnd("bell",setPressedBell,false)} onMouseLeave={()=>pressEnd("bell",setPressedBell,false)}
-                    style={{position:"relative",zIndex:55,background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                    style={{position:"relative",zIndex:55,background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",touchAction:"manipulation"}}>
                     <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
@@ -1443,6 +1443,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           background:active?"rgba(129,140,248,0.28)":isToday?"rgba(99,102,241,0.14)":isDark?"rgba(255,255,255,0.05)":S(0.06),
                           boxShadow:"none",
                           cursor:"pointer",
+                          touchAction:"manipulation",
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
                         <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active||isToday?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
@@ -1629,29 +1630,29 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
                         <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
-                        <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:3,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
+                        <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:4,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
-                            if(pIds.length===people.length) return <span style={{fontSize:12,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
+                            if(pIds.length===people.length) return <span style={{fontSize:13,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span>;
                             if(pIds.length>1){
                               const p=getPerson(pIds[0]);
-                              return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name} +{pIds.length-1}</span>;
+                              return <span style={{fontSize:13,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name} +{pIds.length-1}</span>;
                             }
                             const p=getPerson(pIds[0]);
-                            return <span style={{fontSize:12,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
+                            return <span style={{fontSize:13,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span>;
                           })()}
-                          {people.length>1&&<div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>}
-                          <span style={{fontSize:12,color:C(0.5),minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",flex:"0 1 auto"}}>{zone?.label}</span>
+                          {people.length>1&&<div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/>}
+                          <span style={{fontSize:13,color:TEXT3,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",flex:"0 1 auto"}}>{zone?.label}</span>
                           {t.estMinutes&&<>
-                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
-                            <span style={{fontSize:12,color:C(0.35),flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
+                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/>
+                            <span style={{fontSize:13,color:TEXT3,flexShrink:0}}>{formatEstMinutes(t.estMinutes)}</span>
                           </>}
                           {streak>1&&<>
-                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
-                            <span style={{fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:12,height:12,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
+                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/>
+                            <span style={{fontSize:13,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:13,height:13,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
                           </>}
                           {t.rescheduledFrom&&<>
-                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.32),flexShrink:0}}/>
+                            <div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/>
                             <div style={{width:12,height:12,backgroundColor:"rgba(251,191,36,0.8)",flexShrink:0,WebkitMaskImage:"url(/icons/moved-outline.svg)",maskImage:"url(/icons/moved-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                           </>}
                         </div>
@@ -2072,16 +2073,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <div style={{flex:1}}>
                               <div style={{color:C(0.9),fontSize:15,fontWeight:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{t.text}</div>
                               <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
-                                <span style={{color:freqColorFor(t),fontSize:12}}>{freqLabelFor(t)}{(t.timesPerDay||1)>1?` ×${t.timesPerDay}`:""}</span>
+                                <span style={{color:freqColorFor(t),fontSize:13}}>{freqLabelFor(t)}{(t.timesPerDay||1)>1?` ×${t.timesPerDay}`:""}</span>
                                 {people.length>1&&(()=>{
-                                  if(pIds.length===people.length) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
+                                  if(pIds.length===people.length) return <span style={{color:C(0.5),fontSize:13}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
                                   const p=getPerson(pIds[0]);
-                                  if(pIds.length>1) return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name} +{pIds.length-1}</span></span>;
-                                  return <span style={{color:C(0.5),fontSize:12}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name}</span></span>;
+                                  if(pIds.length>1) return <span style={{color:C(0.5),fontSize:13}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name} +{pIds.length-1}</span></span>;
+                                  return <span style={{color:C(0.5),fontSize:13}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name}</span></span>;
                                 })()}
                               </div>
                             </div>
-                            <span style={{color:C(0.18),fontSize:11,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
+                            <span style={{color:C(0.18),fontSize:13,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
                           </div>
                           {open&&(
                             <div onClick={e=>e.stopPropagation()} style={{marginTop:6,paddingTop:8}}>
