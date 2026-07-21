@@ -1444,9 +1444,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           boxShadow:"none",
                           cursor:"pointer",
                           touchAction:"manipulation",
+                          transition:"background-color 0.2s ease",
                         }}>
                         {/* Border lives on its own absolutely-positioned layer so it can NEVER affect this cell's size, regardless of its width or color */}
-                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active||isToday?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                        <div style={{position:"absolute",inset:0,borderRadius:12,border:`${active?"2px":"1px"} solid ${active||isToday?ACCENT:S(0.1)}`,pointerEvents:"none",transition:"border-width 0.2s ease, border-color 0.2s ease"}}/>
                         <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.1)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
                           {d.toLocaleDateString("en-US",{weekday:"short"})}
