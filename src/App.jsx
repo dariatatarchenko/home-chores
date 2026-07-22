@@ -809,11 +809,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedZoneBack,setPressedZoneBack]=useState(false);
   const [pressedZoneAdd,setPressedZoneAdd]=useState(false);
   const [zoneScreenVisible,setZoneScreenVisible]=useState(false);
+  const zoneNameInputRef=useRef(null);
   useEffect(()=>{
     if(zoneExpandId){
       setZoneScreenVisible(false);
       const raf=requestAnimationFrame(()=>requestAnimationFrame(()=>setZoneScreenVisible(true)));
-      return ()=>cancelAnimationFrame(raf);
+      const focusTimer=setTimeout(()=>{ zoneNameInputRef.current?.focus(); },350);
+      return ()=>{cancelAnimationFrame(raf);clearTimeout(focusTimer);};
     } else {
       setZoneScreenVisible(false);
     }
@@ -2831,16 +2833,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           if(!isNew&&!z) return null;
           const closeZoneScreen=()=>{
             if(document.activeElement instanceof HTMLElement) document.activeElement.blur();
-            setTimeout(()=>{
-              window.scrollTo(0,0);
-              document.body.scrollLeft=0;
-              setZoneScreenVisible(false);
-              setTimeout(()=>{
-                setZoneExpandId(null);setEmojiPicker(false);
-                window.scrollTo(0,0);
-                document.body.scrollLeft=0;
-              },320);
-            },80);
+            setZoneExpandId(null);
+            setEmojiPicker(false);
           };
           const submitZone=()=>{
             if(!zForm.label.trim()){setZoneNameError(true);return;}
@@ -2854,7 +2848,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             closeZoneScreen();
           };
           return(
-          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column",transform:`translateX(${zoneScreenVisible?0:100}%)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
+          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column"}}>
               {/* Header with back button, matching Stats */}
               <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",gap:8}}>
                 <button
@@ -2870,12 +2864,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                   <input
+                    ref={zoneNameInputRef}
                     className={`std-input${zoneNameError?" input-error":""}`}
                     value={zForm.label}
                     onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                     placeholder="Zone name"
                     maxLength={38}
-                    autoFocus
                     style={{flex:1,background:"rgba(255,255,255,0.1)",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 14px",height:40,boxSizing:"border-box",borderRadius:12}}
                   />
                 </div>
