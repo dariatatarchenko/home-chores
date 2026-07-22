@@ -2324,7 +2324,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <span style={{color:C(0.85),fontSize:18,fontWeight:400}}>Day Start</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{color:C(0.5),fontSize:14}}>{[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].find(o=>o.h===dayResetHour)?.label}</span>
+                    <span style={{color:C(0.5),fontSize:16}}>{[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].find(o=>o.h===dayResetHour)?.label}</span>
                     <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/down.svg)",maskImage:"url(/icons/down.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"transform 0.2s",transform:dayStartAccordionOpen?"rotate(180deg)":"none"}}/>
                   </div>
                 </div>
@@ -2433,7 +2433,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     setNewPassword("");
                   }} disabled={settingPassword} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",width:"100%",opacity:settingPassword?0.6:1}}>{settingPassword?"Saving…":"Set password"}</button>
                 </div>
-                <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"12px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>{tr("sign_out")}</button>
+                <button onClick={onSignOut} style={{background:"transparent",border:`1px solid ${ACCENT}`,borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:ACCENT,fontSize:16,fontWeight:600,cursor:"pointer",width:"100%",marginBottom:14}}>{tr("sign_out")}</button>
                 <button onClick={async()=>{
                   if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
                   const personDeleted=await deletePersonRemote(meId);
@@ -2454,7 +2454,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     window.alert("Something went wrong deleting your account fully. You've been signed out, but please try again or contact support.");
                   }
                   onSignOut();
-                }} style={{background:"none",border:"none",color:"rgba(248,113,113,0.4)",fontSize:12,cursor:"pointer",padding:"4px 0",display:"block",width:"100%",textAlign:"center"}}>{tr("delete_account")}</button>
+                }} style={{marginTop:12,background:"none",border:"none",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer",padding:"8px",display:"block",width:"100%",textAlign:"center"}}>{tr("delete_account")}</button>
               </div>
               )}
               </div>
@@ -3075,7 +3075,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           </div>
         )}
         {personModal&&avatarPicker&&(
-          <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setAvatarPicker(false)}>
+          <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setAvatarPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
@@ -3105,7 +3105,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           </div>
         )}
         {zoneModal&&emojiPicker&&(
-          <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250}} onClick={()=>setEmojiPicker(false)}>
+          <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
