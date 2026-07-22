@@ -815,6 +815,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedAccPerson,setPressedAccPerson]=useState(null);
   const [pressedDayReset,setPressedDayReset]=useState(null);
   const [pressedAccAction,setPressedAccAction]=useState(null);
+  const [dayStartAccordionOpen,setDayStartAccordionOpen]=useState(false);
   const [pressedCalArrow,setPressedCalArrow]=useState(null);
   const [pressedAddZone,setPressedAddZone]=useState(false);
   const [pressedStats,setPressedStats]=useState(false);
@@ -2276,30 +2277,26 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 {settingsView==="account"&&(
                   <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center"}}><div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 )}
-                <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
+                <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:settingsView==="account"?20:28,lineHeight:settingsView==="account"?"24px":"34px",fontWeight:700}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
                 </div>
                 {settingsView==="main"&&myStreak>0&&(
-                  <div style={{display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",padding:"0 12px",background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:20,flexShrink:0}}>
-                    <div style={{width:16,height:16,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    <span style={{color:"#fbbf24",fontSize:14,fontWeight:700,whiteSpace:"nowrap"}}>{myStreak}-day</span>
+                  <div style={{textAlign:"right",flexShrink:0}}>
+                    <div style={{color:"#fbbf24",fontSize:16,fontWeight:700,whiteSpace:"nowrap"}}>{myStreak}-day streak!</div>
+                    <div style={{color:C(0.35),fontSize:12,marginTop:2,whiteSpace:"nowrap"}}>Keep it up, {me?.name}!</div>
                   </div>
                 )}
               </div>
               <div ref={settingsScrollRef} style={{flex:1,overflowY:"auto",padding:"8px 16px 110px"}}>
               {settingsView==="main"&&(<>
               {/* People */}
-              <div>
-                <div style={{marginBottom:12}}>
-                  <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("people")}</span>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {people.map(p=>{
                     const count=tasks.filter(t=>t.personId===p.id).length;
                     return (
-                      <div key={p.id} onClick={()=>{if(p.id!==meId)return;setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:p.id===meId?"pointer":"default"}}>
-                        <Avatar person={p} size={40}/>
+                      <div key={p.id} onClick={()=>{if(p.id!==meId)return;setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:p.id===meId?"pointer":"default"}}>
+                        <Avatar person={p} size={24}/>
                         <div style={{flex:1}}>
-                          <div style={{color:C(0.88),fontSize:15,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{color:C(0.88),fontSize:16,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
                             {p.name}
                             {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:6,padding:"4px 6px"}}>me</span>}
                           </div>
@@ -2309,20 +2306,32 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       </div>
                     );
                   })}
-                </div>
               </div>
 
               {/* Preferences */}
-              <div style={{marginTop:24,marginBottom:24}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-                  <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{tr("theme")}</span>
-                  <button onClick={()=>setThemePersisted(theme==="dark"?"light":"dark")} style={{position:"relative",width:56,height:32,borderRadius:16,border:"none",background:S(0.1),cursor:"pointer",flexShrink:0,padding:0}}>
-                    <div style={{position:"absolute",top:3,left:theme==="dark"?3:27,width:26,height:26,borderRadius:"50%",background:theme==="dark"?"#3730a3":"#fbbf24",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,transition:"left 0.2s"}}>
-                      <div style={{width:16,height:16,backgroundColor:"#fff",WebkitMaskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,maskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    </div>
+              <div style={{marginTop:16,marginBottom:16,...CARD}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,maskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:600}}>{tr("theme")}</span>
+                  </div>
+                  <button onClick={()=>setThemePersisted(theme==="dark"?"light":"dark")} style={{position:"relative",width:52,height:32,borderRadius:16,border:"none",background:theme==="dark"?ACCENT:S(0.15),cursor:"pointer",flexShrink:0,padding:0,transition:"background-color 0.2s"}}>
+                    <div style={{position:"absolute",top:2,left:theme==="dark"?22:2,width:28,height:28,borderRadius:"50%",background:"#fff",boxShadow:"0 1px 3px rgba(0,0,0,0.3)",transition:"left 0.2s"}}/>
                   </button>
                 </div>
-                <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:6}}>Day starts at</div>
+                <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
+                <div onClick={()=>setDayStartAccordionOpen(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,cursor:"pointer"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:"url(/icons/clock-fill.svg)",maskImage:"url(/icons/clock-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:600}}>Day starts at</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{color:C(0.5),fontSize:14}}>{[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].find(o=>o.h===dayResetHour)?.label}</span>
+                    <div style={{width:24,height:24,backgroundColor:C(0.4),WebkitMaskImage:"url(/icons/down.svg)",maskImage:"url(/icons/down.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"transform 0.2s",transform:dayStartAccordionOpen?"rotate(180deg)":"none"}}/>
+                  </div>
+                </div>
+                {dayStartAccordionOpen&&(
+                <div style={{marginTop:14}}>
                 <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Applies to everyone in this home — late-night tasks still count toward the previous day</div>
                 {(()=>{
                   const selectDayResetHour=opt=>{
@@ -2376,15 +2385,14 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                   );
                 })()}
+                </div>
+                )}
               </div>
 
               {/* Account entry point */}
-              <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:"pointer",minHeight:44}}>
-                <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>👤</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{color:C(0.82),fontSize:14,fontWeight:500}}>Account</div>
-                  <div style={{color:C(0.4),fontSize:11,marginTop:2}}>Invite code, sign out, delete account</div>
-                </div>
+              <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+                <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:"url(/icons/user-fill.svg)",maskImage:"url(/icons/user-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:16,fontWeight:600}}>Account</div>
                 <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               </div>
               </>)}
@@ -2458,6 +2466,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         </div>{/* end body */}
 
         {/* ── TAB BAR ───────────────────────────────────────────── */}
+        {settingsView!=="account"&&(
         <div style={{position:"absolute",left:8,right:8,bottom:24,zIndex:100,display:"flex",alignItems:"center",gap:8}}>
           <div key={theme} ref={tabBarMeasureRef} style={{flex:1,height:64,boxSizing:"border-box",position:"relative",background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:32,padding:0,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",gap:0}}>
             {(()=>{
@@ -2506,6 +2515,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div style={{width:22,height:22,backgroundColor:isDark?"#343249":"#fff",WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
           </button>
         </div>
+        )}
 
         {/* ── STATS MODAL ───────────────────────────────────────── */}
 
@@ -3018,23 +3028,27 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           </div>
         )}
 
-        {/* ── PERSON MODAL ──────────────────────────────────────── */}
+        {/* ── PERSON EDIT SCREEN ──────────────────────────────────────── */}
         {personModal&&(
-          <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.65)",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:"0 24px"}} onClick={()=>{setPersonModal(null);setAvatarPicker(false);}}>
-            <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:340,...G(0.18,40),borderRadius:24,padding:"22px",display:"flex",flexDirection:"column",gap:16,boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}}>
-              <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>{personModal.mode==="new"?"New Person":"Edit Person"}</div>
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
-                <div style={{position:"relative",cursor:"pointer"}} onClick={()=>setAvatarPicker(v=>!v)}>
-                  <Avatar person={{name:pForm.name||"?",color:pForm.color,avatarEmoji:pForm.avatarEmoji}} size={72}/>
+          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column"}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",minHeight:40,gap:8}}>
+                <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
+                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </button>
+                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>{personModal.mode==="new"?"New Person":"Edit Person"}</div>
+              </div>
+              <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,marginBottom:20}}>
+                  <div style={{position:"relative",cursor:"pointer"}} onClick={()=>setAvatarPicker(v=>!v)}>
+                    <Avatar person={{name:pForm.name||"?",color:pForm.color,avatarEmoji:pForm.avatarEmoji}} size={72}/>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <span style={labelSt}>NAME</span>
-                <input className={`std-input${personNameError?" input-error":""}`} value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
-              </div>
-              <div>
-                <span style={labelSt}>COLOR</span>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <div style={{marginBottom:16}}>
+                  <span style={labelSt}>NAME</span>
+                  <input className={`std-input${personNameError?" input-error":""}`} value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
+                </div>
+                <div>
+                  <span style={labelSt}>COLOR</span>
                   <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                   {PALETTE.map(c=>(
                     <button key={c} onClick={()=>setPForm(f=>({...f,color:c}))} style={{
@@ -3049,12 +3063,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       boxShadow:pForm.color===c?`0 0 12px ${c}99`:"none",
                     }}/>
                   ))}
-                </div>
+                  </div>
                 </div>
               </div>
-              <button onClick={savePerson} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
-              <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",color:C(0.4),fontSize:13,cursor:"pointer",padding:"4px 0"}}>Cancel</button>
-            </div>
+              <div style={{flexShrink:0,padding:"12px 16px",paddingBottom:`calc(12px + ${keyboardInset}px)`,transition:"padding-bottom 0.2s ease"}}>
+                <button onClick={savePerson} style={{width:"100%",background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
+                <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:TEXT2,fontSize:14,fontWeight:600,cursor:"pointer"}}>Cancel</button>
+              </div>
           </div>
         )}
         {personModal&&avatarPicker&&(
