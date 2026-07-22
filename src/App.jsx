@@ -803,6 +803,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedMyTasks,setPressedMyTasks]=useState(false);
   const [pressedDay,setPressedDay]=useState(null);
   const [pressedFilter,setPressedFilter]=useState(null);
+  const [pressedAccPerson,setPressedAccPerson]=useState(null);
   const [pressedCalArrow,setPressedCalArrow]=useState(null);
   const [pressedAddZone,setPressedAddZone]=useState(false);
   const [pressedStats,setPressedStats]=useState(false);
@@ -815,7 +816,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     if(zoneExpandId){
       setZoneScreenVisible(false);
       const raf=requestAnimationFrame(()=>requestAnimationFrame(()=>setZoneScreenVisible(true)));
-      const focusTimer=setTimeout(()=>{ zoneNameInputRef.current?.focus(); },350);
+      const focusTimer=setTimeout(()=>{ zoneNameInputRef.current?.focus(); },50);
       return ()=>{cancelAnimationFrame(raf);clearTimeout(focusTimer);};
     } else {
       setZoneScreenVisible(false);
@@ -2034,9 +2035,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(cur.includes(p.id)&&cur.length===1) return f; // can't deselect the last remaining person
                         const next=cur.includes(p.id)?cur.filter(id=>id!==p.id):[...cur,p.id];
                         return {...f,personIds:next};
-                      })} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"0 16px",cursor:"pointer"}}>
+                      })} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                         <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?p.color+"90":S(0.1)}`,pointerEvents:"none"}}/>
-                        <span style={{fontSize:18,fontWeight:700,color:p.avatarEmoji?undefined:p.color}}>{p.avatarEmoji||initials(p.name)}</span>
+                        <Avatar person={p} size={18}/>
                         <span style={{color:sel?p.color:TEXT2,fontSize:14}}>{p.name}</span>
                       </button>;
                     })}
@@ -2182,22 +2183,38 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               {people.length>1&&(
                               <>
                               <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:10}}>
-                                <button onClick={()=>{const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{
+                                <button
+                                  onTouchStart={e=>{e.preventDefault();pressStart("acc-person-all-"+t.id,setPressedAccPerson,"all");}}
+                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-person-all-"+t.id,e)){const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}pressEnd("acc-person-all-"+t.id,setPressedAccPerson,null);}}
+                                  onTouchCancel={()=>pressEnd("acc-person-all-"+t.id,setPressedAccPerson,null)}
+                                  onMouseDown={()=>pressStart("acc-person-all-"+t.id,setPressedAccPerson,"all")}
+                                  onMouseUp={()=>{const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);pressEnd("acc-person-all-"+t.id,setPressedAccPerson,null);}}
+                                  onMouseLeave={()=>pressEnd("acc-person-all-"+t.id,setPressedAccPerson,null)}
+                                  style={{
                                   position:"relative",display:"flex",alignItems:"center",height:40,boxSizing:"border-box",
                                   background:(t.personIds||[t.personId]).filter(Boolean).length===people.length?S(0.15):S(0.05),
                                   border:"none",
                                   borderRadius:20,padding:"0 16px",cursor:"pointer",
                                 }}>
                                   <div style={{position:"absolute",inset:0,borderRadius:20,border:`${(t.personIds||[t.personId]).filter(Boolean).length===people.length?"2px":"1px"} solid ${(t.personIds||[t.personId]).filter(Boolean).length===people.length?C(0.4):S(0.1)}`,pointerEvents:"none"}}/>
-                                  <span style={{color:(t.personIds||[t.personId]).filter(Boolean).length===people.length?C(0.9):TEXT2,fontSize:14}}>{tr("all")}</span>
+                                  <span style={{color:(t.personIds||[t.personId]).filter(Boolean).length===people.length?C(0.9):TEXT2,fontSize:14,display:"inline-block",transform:pressedAccPerson==="all"?"scale(1.08)":"scale(1)",transition:pressedAccPerson==="all"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{tr("all")}</span>
                                 </button>
                                 {people.map(p=>{
                                   const pIds=t.personIds||[t.personId].filter(Boolean);
                                   const sel=pIds.length===1&&pIds.includes(p.id);
-                                  return <button key={p.id} onClick={()=>{const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"0 16px",cursor:"pointer",position:"relative"}}>
+                                  return <button key={p.id}
+                                    onTouchStart={e=>{e.preventDefault();pressStart("acc-person-"+t.id+"-"+p.id,setPressedAccPerson,p.id);}}
+                                    onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-person-"+t.id+"-"+p.id,e)){const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}pressEnd("acc-person-"+t.id+"-"+p.id,setPressedAccPerson,null);}}
+                                    onTouchCancel={()=>pressEnd("acc-person-"+t.id+"-"+p.id,setPressedAccPerson,null)}
+                                    onMouseDown={()=>pressStart("acc-person-"+t.id+"-"+p.id,setPressedAccPerson,p.id)}
+                                    onMouseUp={()=>{const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);pressEnd("acc-person-"+t.id+"-"+p.id,setPressedAccPerson,null);}}
+                                    onMouseLeave={()=>pressEnd("acc-person-"+t.id+"-"+p.id,setPressedAccPerson,null)}
+                                    style={{display:"flex",alignItems:"center",gap:8,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer",position:"relative"}}>
                                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?p.color+"90":S(0.1)}`,pointerEvents:"none"}}/>
-                                    <span style={{fontSize:18,fontWeight:700,color:p.avatarEmoji?undefined:p.color}}>{p.avatarEmoji||initials(p.name)}</span>
-                                    <span style={{color:sel?p.color:TEXT2,fontSize:14}}>{p.name}</span>
+                                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedAccPerson===p.id?"scale(1.08)":"scale(1)",transition:pressedAccPerson===p.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                                      <Avatar person={p} size={18}/>
+                                      <span style={{color:sel?p.color:TEXT2,fontSize:14}}>{p.name}</span>
+                                    </div>
                                   </button>;
                                 })}
                               </div>
@@ -2919,7 +2936,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   onTouchStart={e=>{e.preventDefault();pressStart("zone-add",setPressedZoneAdd,true);}} onTouchEnd={e=>{e.preventDefault();submitZone();pressEnd("zone-add",setPressedZoneAdd,false);}} onTouchCancel={()=>pressEnd("zone-add",setPressedZoneAdd,false)}
                   onMouseDown={()=>pressStart("zone-add",setPressedZoneAdd,true)} onMouseUp={()=>{submitZone();pressEnd("zone-add",setPressedZoneAdd,false);}} onMouseLeave={()=>pressEnd("zone-add",setPressedZoneAdd,false)}
                   style={{width:"100%",height:50,boxSizing:"border-box",background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",transform:pressedZoneAdd?"scale(1.03)":"scale(1)",transition:pressedZoneAdd?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{isNew?"Add zone":"Save"}</button>
-                {!isNew&&<button onClick={()=>{deleteZone(z.id);closeZoneScreen();}} style={{marginTop:10,width:"100%",background:"none",border:"none",padding:"8px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                {isNew&&<button onClick={closeZoneScreen} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:TEXT2,fontSize:14,fontWeight:600,cursor:"pointer"}}>Cancel</button>}
+                {!isNew&&<button onClick={()=>{deleteZone(z.id);closeZoneScreen();}} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>}
               </div>
           </div>
           );
