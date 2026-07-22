@@ -793,7 +793,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [zoneNameError,setZoneNameError]= useState(false);
   const [assigneeError,setAssigneeError]= useState(false);
 
-  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:28,timesPerDay:1,estMinutes:null};
+  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:26,timesPerDay:1,estMinutes:null};
   const [form,setForm]= useState(blankForm);
 
   const prevPct = useRef(0);
@@ -2241,10 +2241,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 </button>}
                                 <button
                                   onTouchStart={e=>{e.preventDefault();pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id);}}
-                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-edit-"+t.id,e)){setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:28,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-edit-"+t.id,e)){setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:26,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onTouchCancel={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
                                   onMouseDown={()=>pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id)}
-                                  onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:28,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:26,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onMouseLeave={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
                                   style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.55),fontSize:14,fontWeight:600,cursor:"pointer"}}>
                                   <span style={{display:"inline-block",transform:pressedAccAction==="edit-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="edit-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Edit</span>
@@ -2385,6 +2385,35 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 })()}
                 </div>
                 )}
+              </div>
+
+              {/* Subscription */}
+              <div onClick={()=>window.alert("Coming soon")} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:"pointer",marginBottom:16}}>
+                <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/crown-fill.svg)",maskImage:"url(/icons/crown-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Subscription</div>
+                <span style={{fontSize:13,color:C(0.4),fontWeight:600,marginRight:4}}>Free</span>
+                <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+              </div>
+
+              {/* Language, Privacy, Terms, About */}
+              <div style={{...CARD,marginBottom:16}}>
+                <div onClick={()=>window.open("https://example.com/privacy","_blank")} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+                  <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/shield-fill.svg)",maskImage:"url(/icons/shield-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Privacy Policy</div>
+                  <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </div>
+                <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
+                <div onClick={()=>window.open("https://example.com/terms","_blank")} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+                  <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/doc-fill.svg)",maskImage:"url(/icons/doc-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Terms of Service</div>
+                  <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </div>
+                <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/info-fill.svg)",maskImage:"url(/icons/info-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>About</div>
+                  <span style={{fontSize:14,color:C(0.4)}}>v1.0.0</span>
+                </div>
               </div>
 
               {/* Account entry point */}
