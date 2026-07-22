@@ -2830,8 +2830,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           const z=isNew?null:zones.find(x=>x.id===zoneExpandId);
           if(!isNew&&!z) return null;
           const closeZoneScreen=()=>{
-            setZoneScreenVisible(false);
-            setTimeout(()=>{setZoneExpandId(null);setEmojiPicker(false);},320);
+            if(document.activeElement instanceof HTMLElement) document.activeElement.blur();
+            setTimeout(()=>{
+              window.scrollTo(0,0);
+              document.body.scrollLeft=0;
+              setZoneScreenVisible(false);
+              setTimeout(()=>{
+                setZoneExpandId(null);setEmojiPicker(false);
+                window.scrollTo(0,0);
+                document.body.scrollLeft=0;
+              },320);
+            },80);
           };
           const submitZone=()=>{
             if(!zForm.label.trim()){setZoneNameError(true);return;}
