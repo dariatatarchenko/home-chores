@@ -406,7 +406,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       ?"inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.15)"
       :"inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.04)",
   });
-  const CARD={...G(0.08,24),...(isDark?{}:{background:"rgba(255,255,255,0.7)"}),borderRadius:12,padding:"12px"};
+  const CARD=isDark
+    ? {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"12px"}
+    : {background:"#ffffff",borderRadius:12,padding:"12px"};
   const [codeCopied,setCodeCopied]=useState(false);
   const [customTimeOpen,setCustomTimeOpen]=useState(false);
   const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
@@ -1636,8 +1638,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(toDate&&dragInfo) moveTask(dragInfo.id,dragInfo.from,toDate);
                         setDragInfo(null);setDragOver(null);setDragActive(false);
                       }}
-                      style={{...CARD,padding:"12px",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",
-                        border:`1px solid ${S(0.1)}`,
+                      style={{...CARD,padding:"12px",display:"flex",alignItems:"center",gap:12,transition:"opacity 0.2s, transform 0.15s, box-shadow 0.15s",cursor:"grab",touchAction:dragActive&&dragInfo?.id===t.id?"none":"pan-y",position:"relative",WebkitUserSelect:"none",userSelect:"none",WebkitTouchCallout:"none",
                         animation:"fadeInUp 0.2s ease",
                         transform:dragActive&&dragInfo?.id===t.id?"scale(1.03)":"scale(1)",
                         boxShadow:dragActive&&dragInfo?.id===t.id?"0 8px 24px rgba(0,0,0,0.4)":"none",
@@ -1836,7 +1837,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
-                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{...CARD,padding:"12px",display:"flex",alignItems:"center",gap:10,marginBottom:ti<sDayTasks.length-1?8:0,cursor:isFutureDay?"default":"pointer"}}>
+                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:ti===sDayTasks.length-1?"8px 0 0":"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${S(0.08)}`:"none",cursor:isFutureDay?"default":"pointer"}}>
                         <button onClick={e=>{e.stopPropagation();if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=8.1,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
