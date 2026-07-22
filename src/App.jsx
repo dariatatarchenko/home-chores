@@ -805,8 +805,25 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedAddZone,setPressedAddZone]=useState(false);
   const [pressedStats,setPressedStats]=useState(false);
   const [pressedStatsBack,setPressedStatsBack]=useState(false);
+  const [pressedZoneBack,setPressedZoneBack]=useState(false);
+  const [pressedZoneAdd,setPressedZoneAdd]=useState(false);
   const pressStartRef=useRef({});
+  const touchPosRef=useRef({});
   const MIN_PRESS_MS=140;
+  const SCROLL_THRESHOLD=10;
+  const pressStart=(key,setter,value,e)=>{
+    const gen=(pressStartRef.current[key]?.gen||0)+1;
+    pressStartRef.current[key]={time:Date.now(),gen};
+    if(e&&e.touches&&e.touches[0]) touchPosRef.current[key]={x:e.touches[0].clientX,y:e.touches[0].clientY};
+    setter(value);
+  };
+  const wasScrolled=(key,e)=>{
+    const start=touchPosRef.current[key];
+    if(!start||!e||!e.changedTouches||!e.changedTouches[0]) return false;
+    const dx=Math.abs(e.changedTouches[0].clientX-start.x);
+    const dy=Math.abs(e.changedTouches[0].clientY-start.y);
+    return dx>SCROLL_THRESHOLD||dy>SCROLL_THRESHOLD;
+  };
   const pressStart=(key,setter,value)=>{
     const gen=(pressStartRef.current[key]?.gen||0)+1;
     pressStartRef.current[key]={time:Date.now(),gen};
@@ -1328,7 +1345,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     return new Date(d+"T00:00:00").toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
   };
 
-  const inputSt={...G(0.1,20),borderRadius:14,padding:"12px 14px",color:C(0.9),fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:`1px solid ${C(0.1)}`};
+  const inputSt={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"12px 14px",color:C(0.9),fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:`1px solid ${C(0.1)}`};
   const labelSt={color:C(0.6),fontSize:13,fontWeight:600,marginBottom:8,display:"block"};
 
   const TABS=[
@@ -1544,8 +1561,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
                 <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button
-                  onTouchStart={e=>{e.preventDefault();pressStart("wf-all",setPressedFilter,"wf-all");}}
-                  onTouchEnd={e=>{e.preventDefault();setWeekZoneFilter(null);pressEnd("wf-all",setPressedFilter,null);}}
+                  onTouchStart={e=>{pressStart("wf-all",setPressedFilter,"wf-all",e);}}
+                  onTouchEnd={e=>{if(!wasScrolled("wf-all",e)){e.preventDefault();setWeekZoneFilter(null);}pressEnd("wf-all",setPressedFilter,null);}}
                   onTouchCancel={()=>pressEnd("wf-all",setPressedFilter,null)}
                   onMouseDown={()=>pressStart("wf-all",setPressedFilter,"wf-all")}
                   onMouseUp={()=>{setWeekZoneFilter(null);pressEnd("wf-all",setPressedFilter,null);}}
@@ -1556,8 +1573,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </button>
                 {zones.filter(z=>dayTasks(selDay).some(t=>t.zone===z.id)).map(z=>(
                   <button key={z.id}
-                    onTouchStart={e=>{e.preventDefault();pressStart("wf"+z.id,setPressedFilter,"wf"+z.id);}}
-                    onTouchEnd={e=>{e.preventDefault();setWeekZoneFilter(weekZoneFilter===z.id?null:z.id);pressEnd("wf"+z.id,setPressedFilter,null);}}
+                    onTouchStart={e=>{pressStart("wf"+z.id,setPressedFilter,"wf"+z.id,e);}}
+                    onTouchEnd={e=>{if(!wasScrolled("wf"+z.id,e)){e.preventDefault();setWeekZoneFilter(weekZoneFilter===z.id?null:z.id);}pressEnd("wf"+z.id,setPressedFilter,null);}}
                     onTouchCancel={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
                     onMouseDown={()=>pressStart("wf"+z.id,setPressedFilter,"wf"+z.id)}
                     onMouseUp={()=>{setWeekZoneFilter(weekZoneFilter===z.id?null:z.id);pressEnd("wf"+z.id,setPressedFilter,null);}}
@@ -1909,7 +1926,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {form.freq==="custom"&&(
                     <div style={{display:"flex",alignItems:"center",gap:10,...G(0.08,20),borderRadius:14,padding:"12px 16px",marginTop:8,border:"1px solid rgba(232,121,249,0.3)"}}>
                       <span style={{color:TEXT2,fontSize:14}}>Every</span>
-                      <input type="number" min="1" max="365" value={form.customDays===0?"":form.customDays} onChange={e=>{const v=e.target.value;setForm(f=>({...f,customDays:v===""?0:Math.max(1,parseInt(v)||1)}));}} onBlur={e=>{if(!form.customDays||form.customDays<1)setForm(f=>({...f,customDays:2}));}} style={{background:"rgba(255,255,255,0.9)",borderRadius:10,border:"none",padding:"6px 10px",color:"#111",fontWeight:700,fontSize:16,width:60,textAlign:"center"}}/>
+                      <input type="number" min="1" max="365" value={form.customDays===0?"":form.customDays} onChange={e=>{const v=e.target.value;setForm(f=>({...f,customDays:v===""?0:Math.max(1,parseInt(v)||1)}));}} onBlur={e=>{if(!form.customDays||form.customDays<1)setForm(f=>({...f,customDays:2}));}} style={{background:"rgba(255,255,255,0.1)",borderRadius:10,border:`1px solid ${C(0.1)}`,padding:"6px 10px",color:C(0.9),fontWeight:700,fontSize:16,width:60,textAlign:"center"}}/>
                       <span style={{color:TEXT2,fontSize:14}}>days</span>
                     </div>
                   )}
@@ -1974,7 +1991,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={labelSt}>{tr("start_date")}</span>
                   <input type="date" value={form.startDate} min={todayStr}
                     onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
-                    style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",colorScheme:"light",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center"}}/>
+                    style={{...inputSt,colorScheme:"dark",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center"}}/>
                 </div>
                 {people.length>1&&(
                 <div>
@@ -2010,7 +2027,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </div>
                 </div>
                 )}
-                <button onClick={saveTask} disabled={savingTask} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:savingTask?"default":"pointer",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
+                <button onClick={saveTask} disabled={savingTask} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:16,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:savingTask?"default":"pointer",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
                 <button onClick={closeTaskForm} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
               </div>
@@ -2048,8 +2065,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:"0 16px 24px"}}>
               <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button
-                  onTouchStart={e=>{e.preventDefault();pressStart("tf-all",setPressedFilter,"tf-all");}}
-                  onTouchEnd={e=>{e.preventDefault();setTaskZoneFilter(null);pressEnd("tf-all",setPressedFilter,null);}}
+                  onTouchStart={e=>{pressStart("tf-all",setPressedFilter,"tf-all",e);}}
+                  onTouchEnd={e=>{if(!wasScrolled("tf-all",e)){e.preventDefault();setTaskZoneFilter(null);}pressEnd("tf-all",setPressedFilter,null);}}
                   onTouchCancel={()=>pressEnd("tf-all",setPressedFilter,null)}
                   onMouseDown={()=>pressStart("tf-all",setPressedFilter,"tf-all")}
                   onMouseUp={()=>{setTaskZoneFilter(null);pressEnd("tf-all",setPressedFilter,null);}}
@@ -2060,8 +2077,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </button>
                 {zones.map(z=>(
                   <button key={z.id}
-                    onTouchStart={e=>{e.preventDefault();pressStart("tf"+z.id,setPressedFilter,"tf"+z.id);}}
-                    onTouchEnd={e=>{e.preventDefault();setTaskZoneFilter(taskZoneFilter===z.id?null:z.id);pressEnd("tf"+z.id,setPressedFilter,null);}}
+                    onTouchStart={e=>{pressStart("tf"+z.id,setPressedFilter,"tf"+z.id,e);}}
+                    onTouchEnd={e=>{if(!wasScrolled("tf"+z.id,e)){e.preventDefault();setTaskZoneFilter(taskZoneFilter===z.id?null:z.id);}pressEnd("tf"+z.id,setPressedFilter,null);}}
                     onTouchCancel={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
                     onMouseDown={()=>pressStart("tf"+z.id,setPressedFilter,"tf"+z.id)}
                     onMouseUp={()=>{setTaskZoneFilter(taskZoneFilter===z.id?null:z.id);pressEnd("tf"+z.id,setPressedFilter,null);}}
@@ -2093,13 +2110,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           placeholder="Zone name"
                           maxLength={38}
                           autoFocus
-                          style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:12}}
+                          style={{flex:1,background:"rgba(255,255,255,0.1)",border:`2px solid ${zoneNameError?"#f87171":C(0.1)}`,color:C(0.9),fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:12}}
                         />
                       </div>
                       <div style={{display:"flex",gap:8}}>
                         <button onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"10px",color:C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancel</button>
                         <button onClick={()=>{deleteZone(zone.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"10px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
-                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Save</button>
+                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Save</button>
                       </div>
                     </div>
                   ):(
@@ -2326,7 +2343,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     if(error){ setPasswordMsg(error.message||"Couldn't set password"); return; }
                     setPasswordMsg("✓ Password set");
                     setNewPassword("");
-                  }} disabled={settingPassword} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",width:"100%",opacity:settingPassword?0.6:1}}>{settingPassword?"Saving…":"Set password"}</button>
+                  }} disabled={settingPassword} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",width:"100%",opacity:settingPassword?0.6:1}}>{settingPassword?"Saving…":"Set password"}</button>
                 </div>
                 <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>{tr("sign_out")}</button>
                 <button onClick={async()=>{
@@ -2817,14 +2834,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column"}}>
               {/* Header with back button, matching Stats */}
               <div style={{flexShrink:0,padding:"16px 16px 12px",display:"flex",alignItems:"center",gap:8}}>
-                <button onClick={closeZoneScreen} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
-                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                <button
+                  onTouchStart={e=>{e.preventDefault();pressStart("zone-back",setPressedZoneBack,true);}} onTouchEnd={e=>{e.preventDefault();closeZoneScreen();pressEnd("zone-back",setPressedZoneBack,false);}} onTouchCancel={()=>pressEnd("zone-back",setPressedZoneBack,false)}
+                  onMouseDown={()=>pressStart("zone-back",setPressedZoneBack,true)} onMouseUp={()=>{closeZoneScreen();pressEnd("zone-back",setPressedZoneBack,false);}} onMouseLeave={()=>pressEnd("zone-back",setPressedZoneBack,false)}
+                  style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
+                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedZoneBack?"scale(1.4)":"scale(1)",transition:pressedZoneBack?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                 </button>
                 <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>{isNew?"New Zone":"Edit Zone"}</div>
               </div>
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
-                <div style={{...CARD,display:"flex",alignItems:"center",gap:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                   <input
                     value={zForm.label}
@@ -2832,14 +2852,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     placeholder="Zone name"
                     maxLength={38}
                     autoFocus
-                    style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
+                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:`2px solid ${zoneNameError?"#f87171":C(0.1)}`,color:C(0.9),fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
                   />
                 </div>
                 {!isNew&&<button onClick={()=>{deleteZone(z.id);closeZoneScreen();}} style={{marginTop:16,width:"100%",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete zone</button>}
               </div>
               {/* Bottom-pinned Add/Save button, shifts up above keyboard via keyboardInset */}
               <div style={{flexShrink:0,padding:"12px 16px",paddingBottom:`calc(12px + ${keyboardInset}px)`,transition:"padding-bottom 0.2s ease"}}>
-                <button onClick={submitZone} style={{width:"100%",background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,padding:"15px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}}>{isNew?"Add zone":"Save"}</button>
+                <button
+                  onTouchStart={e=>{e.preventDefault();pressStart("zone-add",setPressedZoneAdd,true);}} onTouchEnd={e=>{e.preventDefault();submitZone();pressEnd("zone-add",setPressedZoneAdd,false);}} onTouchCancel={()=>pressEnd("zone-add",setPressedZoneAdd,false)}
+                  onMouseDown={()=>pressStart("zone-add",setPressedZoneAdd,true)} onMouseUp={()=>{submitZone();pressEnd("zone-add",setPressedZoneAdd,false);}} onMouseLeave={()=>pressEnd("zone-add",setPressedZoneAdd,false)}
+                  style={{width:"100%",height:50,boxSizing:"border-box",background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",transform:pressedZoneAdd?"scale(1.03)":"scale(1)",transition:pressedZoneAdd?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{isNew?"Add zone":"Save"}</button>
               </div>
           </div>
           );
@@ -2847,7 +2870,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {emojiPicker&&zoneExpandId&&(
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
-            <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
                 {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>)}
@@ -2887,7 +2910,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               <div>
                 <span style={labelSt}>NAME</span>
-                <input value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,background:"rgba(255,255,255,0.9)",color:"#111",border:personNameError?"2px solid #f87171":`2px solid ${C(0.1)}`}}/>
+                <input value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
               </div>
               <div>
                 <span style={labelSt}>COLOR</span>
@@ -2909,7 +2932,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 </div>
               </div>
-              <button onClick={savePerson} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
+              <button onClick={savePerson} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
               <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",color:C(0.4),fontSize:13,cursor:"pointer",padding:"4px 0"}}>Cancel</button>
             </div>
           </div>
@@ -2937,10 +2960,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <div style={{flex:1}}>
-                  <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"12px 14px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":"2px solid transparent"}}/>
+                  <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"12px 14px",color:C(0.9),fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
                 </div>
               </div>
-              <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Add</button>
+              <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Add</button>
             </div>
           </div>
         )}
@@ -2966,7 +2989,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
 const SHELL_STYLE={height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'SF Pro Text',-apple-system,system-ui,sans-serif",overflow:"hidden"};
 const CARD_BG="linear-gradient(160deg,#1a1035 0%,#0d1f3c 45%,#0a2a1f 100%)";
-const AUTH_INPUT={background:"rgba(255,255,255,0.9)",borderRadius:14,padding:"13px 16px",color:"#111",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:"none"};
+const AUTH_INPUT={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"13px 16px",color:"#fff",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:"1px solid rgba(255,255,255,0.1)"};
 const AUTH_BTN={background:"linear-gradient(135deg,#7163F3,#5E51E0)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%"};
 
 function LoginScreen(){
