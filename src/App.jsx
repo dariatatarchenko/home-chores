@@ -720,6 +720,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [justLiked,setJustLiked]= useState(null);
   const [activityOrder,setActivityOrder]= useState([]); // array of "id|date" keys, most recent action first (either direction)
   const [showStats,setShowStats]= useState(false);
+  const [showManageZones,setShowManageZones]=useState(false);
   const [notifsVisible,setNotifsVisible]=useState(false);
   const [keyboardInset,setKeyboardInset]=useState(0);
   useEffect(()=>{
@@ -1476,7 +1477,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onTouchStart={e=>{e.preventDefault();pressStart("bell",setPressedBell,true);}} onTouchEnd={e=>{e.preventDefault();if(showNotifs){closeNotifs();}else{setShowNotifs(true);markNotifsRead(notifs.map(n=>n.id));}pressEnd("bell",setPressedBell,false);}} onTouchCancel={()=>pressEnd("bell",setPressedBell,false)}
                     onMouseDown={()=>pressStart("bell",setPressedBell,true)} onMouseUp={()=>{if(showNotifs){closeNotifs();}else{setShowNotifs(true);markNotifsRead(notifs.map(n=>n.id));}pressEnd("bell",setPressedBell,false);}} onMouseLeave={()=>pressEnd("bell",setPressedBell,false)}
                     style={{position:"relative",zIndex:55,background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",touchAction:"manipulation"}}>
-                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/notifications-fill.svg)",maskImage:"url(/icons/notifications-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -2056,13 +2057,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_alltasks")}</div>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <button
-                    onTouchStart={e=>{e.preventDefault();pressStart("addzone",setPressedAddZone,true);}} onTouchEnd={e=>{e.preventDefault();setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");pressEnd("addzone",setPressedAddZone,false);}} onTouchCancel={()=>pressEnd("addzone",setPressedAddZone,false)}
-                    onMouseDown={()=>pressStart("addzone",setPressedAddZone,true)} onMouseUp={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");pressEnd("addzone",setPressedAddZone,false);}} onMouseLeave={()=>pressEnd("addzone",setPressedAddZone,false)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("managezones",setPressedAddZone,true);}} onTouchEnd={e=>{e.preventDefault();setShowManageZones(true);pressEnd("managezones",setPressedAddZone,false);}} onTouchCancel={()=>pressEnd("managezones",setPressedAddZone,false)}
+                    onMouseDown={()=>pressStart("managezones",setPressedAddZone,true)} onMouseUp={()=>{setShowManageZones(true);pressEnd("managezones",setPressedAddZone,false);}} onMouseLeave={()=>pressEnd("managezones",setPressedAddZone,false)}
                     style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`1px solid ${S(0.1)}`,pointerEvents:"none"}}/>
                     <div style={{display:"flex",alignItems:"center",gap:6,transform:pressedAddZone?"scale(1.06)":"scale(1)",transition:pressedAddZone?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
-                      <div style={{width:18,height:18,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                      <span style={{color:ACCENT,fontSize:14,fontWeight:500}}>Zone</span>
+                      <div style={{width:18,height:18,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/settings-outline.svg)",maskImage:"url(/icons/settings-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                      <span style={{color:ACCENT,fontSize:14,fontWeight:500}}>Manage zones</span>
                     </div>
                   </button>
                   <button
@@ -2132,12 +2133,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Save</button>
                       </div>
                     </div>
-                  ):(
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                    <span style={{color:C(0.85),fontSize:16,fontWeight:700,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{zone.label}</span>
-                    {zone.id!=="__orphaned__"&&(
-                      <button onClick={()=>{setZoneNameError(false);setZForm({label:zone.label,emoji:zone.emoji});setEmojiPicker(false);setZoneExpandId(zone.id);}} style={{background:"none",border:"none",width:26,height:26,cursor:"pointer",flexShrink:0,padding:0}}><div style={{width:"100%",height:"100%",backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/edit-outline.svg)",maskImage:"url(/icons/edit-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
-                    )}
+                  ):!taskZoneFilter&&(
+                  <div style={{marginBottom:12}}>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:700}}>{zone.label}</span>
                   </div>
                   )}
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -2158,15 +2156,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 </svg>
                               </div>
                             )}
-                            <div style={{flex:1}}>
-                              <div style={{color:C(0.9),fontSize:15,fontWeight:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{t.text}</div>
-                              <div style={{display:"flex",gap:6,marginTop:2,alignItems:"center"}}>
-                                <span style={{color:freqColorFor(t),fontSize:13}}>{freqLabelFor(t)}{(t.timesPerDay||1)>1?` ×${t.timesPerDay}`:""}</span>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
+                              <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:4,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
+                                <span style={{fontSize:13,color:freqColorFor(t),whiteSpace:"nowrap",flexShrink:0}}>{freqLabelFor(t)}{(t.timesPerDay||1)>1?` ×${t.timesPerDay}`:""}</span>
                                 {people.length>1&&(()=>{
-                                  if(pIds.length===people.length) return <span style={{color:C(0.5),fontSize:13}}>· <span style={{color:"#cbd5e1",fontWeight:600}}>{tr("all")}</span></span>;
+                                  if(pIds.length===people.length) return <><div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/><span style={{fontSize:13,color:"#cbd5e1",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{tr("all")}</span></>;
                                   const p=getPerson(pIds[0]);
-                                  if(pIds.length>1) return <span style={{color:C(0.5),fontSize:13}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name} +{pIds.length-1}</span></span>;
-                                  return <span style={{color:C(0.5),fontSize:13}}>· <span style={{color:p?.color,fontWeight:600}}>{p?.name}</span></span>;
+                                  if(pIds.length>1) return <><div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/><span style={{fontSize:13,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name} +{pIds.length-1}</span></>;
+                                  return <><div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/><span style={{fontSize:13,color:p?.color||C(0.55),fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>{p?.name}</span></>;
                                 })()}
                               </div>
                             </div>
@@ -2827,6 +2825,39 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         )}
 
         {/* ── ZONE EDIT/CREATE SHEET (global — reachable from any tab) ──── */}
+        {showManageZones&&(
+          <div style={{position:"absolute",inset:0,zIndex:290,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column"}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",gap:8}}>
+                <button onClick={()=>setShowManageZones(false)} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
+                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </button>
+                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700,flex:1}}>Manage zones</div>
+                <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
+                  <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </button>
+              </div>
+              <div style={{flex:1,overflowY:"auto",padding:"0 16px 16px"}}>
+                {zones.length===0?(
+                  <div style={{textAlign:"center",padding:"60px 0"}}>
+                    <div style={{fontSize:44}}>📦</div>
+                    <div style={{color:C(0.38),marginTop:10,fontSize:14}}>No zones yet — add one to get started</div>
+                  </div>
+                ):zones.map(z=>(
+                  <div key={z.id} style={{...CARD,display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+                    <div style={{width:40,height:40,borderRadius:12,background:"rgba(255,255,255,0.1)",fontSize:20,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{z.emoji}</div>
+                    <div style={{flex:1,color:C(0.9),fontSize:15,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                    <button onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);}} style={{background:"none",border:"none",width:32,height:32,cursor:"pointer",flexShrink:0,padding:0}}>
+                      <div style={{width:"100%",height:"100%",backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/edit-outline.svg)",maskImage:"url(/icons/edit-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    </button>
+                    <button onClick={()=>deleteZone(z.id)} style={{background:"none",border:"none",width:32,height:32,cursor:"pointer",flexShrink:0,padding:0}}>
+                      <div style={{width:"100%",height:"100%",backgroundColor:"#f87171",WebkitMaskImage:"url(/icons/cross.svg)",maskImage:"url(/icons/cross.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    </button>
+                  </div>
+                ))}
+              </div>
+          </div>
+        )}
+
         {zoneExpandId&&(()=>{
           const isNew=zoneExpandId==="__new__";
           const z=isNew?null:zones.find(x=>x.id===zoneExpandId);
