@@ -1716,7 +1716,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       )}
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
-                        <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
+                        <div style={{color:C(0.9),fontSize:18,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
                         <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:4,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
