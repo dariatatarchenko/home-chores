@@ -1435,7 +1435,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>}
                 {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
                   <div key={n.id} style={{...CARD,display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,background:isUnread?`${ACCENT}14`:CARD.background,cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);closeNotifs();}}>
-                    <span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:1}}>{n.icon}</span>
+                    <span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:2}}>{n.icon}</span>
                     <div style={{minWidth:0,flex:1}}>
                       <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{n.from}</div>
                       <div style={{color:TEXT3,fontSize:12,marginTop:2}}>{n.text}</div>
@@ -1487,7 +1487,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Week strip */}
               <div style={{flexShrink:0,margin:"0"}}>
-                <div ref={stripRef} onScroll={e=>{weekScrollLeftRef.current=e.currentTarget.scrollLeft;}} style={{display:"flex",gap:5,paddingLeft:20,paddingRight:20,paddingTop:8,paddingBottom:20,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",
+                <div ref={stripRef} onScroll={e=>{weekScrollLeftRef.current=e.currentTarget.scrollLeft;}} style={{display:"flex",gap:4,paddingLeft:20,paddingRight:20,paddingTop:8,paddingBottom:20,overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none",
                   WebkitMaskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)",
                   maskImage:"linear-gradient(to right,transparent 0%,black 12%,black 88%,transparent 100%)"}}>
                   {visWeek.map(d=>{
@@ -1554,7 +1554,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       {pct===100?(<span style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:12,height:12,backgroundColor:"#34d399",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>All done!</span>):`${dayAllDone} of ${dayAllTasks.length}`}
                     </span>
                   </div>
-                  <div style={{background:S(0.07),borderRadius:4,height:3,overflow:"hidden"}}>
+                  <div style={{background:S(0.07),borderRadius:4,height:4,overflow:"hidden"}}>
                     <div style={{height:"100%",width:`${pct}%`,borderRadius:4,transition:"width 0.4s",background:pct===100?"linear-gradient(90deg,#34d399,#6ee7b7)":`linear-gradient(90deg,${ACCENT},#a78bfa)`}}/>
                   </div>
                 </div>
@@ -1690,9 +1690,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           );})()}
                           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                             {done
-                              ?<div style={{width:13,height:13,backgroundColor:isDark?"#211c3d":"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>
+                              ?<div style={{width:12,height:12,backgroundColor:isDark?"#211c3d":"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>
                               :isFuture
-                              ?<div style={{width:13,height:13,backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                              ?<div style={{width:12,height:12,backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                               :<span style={{fontSize:8,fontWeight:700,color:C(0.6),lineHeight:1}}>{doneCount}/{t.timesPerDay}</span>}
                           </div>
                         </button>
@@ -1704,8 +1704,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         cursor:isFuture?"not-allowed":"pointer",
                         display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",
                       }}>
-                        {done&&<div style={{width:13,height:13,backgroundColor:isDark?"#211c3d":"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>}
-                        {!done&&isFuture&&<div style={{width:13,height:13,backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>}
+                        {done&&<div style={{width:12,height:12,backgroundColor:isDark?"#211c3d":"#fff",WebkitMaskImage:"url(/icons/check.svg)",maskImage:"url(/icons/check.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",animation:"checkPop 0.35s ease"}}/>}
+                        {!done&&isFuture&&<div style={{width:12,height:12,backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/lock-outline.svg)",maskImage:"url(/icons/lock-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>}
                       </button>
                       )}
                       {/* Text */}
@@ -1730,7 +1730,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           </>}
                           {streak>1&&<>
                             <div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/>
-                            <span style={{fontSize:13,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:13,height:13,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
+                            <span style={{fontSize:13,color:"#fbbf24",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap",flexShrink:0}}><div style={{width:12,height:12,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{streak}</span>
                           </>}
                           {t.rescheduledFrom&&<>
                             <div style={{width:4,height:4,borderRadius:"50%",background:C(0.2),flexShrink:0}}/>
@@ -1823,7 +1823,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
                   {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:TEXT3,fontSize:12,fontWeight:700}}>{d}</div>)}
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:12}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:12}}>
                   {cells.map((d,i)=>{
                     if(!d) return <div key={"e"+i}/>;
                     const dStr=ds(d),cnt=dayTasks(dStr).length;
@@ -1831,7 +1831,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     const isT=dStr===todayStr,iP=dStr<todayStr,iS=selDay===dStr;
                     const allD=cnt>0&&dCnt===cnt,hasMiss=iP&&cnt>0&&dCnt<cnt;
                     return (
-                      <div key={dStr} onClick={()=>setSelDay(dStr)} style={{borderRadius:10,aspectRatio:"1",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,cursor:"pointer",transition:"all 0.15s",
+                      <div key={dStr} onClick={()=>setSelDay(dStr)} style={{borderRadius:10,aspectRatio:"1",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,cursor:"pointer",transition:"all 0.15s",
                         background:iS?`linear-gradient(135deg,${ACCENT},${ACCENT2})`:isT?"rgba(99,102,241,0.18)":S(0.04),
                         border:iS?`1px solid ${C(0.2)}`:isT?"1px solid rgba(99,102,241,0.4)":"1px solid transparent",
                         boxShadow:iS?"0 4px 16px rgba(99,102,241,0.35)":"none"}}>
@@ -1918,7 +1918,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <input ref={taskNameRef} className={`std-input${taskNameError?" input-error":""}`} type="text" maxLength={form.maxLen} value={form.text} onChange={e=>{setForm(f=>({...f,text:e.target.value.slice(0,f.maxLen)}));if(e.target.value.trim())setTaskNameError(false);}} placeholder="e.g. wash the sink" style={{...inputSt,border:taskNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/></div>
                 <div>
                   <span style={labelSt}>{tr("zone")}</span>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                     {zones.map(z=>{const sel=form.zone===z.id; return (
                       <button key={z.id} onClick={()=>setForm(f=>({...f,zone:z.id}))} style={{position:"relative",display:"flex",alignItems:"center",gap:6,background:sel?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",color:sel?"#fff":TEXT2,fontSize:14}}>
                         <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
@@ -1930,7 +1930,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div>
                   <span style={labelSt}>{tr("frequency")}</span>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                     {FREQ_OPTIONS.map(f=>{const sel=form.freq===f.id; return (
                       <button key={f.id} onClick={()=>setForm(fm=>({...fm,freq:(f.id==="custom"&&fm.freq==="custom")?"daily":f.id}))} style={{position:"relative",background:sel?FREQ_COLOR[f.id]+"25":S(0.05),border:"none",borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",color:sel?FREQ_COLOR[f.id]:TEXT2,fontSize:14,fontWeight:500}}>
                         <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?FREQ_COLOR[f.id]+"60":S(0.1)}`,pointerEvents:"none"}}/>
@@ -2019,7 +2019,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",
                     }}>
                       <div style={{position:"absolute",inset:0,borderRadius:20,border:`${(form.personIds||[]).length===people.length?"2px":"1px"} solid ${(form.personIds||[]).length===people.length?C(0.4):S(0.1)}`,pointerEvents:"none"}}/>
-                      <span style={{color:(form.personIds||[]).length===people.length?C(0.9):TEXT2,fontSize:14}}>{tr("all")}</span>
+                      <span style={{color:(form.personIds||[]).length===people.length?C(0.9):TEXT2,fontSize:14,fontWeight:(form.personIds||[]).length===people.length?700:400}}>{tr("all")}</span>
                     </button>
                     {people.map(p=>{
                       const isAll=(form.personIds||[]).length===people.length;
@@ -2038,13 +2038,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       })} style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                         <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?p.color+"90":S(0.1)}`,pointerEvents:"none"}}/>
                         <Avatar person={p} size={18}/>
-                        <span style={{color:sel?p.color:TEXT2,fontSize:14}}>{p.name}</span>
+                        <span style={{color:sel?p.color:TEXT2,fontSize:14,fontWeight:sel?700:400}}>{p.name}</span>
                       </button>;
                     })}
                   </div>
                 </div>
                 )}
-                <button onClick={saveTask} disabled={savingTask} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:16,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:savingTask?"default":"pointer",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
+                <button onClick={saveTask} disabled={savingTask} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:savingTask?"default":"pointer",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
                 <button onClick={closeTaskForm} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
               </div>
@@ -2134,7 +2134,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <div style={{display:"flex",gap:8}}>
                         <button onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"10px",color:C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancel</button>
                         <button onClick={()=>{deleteZone(zone.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"10px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
-                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Save</button>
+                        <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Save</button>
                       </div>
                     </div>
                   ):!taskZoneFilter&&(
@@ -2149,9 +2149,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <div key={t.id} style={{...CARD,cursor:"pointer",overflow:"hidden",boxSizing:"border-box"}} onClick={()=>setExpandId(open?null:t.id)}>
                           <div style={{display:"flex",alignItems:"center",gap:10,minHeight:44}}>
                             {pIds.length===1?(
-                              <Avatar person={getPerson(pIds[0])} size={32}/>
+                              <Avatar person={getPerson(pIds[0])} size={24}/>
                             ):(
-                              <div style={{width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                              <div style={{width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                                   <circle cx="15.5" cy="8.5" r="4.2" fill="#94a3b8" opacity="0.55"/>
                                   <path d="M15.5 14.3c-3.6 0-6.5 2.4-6.9 5.7h13.8c-0.4-3.3-3.3-5.7-6.9-5.7z" fill="#94a3b8" opacity="0.55"/>
@@ -2182,7 +2182,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             <div onClick={e=>e.stopPropagation()} style={{marginTop:6,paddingTop:8}}>
                               {people.length>1&&(
                               <>
-                              <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:10}}>
+                              <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:10}}>
                                 <button
                                   onTouchStart={e=>{e.preventDefault();pressStart("acc-person-all-"+t.id,setPressedAccPerson,"all");}}
                                   onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-person-all-"+t.id,e)){const upd={personIds:people.map(p=>p.id),personId:people[0]?.id??null};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}pressEnd("acc-person-all-"+t.id,setPressedAccPerson,null);}}
@@ -2197,7 +2197,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                   borderRadius:20,padding:"0 16px",cursor:"pointer",
                                 }}>
                                   <div style={{position:"absolute",inset:0,borderRadius:20,border:`${(t.personIds||[t.personId]).filter(Boolean).length===people.length?"2px":"1px"} solid ${(t.personIds||[t.personId]).filter(Boolean).length===people.length?C(0.4):S(0.1)}`,pointerEvents:"none"}}/>
-                                  <span style={{color:(t.personIds||[t.personId]).filter(Boolean).length===people.length?C(0.9):TEXT2,fontSize:14,display:"inline-block",transform:pressedAccPerson==="all"?"scale(1.08)":"scale(1)",transition:pressedAccPerson==="all"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{tr("all")}</span>
+                                  <span style={{color:(t.personIds||[t.personId]).filter(Boolean).length===people.length?C(0.9):TEXT2,fontSize:14,fontWeight:(t.personIds||[t.personId]).filter(Boolean).length===people.length?700:400,display:"inline-block",transform:pressedAccPerson==="all"?"scale(1.08)":"scale(1)",transition:pressedAccPerson==="all"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{tr("all")}</span>
                                 </button>
                                 {people.map(p=>{
                                   const pIds=t.personIds||[t.personId].filter(Boolean);
@@ -2213,7 +2213,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?p.color+"90":S(0.1)}`,pointerEvents:"none"}}/>
                                     <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedAccPerson===p.id?"scale(1.08)":"scale(1)",transition:pressedAccPerson===p.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                                       <Avatar person={p} size={18}/>
-                                      <span style={{color:sel?p.color:TEXT2,fontSize:14}}>{p.name}</span>
+                                      <span style={{color:sel?p.color:TEXT2,fontSize:14,fontWeight:sel?700:400}}>{p.name}</span>
                                     </div>
                                   </button>;
                                 })}
@@ -2221,8 +2221,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"9px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"9px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"8px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"8px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
@@ -2269,11 +2269,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <div key={p.id} onClick={()=>{if(p.id!==meId)return;setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});}} style={{...CARD,display:"flex",alignItems:"center",gap:10,cursor:p.id===meId?"pointer":"default"}}>
                         <Avatar person={p} size={40}/>
                         <div style={{flex:1}}>
-                          <div style={{color:C(0.88),fontSize:15,fontWeight:600,display:"flex",alignItems:"center",gap:7}}>
+                          <div style={{color:C(0.88),fontSize:15,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
                             {p.name}
-                            {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:6,padding:"3px 6px"}}>me</span>}
+                            {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:6,padding:"4px 6px"}}>me</span>}
                           </div>
-                          <div style={{color:C(0.55),fontSize:12,marginTop:1}}>{count} task{count!==1?"s":""}</div>
+                          <div style={{color:C(0.55),fontSize:12,marginTop:2}}>{count} task{count!==1?"s":""}</div>
                         </div>
                         {p.id===meId&&<div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>}
                       </div>
@@ -2294,7 +2294,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:6}}>Day starts at</div>
                 <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Applies to everyone in this home — late-night tasks still count toward the previous day</div>
-                <div style={{display:"flex",gap:8}}>
+                <div style={{display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
                     <button key={opt.h} onClick={()=>{
                       const computeEffectiveTodayStr=resetHour=>{
@@ -2328,7 +2328,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                           setTimeout(()=>setToast(null),4000);
                         }
                       }
-                    }} style={{flex:1,height:40,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":S(0.06),border:`1.5px solid ${dayResetHour===opt.h?ACCENT:"transparent"}`,borderRadius:20,color:dayResetHour===opt.h?"#fff":C(0.4),fontSize:14,fontWeight:dayResetHour===opt.h?700:500,cursor:"pointer"}}>{opt.label}</button>
+                    }} style={{position:"relative",flex:1,height:36,border:"none",background:"transparent",cursor:"pointer"}}>
+                      <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:dayResetHour===opt.h?1:0,transition:"opacity 0.2s ease"}}/>
+                      <span style={{position:"relative",fontSize:14,fontWeight:dayResetHour===opt.h?700:400,color:dayResetHour===opt.h?"#fff":TEXT2}}>{opt.label}</span>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -2338,7 +2341,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>👤</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{color:C(0.82),fontSize:14,fontWeight:500}}>Account</div>
-                  <div style={{color:C(0.4),fontSize:11,marginTop:1}}>Invite code, sign out, delete account</div>
+                  <div style={{color:C(0.4),fontSize:11,marginTop:2}}>Invite code, sign out, delete account</div>
                 </div>
                 <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               </div>
@@ -2380,9 +2383,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     if(error){ setPasswordMsg(error.message||"Couldn't set password"); return; }
                     setPasswordMsg("✓ Password set");
                     setNewPassword("");
-                  }} disabled={settingPassword} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",width:"100%",opacity:settingPassword?0.6:1}}>{settingPassword?"Saving…":"Set password"}</button>
+                  }} disabled={settingPassword} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",width:"100%",opacity:settingPassword?0.6:1}}>{settingPassword?"Saving…":"Set password"}</button>
                 </div>
-                <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>{tr("sign_out")}</button>
+                <button onClick={onSignOut} style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,padding:"12px",color:"#f87171",fontSize:14,fontWeight:700,cursor:"pointer",width:"100%",marginBottom:14}}>{tr("sign_out")}</button>
                 <button onClick={async()=>{
                   if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
                   const personDeleted=await deletePersonRemote(meId);
@@ -2490,11 +2493,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {/* Weekly summary */}
                   <div style={{...CARD,marginBottom:12}}>
                     {SL("This week")}
-                    {mvp&&<div style={{background:"rgba(251,191,36,0.12)",borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(251,191,36,0.3)"}}>
+                    {mvp&&<div style={{background:"rgba(251,191,36,0.12)",borderRadius:14,padding:"8px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(251,191,36,0.3)"}}>
                       <span style={{fontSize:20}}>⭐</span>
                       <span style={{color:"#fbbf24",fontSize:13,fontWeight:500}}>Top performer this week: {mvp.name}</span>
                     </div>}
-                    {dreamTeam&&<div style={{background:"rgba(52,211,153,0.12)",borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(52,211,153,0.3)"}}>
+                    {dreamTeam&&<div style={{background:"rgba(52,211,153,0.12)",borderRadius:14,padding:"8px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(52,211,153,0.3)"}}>
                       <span style={{fontSize:20}}>🤝</span>
                       <span style={{color:"#34d399",fontSize:13,fontWeight:500}}>Dream Team — everyone contributed!</span>
                     </div>}
@@ -2505,11 +2508,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       return(
                         <div key={p.id} style={{marginBottom:i<arr.length-1?14:0}}>
                           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-                            <Avatar person={p} size={32}/>
+                            <Avatar person={p} size={24}/>
                             <div style={{flex:1}}>
                               <div style={{color:"rgba(255,255,255,0.88)",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
                                 {p.name}
-                                {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
+                                {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"4px 6px"}}>me</span>}
                               </div>
                               <div style={{color:rank.color,fontSize:11}}>{rank.label}</div>
                             </div>
@@ -2545,7 +2548,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{color:"rgba(255,255,255,0.88)",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
                                   {p.name}
-                                  {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
+                                  {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"4px 6px"}}>me</span>}
                                 </div>
                                 <div style={{color:rank.color,fontSize:11}}>{rank.icon} {rank.label}</div>
                               </div>
@@ -2573,16 +2576,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         <div key={p.id} style={{marginBottom:pi<people.length-1?24:0}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                             <div style={{display:"flex",alignItems:"center",gap:8}}>
-                              <Avatar person={p} size={32}/>
+                              <Avatar person={p} size={24}/>
                               <span style={{color:"rgba(255,255,255,0.85)",fontSize:14,fontWeight:600}}>{p.name}</span>
-                              {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
+                              {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"4px 6px"}}>me</span>}
                             </div>
                             <span style={{color:pStreak>0?"#fbbf24":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:700}}>
                               {pStreak>0?`🔥 ${pStreak} days`:"No streak yet"}
                             </span>
                           </div>
                           {earned.length>0&&(
-                            <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:6}}>
+                            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6}}>
                               {earned.map(m=>(
                                 <span key={m.days} style={{
                                   display:"inline-flex",alignItems:"center",
@@ -2595,11 +2598,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                             </div>
                           )}
                           {next?(
-                            <div style={{color:C(0.5),fontSize:12,marginTop:1}}>
+                            <div style={{color:C(0.5),fontSize:12,marginTop:2}}>
                               {next.days-pStreak} more days to unlock {next.label}
                             </div>
                           ):(
-                            <div style={{color:"#e879f9",fontSize:12,marginTop:1}}>All streak badges unlocked!</div>
+                            <div style={{color:"#e879f9",fontSize:12,marginTop:2}}>All streak badges unlocked!</div>
                           )}
                         </div>
                       );
@@ -2615,9 +2618,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       return(
                         <div key={p.id} style={{marginBottom:pi<arr.length-1?20:0}}>
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                            <Avatar person={p} size={32}/>
+                            <Avatar person={p} size={24}/>
                             <span style={{color:"rgba(255,255,255,0.7)",fontSize:13,fontWeight:600}}>{p.name}</span>
-                            {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"2px 5px"}}>me</span>}
+                            {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",borderRadius:4,padding:"4px 6px"}}>me</span>}
                           </div>
                           {achs.length===0
                             ?<div style={{color:"rgba(255,255,255,0.3)",fontSize:12}}>Complete 10 tasks in any zone to unlock Bronze</div>
@@ -2628,9 +2631,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                   border:`1px solid rgba(255,255,255,0.08)`,
                                   borderRadius:12,padding:"12px 12px",
                                 }}>
-                                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:7}}>
+                                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:8}}>
                                     <span style={{color:"rgba(255,255,255,0.8)",fontSize:13,fontWeight:500}}>{a.label}</span>
-                                    <div style={{display:"flex",alignItems:"center",gap:3}}>
+                                    <div style={{display:"flex",alignItems:"center",gap:4}}>
                                       {LEVELS.map(lvl=>(
                                         <span key={lvl.min} style={{fontSize:15,opacity:a.ach.cnt>=lvl.min?1:0.2,filter:a.ach.cnt>=lvl.min?"none":"grayscale(1)"}}>{lvl.icon}</span>
                                       ))}
@@ -2641,8 +2644,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                     const ceil=a.ach.cnt>=100?100:a.ach.cnt>=50?100:a.ach.cnt>=10?50:10;
                                     const pct=a.ach.cnt>=100?100:Math.round((a.ach.cnt-floor)/(ceil-floor)*100);
                                     return(
-                                      <div style={{background:"rgba(255,255,255,0.07)",borderRadius:3,height:4,overflow:"hidden"}}>
-                                        <div style={{height:"100%",width:`${pct}%`,borderRadius:3,background:a.ach.color}}/>
+                                      <div style={{background:"rgba(255,255,255,0.07)",borderRadius:4,height:4,overflow:"hidden"}}>
+                                        <div style={{height:"100%",width:`${pct}%`,borderRadius:4,background:a.ach.color}}/>
                                       </div>
                                     );
                                   })()}
@@ -2989,7 +2992,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               <div>
                 <span style={labelSt}>COLOR</span>
-                <div style={{display:"flex",gap:9,flexWrap:"wrap"}}>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                   {PALETTE.map(c=>(
                     <button key={c} onClick={()=>setPForm(f=>({...f,color:c}))} style={{
@@ -3007,7 +3010,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 </div>
               </div>
-              <button onClick={savePerson} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
+              <button onClick={savePerson} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
               <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{background:"none",border:"none",color:C(0.4),fontSize:13,cursor:"pointer",padding:"4px 0"}}>Cancel</button>
             </div>
           </div>
@@ -3038,7 +3041,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <input className={`std-input${zoneNameError?" input-error":""}`} value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
                 </div>
               </div>
-              <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Add</button>
+              <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Add</button>
             </div>
           </div>
         )}
