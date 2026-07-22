@@ -476,7 +476,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     rescheduledFrom:r.rescheduled_from,createdBy:r.created_by,confirmedBy:r.confirmed_by||[],
     excludedDates:r.excluded_dates||[],timesPerDay:r.times_per_day||1,shiftAnchor:r.shift_anchor||null,estMinutes:r.est_minutes??null,archivedAt:r.archived_at||null,
   });
-  const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body,readBy:r.read_by||[]});
+  const rowToNotif=r=>({id:r.id,actorPersonId:r.actor_person_id,icon:r.icon,from:r.title,text:r.body,readBy:r.read_by||[],assignedPersonId:r.assigned_person_id||null});
 
   useEffect(()=>{
     let active=true;
@@ -956,6 +956,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   };
   const dayTasks=d=>tasks.filter(t=>(!t.archivedAt||d<todayStr)&&isScheduledOn(t,d));
   const getPerson=id=>people.find(p=>p.id===id);
+  const notifTitle=n=>{
+    if(!n.assignedPersonId) return n.from;
+    const suffix=n.assignedPersonId===meId?" — assigned to you":` — assigned to ${getPerson(n.assignedPersonId)?.name||""}`;
+    return n.from+suffix;
+  };
   const getZone=id=>zones.find(z=>z.id===id);
   const unread=notifs.filter(n=>!n.readBy.includes(meId)).length;
   const me=getPerson(meId);
@@ -1189,12 +1194,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       if(people.length>1){
         const creator=getPerson(meId);
         const assignedIds=(newTask.personIds||[]).filter(Boolean);
-        const assignedNote=assignedIds.length===1&&assignedIds[0]!==meId
-          ?` — assigned to ${getPerson(assignedIds[0])?.name||"you"}`
-          :"";
+        const soleAssignee=assignedIds.length===1&&assignedIds[0]!==meId?assignedIds[0]:null;
         supabase.from("notifications").insert({
           household_id:household.id,actor_person_id:meId,icon:"🆕",
-          title:`${creator?.name||"Someone"} added a new task${assignedNote}`,body:newTask.text,
+          title:`${creator?.name||"Someone"} added a new task`,body:newTask.text,
+          assigned_person_id:soleAssignee,
         }).then(({error})=>{ if(error) console.error("insert new-task notification",error); });
       }
     }
@@ -1418,7 +1422,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 16px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
             <span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>
             <div style={{minWidth:0,flex:1}}>
-              <div style={{color:C(0.9),fontSize:14,fontWeight:700}}>{toast.from}</div>
+              <div style={{color:C(0.9),fontSize:14,fontWeight:700}}>{toast.assignedPersonId?notifTitle(toast):toast.from}</div>
               <div style={{color:C(0.6),fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{toast.text}</div>
             </div>
             {toast.onUndo&&<button onClick={e=>{e.stopPropagation();toast.onUndo();setToast(null);}} style={{flexShrink:0,background:"none",border:"none",color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",padding:"6px 8px"}}>Undo</button>}
@@ -1443,7 +1447,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div key={n.id} style={{...CARD,display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,background:isUnread?`${ACCENT}14`:CARD.background,cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);closeNotifs();}}>
                     <span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:2}}>{n.icon}</span>
                     <div style={{minWidth:0,flex:1}}>
-                      <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{n.from}</div>
+                      <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{notifTitle(n)}</div>
                       <div style={{color:TEXT3,fontSize:12,marginTop:2}}>{n.text}</div>
                     </div>
                     {isUnread&&<div style={{width:8,height:8,borderRadius:"50%",background:ACCENT,flexShrink:0,marginTop:4}}/>}
@@ -1566,17 +1570,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
               )}
 
-              {/* Move incomplete tasks forward — only for yesterday; older days are past the point of moving them */}
-              {(()=>{const y=new Date(TODAY);y.setDate(y.getDate()-1);return selDay===ds(y);})()&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
-                <div style={{flexShrink:0,margin:"0 20px 14px",...G(0.08,20),border:"1px solid rgba(251,191,36,0.25)",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:18}}>⏭️</span>
-                  <div style={{flex:1,color:C(0.7),fontSize:12,lineHeight:1.4}}>
-                    {dayAllTasks.length-dayAllDone} unfinished task{dayAllTasks.length-dayAllDone!==1?"s":""} from this day — move to the next day?
-                  </div>
-                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(251,191,36,0.15)",border:"1px solid rgba(251,191,36,0.35)",borderRadius:12,padding:"8px 12px",color:"#fbbf24",fontSize:12,fontWeight:700,cursor:"pointer"}}>Move</button>
-                </div>
-              )}
-
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
                 <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
@@ -1606,6 +1599,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 ))}
               </div>
               </div>
+
+              {/* Move incomplete tasks forward — only for yesterday; older days are past the point of moving them */}
+              {(()=>{const y=new Date(TODAY);y.setDate(y.getDate()-1);return selDay===ds(y);})()&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
+                <div style={{flexShrink:0,margin:`0 16px ${SPACE_MD}px`,...G(0.08,20),border:"1px solid rgba(251,191,36,0.25)",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{fontSize:18}}>⏭️</span>
+                  <div style={{flex:1,color:C(0.7),fontSize:12,lineHeight:1.4}}>
+                    {dayAllTasks.length-dayAllDone} unfinished task{dayAllTasks.length-dayAllDone!==1?"s":""} from this day — move to the next day?
+                  </div>
+                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(251,191,36,0.15)",border:"1px solid rgba(251,191,36,0.35)",borderRadius:12,padding:"8px 12px",color:"#fbbf24",fontSize:12,fontWeight:700,cursor:"pointer"}}>Move</button>
+                </div>
+              )}
 
               {/* Task cards */}
               <div ref={taskListRef} style={{flex:1,overflowY:"auto",padding:"0 16px",display:"flex",flexDirection:"column",gap:SPACE_SM,paddingBottom:110}}>
@@ -2246,7 +2250,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                   onMouseDown={()=>pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id)}
                                   onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onMouseLeave={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
-                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.55),fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.85),fontSize:14,fontWeight:600,cursor:"pointer"}}>
                                   <span style={{display:"inline-block",transform:pressedAccAction==="edit-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="edit-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Edit</span>
                                 </button>
                               </div>
