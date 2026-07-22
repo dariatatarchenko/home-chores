@@ -2250,7 +2250,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                   <span style={{display:"inline-block",transform:pressedAccAction==="edit-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="edit-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Edit</span>
                                 </button>
                               </div>
-                              {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
+
                             </div>
                           )}
                         </div>
