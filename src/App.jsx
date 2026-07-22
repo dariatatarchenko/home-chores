@@ -104,11 +104,11 @@ const STRINGS = {
     add_task:"Add Task", edit_task:"Edit Task", new_task:"New Task", save:"Save", save_changes:"Save Changes",
     cancel:"Cancel", delete:"Delete", assigned_to:"Assigned to", all:"All", zone:"Zone",
     frequency:"Frequency", start_date:"Start date", what_to_do:"What to do",
-    zones:"Zones", people:"People", invite_code:"Invite code",
+    zones:"Zones", people:"People", invite_code:"Invite Code",
     share_code:"Share this code so your partner can join this home",
     sign_out:"Sign out", delete_account:"Delete account", signed_in_as:"Signed in as",
-    stats:"Stats", this_week:"This week", all_time:"All time", streaks:"Streaks",
-    zone_achievements:"Zone achievements", no_tasks_yet:"No tasks yet — tap + Add to create one",
+    stats:"Stats", this_week:"This Week", all_time:"All Time", streaks:"Streaks",
+    zone_achievements:"Zone Achievements", no_tasks_yet:"No tasks yet — tap + Add to create one",
     no_zones_yet:"No zones yet — add one to get started", language:"Language", theme:"Theme",
     dark:"Dark", light:"Light",
   },
@@ -2271,8 +2271,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_settings")}</span>
                 {myStreak>0&&(
                   <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{color:"#fbbf24",fontSize:16,fontWeight:700,whiteSpace:"nowrap"}}>{myStreak}-day streak!</div>
-                    <div style={{color:C(0.35),fontSize:12,marginTop:2,whiteSpace:"nowrap"}}>Keep it up, {me?.name}!</div>
+                    <div style={{color:"#fbbf24",fontSize:16,fontWeight:700,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:6,justifyContent:"flex-end"}}><div style={{width:16,height:16,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>
+                    <div style={{color:C(0.35),fontSize:14,marginTop:2,whiteSpace:"nowrap"}}>Keep it up, {me?.name}!</div>
                   </div>
                 )}
               </div>
@@ -2288,7 +2288,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {settingsView==="main"&&(<>
               {/* People */}
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {people.map(p=>{
+                  {[...people].sort((a,b)=>(a.id===meId?-1:0)-(b.id===meId?-1:0)).map(p=>{
                     const count=tasks.filter(t=>t.personId===p.id).length;
                     return (
                       <div key={p.id} onClick={()=>{if(p.id!==meId)return;flushSync(()=>{setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});});personNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:p.id===meId?"pointer":"default"}}>
@@ -2310,8 +2310,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{marginTop:16,marginBottom:16,...CARD}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
-                    <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,maskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    <span style={{color:C(0.85),fontSize:16,fontWeight:600}}>{tr("theme")}</span>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,maskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    <span style={{color:C(0.85),fontSize:18,fontWeight:400}}>{tr("theme")}</span>
                   </div>
                   <button onClick={()=>setThemePersisted(theme==="dark"?"light":"dark")} style={{position:"relative",width:52,height:32,borderRadius:16,border:"none",background:theme==="dark"?ACCENT:S(0.15),cursor:"pointer",flexShrink:0,padding:0,transition:"background-color 0.2s"}}>
                     <div style={{position:"absolute",top:2,left:theme==="dark"?22:2,width:28,height:28,borderRadius:"50%",background:"#fff",boxShadow:"0 1px 3px rgba(0,0,0,0.3)",transition:"left 0.2s"}}/>
@@ -2320,12 +2320,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
                 <div onClick={()=>setDayStartAccordionOpen(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,cursor:"pointer"}}>
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
-                    <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:"url(/icons/clock-fill.svg)",maskImage:"url(/icons/clock-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    <span style={{color:C(0.85),fontSize:16,fontWeight:600}}>Day start</span>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/start-fill.svg)",maskImage:"url(/icons/start-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    <span style={{color:C(0.85),fontSize:18,fontWeight:400}}>Day Start</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{color:C(0.5),fontSize:14}}>{[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].find(o=>o.h===dayResetHour)?.label}</span>
-                    <div style={{width:24,height:24,backgroundColor:C(0.4),WebkitMaskImage:"url(/icons/down.svg)",maskImage:"url(/icons/down.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"transform 0.2s",transform:dayStartAccordionOpen?"rotate(180deg)":"none"}}/>
+                    <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/down.svg)",maskImage:"url(/icons/down.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"transform 0.2s",transform:dayStartAccordionOpen?"rotate(180deg)":"none"}}/>
                   </div>
                 </div>
                 {dayStartAccordionOpen&&(
@@ -2366,7 +2366,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     }
                   };
                   return (
-                <div style={{display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
                     <button key={opt.h}
                       onTouchStart={e=>{e.preventDefault();pressStart("dayreset-"+opt.h,setPressedDayReset,opt.h);}}
@@ -2375,9 +2375,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       onMouseDown={()=>pressStart("dayreset-"+opt.h,setPressedDayReset,opt.h)}
                       onMouseUp={()=>{selectDayResetHour(opt);pressEnd("dayreset-"+opt.h,setPressedDayReset,null);}}
                       onMouseLeave={()=>pressEnd("dayreset-"+opt.h,setPressedDayReset,null)}
-                      style={{position:"relative",flex:1,height:36,border:"none",background:"transparent",cursor:"pointer"}}>
-                      <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:dayResetHour===opt.h?1:0,transition:"opacity 0.2s ease"}}/>
-                      <span style={{position:"relative",fontSize:14,fontWeight:400,color:dayResetHour===opt.h?"#fff":TEXT2,display:"inline-block",transform:pressedDayReset===opt.h?"scale(1.1)":"scale(1)",transition:pressedDayReset===opt.h?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{opt.label}</span>
+                      style={{position:"relative",display:"flex",alignItems:"center",height:40,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"0 16px",cursor:"pointer"}}>
+                      <div style={{position:"absolute",inset:0,borderRadius:20,border:`${dayResetHour===opt.h?"2px":"1px"} solid ${dayResetHour===opt.h?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
+                      <span style={{position:"relative",fontSize:14,fontWeight:dayResetHour===opt.h?700:400,color:dayResetHour===opt.h?"#fff":TEXT2,display:"inline-block",transform:pressedDayReset===opt.h?"scale(1.1)":"scale(1)",transition:pressedDayReset===opt.h?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{opt.label}</span>
                     </button>
                   ))}
                 </div>
@@ -2389,8 +2389,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Account entry point */}
               <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
-                <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:"url(/icons/user-fill.svg)",maskImage:"url(/icons/user-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:16,fontWeight:600}}>Account</div>
+                <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/user-fill.svg)",maskImage:"url(/icons/user-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Account</div>
                 <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               </div>
               </>)}
@@ -2542,7 +2542,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
                   {/* Weekly summary */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("This week")}
+                    {SL("This Week")}
                     {mvp&&<div style={{background:"rgba(251,191,36,0.12)",borderRadius:14,padding:"8px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(251,191,36,0.3)"}}>
                       <span style={{fontSize:20}}>⭐</span>
                       <span style={{color:"#fbbf24",fontSize:13,fontWeight:500}}>Top performer this week: {mvp.name}</span>
@@ -2661,7 +2661,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {DIV}
                   {/* Zone achievements */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("Zone achievements")}
+                    {SL("Zone Achievements")}
                     {[...people].sort((a,b)=>getZoneAch(tasks,b.id).length-getZoneAch(tasks,a.id).length).map((p,pi,arr)=>{
                       const achs=getZoneAch(tasks,p.id);
                       const LEVELS=[{icon:"🥉",min:10,color:"#fb923c"},{icon:"🥈",min:50,color:"#94a3b8"},{icon:"🥇",min:100,color:"#fbbf24"}];
@@ -2711,7 +2711,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {DIV}
                   {/* Busiest zones */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("Busiest zones")}
+                    {SL("Busiest Zones")}
                     {(()=>{
                       const ZONE_RING_COLORS=[ACCENT,"#f472b6","#34d399","#fbbf24","#38bdf8","#fb923c","#a78bfa","#2dd4bf"];
                       const counts=zones.map((z,i)=>({z,count:tasks.filter(t=>t.zone===z.id).length,color:ZONE_RING_COLORS[i%ZONE_RING_COLORS.length]})).filter(x=>x.count>0);
@@ -2752,7 +2752,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {DIV}
                   {/* Week over week */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("This week vs last week")}
+                    {SL("This Week vs Last Week")}
                     {(()=>{
                       const thisW=totalCompletionsOn(tasks,weekDates);
                       const lastW=totalCompletionsOn(tasks,lastWeekDates);
@@ -2780,7 +2780,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {DIV}
                   {/* Day of week pattern */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("Best & toughest days")}
+                    {SL("Best & Toughest Days")}
                     {(()=>{
                       const dayLabels=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
                       const stats=dayLabels.map((label,dow)=>{
@@ -2837,7 +2837,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {DIV}
                   {/* Most-liked task */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("Crowd favorite")}
+                    {SL("Crowd Favorite")}
                     {(()=>{
                       const ml=getMostLikedTask(tasks);
                       if(!ml) return <div style={{color:C(0.4),fontSize:12}}>No likes yet — go appreciate someone's work!</div>;
@@ -2858,7 +2858,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {DIV}
                   {/* Task creators */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("Who plans the chores")}
+                    {SL("Who Plans the Chores")}
                     {(()=>{
                       const counts=people.map(p=>({p,count:tasks.filter(t=>t.createdBy===p.id).length})).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
                       if(counts.length===0) return <div style={{color:C(0.4),fontSize:12}}>No task-creation history yet</div>;
@@ -2879,7 +2879,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {DIV}
                   {/* On-time rate */}
                   <div style={{...CARD,marginBottom:12}}>
-                    {SL("On-time vs rescheduled")}
+                    {SL("On-Time vs Rescheduled")}
                     {(()=>{
                       const otr=getOnTimeRate(tasks);
                       if(!otr) return <div style={{color:C(0.4),fontSize:12}}>Not enough history yet</div>;
