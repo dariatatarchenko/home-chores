@@ -804,6 +804,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedDay,setPressedDay]=useState(null);
   const [pressedFilter,setPressedFilter]=useState(null);
   const [pressedAccPerson,setPressedAccPerson]=useState(null);
+  const [pressedDayReset,setPressedDayReset]=useState(null);
   const [pressedCalArrow,setPressedCalArrow]=useState(null);
   const [pressedAddZone,setPressedAddZone]=useState(false);
   const [pressedStats,setPressedStats]=useState(false);
@@ -2294,45 +2295,58 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 <div style={{color:C(0.85),fontSize:16,fontWeight:700,marginBottom:6}}>Day starts at</div>
                 <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Applies to everyone in this home — late-night tasks still count toward the previous day</div>
+                {(()=>{
+                  const selectDayResetHour=opt=>{
+                    const computeEffectiveTodayStr=resetHour=>{
+                      const now=new Date();
+                      if(resetHour>0&&now.getHours()<resetHour) now.setDate(now.getDate()-1);
+                      now.setHours(0,0,0,0);
+                      return ds(now);
+                    };
+                    const oldTodayStr=computeEffectiveTodayStr(dayResetHour);
+                    const newTodayStr=computeEffectiveTodayStr(opt.h);
+                    setDayResetHour(opt.h);
+                    supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{
+                      if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); }
+                    });
+                    // If "today" just shifted backward (there's now more time
+                    // left to finish what was due on that day), un-move any
+                    // tasks that got auto-moved forward off of that day —
+                    // they still have time, no need to have bumped them.
+                    if(newTodayStr<oldTodayStr){
+                      const affected=tasks.filter(t=>t.rescheduledFrom===newTodayStr);
+                      affected.forEach(t=>{
+                        const dates=[...new Set([...t.scheduledDates.filter(d=>d!==oldTodayStr),newTodayStr])].sort();
+                        const excludedDates=(t.excludedDates||[]).filter(d=>d!==newTodayStr);
+                        const shiftAnchor=(t.freq&&t.freq!=="once")?newTodayStr:t.shiftAnchor;
+                        const newFields={scheduledDates:dates,excludedDates,shiftAnchor,rescheduledFrom:null};
+                        setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...newFields}));
+                        persistTask(t.id,newFields);
+                      });
+                      if(affected.length>0){
+                        setToast({icon:"↩️",from:`${affected.length} task${affected.length!==1?"s":""} moved back`,text:"There's still time to finish them today"});
+                        setTimeout(()=>setToast(null),4000);
+                      }
+                    }
+                  };
+                  return (
                 <div style={{display:"flex",gap:2,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22}}>
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
-                    <button key={opt.h} onClick={()=>{
-                      const computeEffectiveTodayStr=resetHour=>{
-                        const now=new Date();
-                        if(resetHour>0&&now.getHours()<resetHour) now.setDate(now.getDate()-1);
-                        now.setHours(0,0,0,0);
-                        return ds(now);
-                      };
-                      const oldTodayStr=computeEffectiveTodayStr(dayResetHour);
-                      const newTodayStr=computeEffectiveTodayStr(opt.h);
-                      setDayResetHour(opt.h);
-                      supabase.from("households").update({day_reset_hour:opt.h}).eq("id",household.id).then(({error})=>{
-                        if(error){ console.error("setDayResetHour",error); window.alert("Couldn't save this setting: "+error.message); }
-                      });
-                      // If "today" just shifted backward (there's now more time
-                      // left to finish what was due on that day), un-move any
-                      // tasks that got auto-moved forward off of that day —
-                      // they still have time, no need to have bumped them.
-                      if(newTodayStr<oldTodayStr){
-                        const affected=tasks.filter(t=>t.rescheduledFrom===newTodayStr);
-                        affected.forEach(t=>{
-                          const dates=[...new Set([...t.scheduledDates.filter(d=>d!==oldTodayStr),newTodayStr])].sort();
-                          const excludedDates=(t.excludedDates||[]).filter(d=>d!==newTodayStr);
-                          const shiftAnchor=(t.freq&&t.freq!=="once")?newTodayStr:t.shiftAnchor;
-                          const newFields={scheduledDates:dates,excludedDates,shiftAnchor,rescheduledFrom:null};
-                          setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...newFields}));
-                          persistTask(t.id,newFields);
-                        });
-                        if(affected.length>0){
-                          setToast({icon:"↩️",from:`${affected.length} task${affected.length!==1?"s":""} moved back`,text:"There's still time to finish them today"});
-                          setTimeout(()=>setToast(null),4000);
-                        }
-                      }
-                    }} style={{position:"relative",flex:1,height:36,border:"none",background:"transparent",cursor:"pointer"}}>
+                    <button key={opt.h}
+                      onTouchStart={e=>{e.preventDefault();pressStart("dayreset-"+opt.h,setPressedDayReset,opt.h);}}
+                      onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("dayreset-"+opt.h,e)){selectDayResetHour(opt);}pressEnd("dayreset-"+opt.h,setPressedDayReset,null);}}
+                      onTouchCancel={()=>pressEnd("dayreset-"+opt.h,setPressedDayReset,null)}
+                      onMouseDown={()=>pressStart("dayreset-"+opt.h,setPressedDayReset,opt.h)}
+                      onMouseUp={()=>{selectDayResetHour(opt);pressEnd("dayreset-"+opt.h,setPressedDayReset,null);}}
+                      onMouseLeave={()=>pressEnd("dayreset-"+opt.h,setPressedDayReset,null)}
+                      style={{position:"relative",flex:1,height:36,border:"none",background:"transparent",cursor:"pointer"}}>
                       <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:dayResetHour===opt.h?1:0,transition:"opacity 0.2s ease"}}/>
-                      <span style={{position:"relative",fontSize:14,fontWeight:dayResetHour===opt.h?700:400,color:dayResetHour===opt.h?"#fff":TEXT2}}>{opt.label}</span>
+                      <span style={{position:"relative",fontSize:14,fontWeight:400,color:dayResetHour===opt.h?"#fff":TEXT2,display:"inline-block",transform:pressedDayReset===opt.h?"scale(1.08)":"scale(1)",transition:pressedDayReset===opt.h?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{opt.label}</span>
                     </button>
                   ))}
+                </div>
+                  );
+                })()}
                 </div>
               </div>
 
