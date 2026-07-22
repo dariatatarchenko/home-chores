@@ -541,6 +541,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           setTasks(ts=>ts.filter(t=>t.id!==payload.old.id));
         } else {
           const row=rowToTask(payload.new);
+          const recentEdit=recentLocalTaskEditsRef.current[row.id];
+          // Ignore echoes of our own very recent local edits — an out-of-order
+          // realtime event (e.g. from a moment-ago change) can otherwise
+          // briefly overwrite the newer optimistic state we already applied,
+          // causing a visible flicker back to the old value before correcting.
+          if(recentEdit&&Date.now()-recentEdit<2000) return;
           setTasks(ts=>{
             const exists=ts.some(t=>t.id===row.id);
             return exists?ts.map(t=>t.id===row.id?row:t):[row,...ts];
@@ -583,7 +589,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   },[household.id]);
 
   // Persist a task's current fields to Supabase (fire-and-forget, local state already updated)
+  const recentLocalTaskEditsRef=useRef({});
   const persistTask=(id,fields)=>{
+    recentLocalTaskEditsRef.current[id]=Date.now();
     const dbFields={};
     if("zone" in fields) dbFields.zone_id=fields.zone;
     if("text" in fields) dbFields.text=fields.text;
@@ -806,6 +814,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedFilter,setPressedFilter]=useState(null);
   const [pressedAccPerson,setPressedAccPerson]=useState(null);
   const [pressedDayReset,setPressedDayReset]=useState(null);
+  const [pressedAccAction,setPressedAccAction]=useState(null);
   const [pressedCalArrow,setPressedCalArrow]=useState(null);
   const [pressedAddZone,setPressedAddZone]=useState(false);
   const [pressedStats,setPressedStats]=useState(false);
@@ -2225,8 +2234,26 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}} style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.55),fontSize:14,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button
+                                  onTouchStart={e=>{e.preventDefault();pressStart("acc-del-"+t.id,setPressedAccAction,"del-"+t.id);}}
+                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-del-"+t.id,e)){if(window.confirm(`Delete "${t.text}"? This can't be undone.`)){setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}}pressEnd("acc-del-"+t.id,setPressedAccAction,null);}}
+                                  onTouchCancel={()=>pressEnd("acc-del-"+t.id,setPressedAccAction,null)}
+                                  onMouseDown={()=>pressStart("acc-del-"+t.id,setPressedAccAction,"del-"+t.id)}
+                                  onMouseUp={()=>{if(window.confirm(`Delete "${t.text}"? This can't be undone.`)){setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}pressEnd("acc-del-"+t.id,setPressedAccAction,null);}}
+                                  onMouseLeave={()=>pressEnd("acc-del-"+t.id,setPressedAccAction,null)}
+                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                                  <span style={{display:"inline-block",transform:pressedAccAction==="del-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="del-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Delete</span>
+                                </button>}
+                                <button
+                                  onTouchStart={e=>{e.preventDefault();pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id);}}
+                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-edit-"+t.id,e)){setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onTouchCancel={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
+                                  onMouseDown={()=>pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id)}
+                                  onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onMouseLeave={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
+                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.55),fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                                  <span style={{display:"inline-block",transform:pressedAccAction==="edit-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="edit-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Edit</span>
+                                </button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
@@ -2244,23 +2271,22 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ SETTINGS ══════════════════════════════════════════ */}
           {tab==="settings"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"flex-start",minHeight:40,gap:10}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",minHeight:40,gap:10}}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
                 {settingsView==="account"&&(
                   <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center"}}><div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 )}
                 <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
+                </div>
+                {settingsView==="main"&&myStreak>0&&(
+                  <div style={{display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",padding:"0 12px",background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:20,flexShrink:0}}>
+                    <div style={{width:16,height:16,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                    <span style={{color:"#fbbf24",fontSize:14,fontWeight:700,whiteSpace:"nowrap"}}>{myStreak}-day</span>
+                  </div>
+                )}
               </div>
               <div ref={settingsScrollRef} style={{flex:1,overflowY:"auto",padding:"8px 16px 110px"}}>
               {settingsView==="main"&&(<>
-              {myStreak>0&&(
-                <div style={{marginBottom:22,display:"flex",alignItems:"center",gap:12}}>
-                  <span style={{fontSize:28}}>🔥</span>
-                  <div>
-                    <div style={{color:"#fbbf24",fontSize:16,fontWeight:700}}>{myStreak}-day streak!</div>
-                    <div style={{color:C(0.35),fontSize:12,marginTop:2}}>Keep it up, {me?.name}!</div>
-                  </div>
-                </div>
-              )}
               {/* People */}
               <div>
                 <div style={{marginBottom:12}}>
@@ -2344,7 +2370,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       onMouseLeave={()=>pressEnd("dayreset-"+opt.h,setPressedDayReset,null)}
                       style={{position:"relative",flex:1,height:36,border:"none",background:"transparent",cursor:"pointer"}}>
                       <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:dayResetHour===opt.h?1:0,transition:"opacity 0.2s ease"}}/>
-                      <span style={{position:"relative",fontSize:14,fontWeight:400,color:dayResetHour===opt.h?"#fff":TEXT2,display:"inline-block",transform:pressedDayReset===opt.h?"scale(1.08)":"scale(1)",transition:pressedDayReset===opt.h?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{opt.label}</span>
+                      <span style={{position:"relative",fontSize:14,fontWeight:400,color:dayResetHour===opt.h?"#fff":TEXT2,display:"inline-block",transform:pressedDayReset===opt.h?"scale(1.1)":"scale(1)",transition:pressedDayReset===opt.h?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{opt.label}</span>
                     </button>
                   ))}
                 </div>
