@@ -697,6 +697,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [weekOff, setWeekOff] = useState(0);
   const [calYear, setCalYear] = useState(TODAY.getFullYear());
   const [calMonth,setCalMonth]= useState(TODAY.getMonth());
+  const [calSlideDir,setCalSlideDir]=useState(0); // -1 = came from right (prev), 1 = came from left (next)
   const [calScrolled,setCalScrolled]=useState(false);
   const calGridRef=useRef(null);
   const [dragInfo,setDragInfo]= useState(null);
@@ -807,6 +808,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedStatsBack,setPressedStatsBack]=useState(false);
   const [pressedZoneBack,setPressedZoneBack]=useState(false);
   const [pressedZoneAdd,setPressedZoneAdd]=useState(false);
+  const [zoneScreenVisible,setZoneScreenVisible]=useState(false);
+  useEffect(()=>{
+    if(zoneExpandId){
+      setZoneScreenVisible(false);
+      const raf=requestAnimationFrame(()=>requestAnimationFrame(()=>setZoneScreenVisible(true)));
+      return ()=>cancelAnimationFrame(raf);
+    } else {
+      setZoneScreenVisible(false);
+    }
+  },[zoneExpandId]);
   const pressStartRef=useRef({});
   const touchPosRef=useRef({});
   const MIN_PRESS_MS=140;
@@ -1366,10 +1377,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         html,body{position:fixed;inset:0;width:100%;}
         #root{width:100%;overflow:hidden;}
         body{overflow:hidden;overscroll-behavior:none;}
-        .std-input:focus{border-color:${ACCENT} !important;}
+        .std-input:focus:not(.input-error){border-color:${ACCENT} !important;}
+        .std-input::placeholder{color:${TEXT4} !important;opacity:1;}
         @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(110px) rotate(720deg);opacity:0}}
         @keyframes celebUp{0%{transform:translateY(100%);opacity:0}20%{transform:translateY(-6px);opacity:1}30%{transform:translateY(0)}100%{transform:translateY(0);opacity:1}}
+        @keyframes calSlideFromRight{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes calSlideFromLeft{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
         @keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.6)}70%{transform:scale(0.9)}100%{transform:scale(1)}}
         @keyframes checkPop{0%{transform:scale(0) rotate(-20deg);opacity:0}60%{transform:scale(1.3) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
         @keyframes pulseBig{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
@@ -1460,7 +1474,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onTouchStart={e=>{e.preventDefault();pressStart("bell",setPressedBell,true);}} onTouchEnd={e=>{e.preventDefault();if(showNotifs){closeNotifs();}else{setShowNotifs(true);markNotifsRead(notifs.map(n=>n.id));}pressEnd("bell",setPressedBell,false);}} onTouchCancel={()=>pressEnd("bell",setPressedBell,false)}
                     onMouseDown={()=>pressStart("bell",setPressedBell,true)} onMouseUp={()=>{if(showNotifs){closeNotifs();}else{setShowNotifs(true);markNotifsRead(notifs.map(n=>n.id));}pressEnd("bell",setPressedBell,false);}} onMouseLeave={()=>pressEnd("bell",setPressedBell,false)}
                     style={{position:"relative",zIndex:55,background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",touchAction:"manipulation"}}>
-                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/${showNotifs?"cross":"notifications-outline"}.svg)`,maskImage:`url(/icons/${showNotifs?"cross":"notifications-outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -1787,13 +1801,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <button
-                    onTouchStart={e=>{e.preventDefault();pressStart("cal-prev",setPressedCalArrow,"prev");}} onTouchEnd={e=>{e.preventDefault();const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-prev",setPressedCalArrow,null);}} onTouchCancel={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
-                    onMouseDown={()=>pressStart("cal-prev",setPressedCalArrow,"prev")} onMouseUp={()=>{const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-prev",setPressedCalArrow,null);}} onMouseLeave={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("cal-prev",setPressedCalArrow,"prev");}} onTouchEnd={e=>{e.preventDefault();setCalSlideDir(-1);const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-prev",setPressedCalArrow,null);}} onTouchCancel={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
+                    onMouseDown={()=>pressStart("cal-prev",setPressedCalArrow,"prev")} onMouseUp={()=>{setCalSlideDir(-1);const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-prev",setPressedCalArrow,null);}} onMouseLeave={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
                     style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedCalArrow==="prev"?"scale(1.4)":"scale(1)",transition:pressedCalArrow==="prev"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/></button>
                   <div style={{color:TEXT1,fontSize:16,fontWeight:700}}>{calScrolled?dayLabel(selDay):mName}</div>
                   <button
-                    onTouchStart={e=>{e.preventDefault();pressStart("cal-next",setPressedCalArrow,"next");}} onTouchEnd={e=>{e.preventDefault();const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-next",setPressedCalArrow,null);}} onTouchCancel={()=>pressEnd("cal-next",setPressedCalArrow,null)}
-                    onMouseDown={()=>pressStart("cal-next",setPressedCalArrow,"next")} onMouseUp={()=>{const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-next",setPressedCalArrow,null);}} onMouseLeave={()=>pressEnd("cal-next",setPressedCalArrow,null)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("cal-next",setPressedCalArrow,"next");}} onTouchEnd={e=>{e.preventDefault();setCalSlideDir(1);const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-next",setPressedCalArrow,null);}} onTouchCancel={()=>pressEnd("cal-next",setPressedCalArrow,null)}
+                    onMouseDown={()=>pressStart("cal-next",setPressedCalArrow,"next")} onMouseUp={()=>{setCalSlideDir(1);const d=new Date(calYear,calMonth+1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-next",setPressedCalArrow,null);}} onMouseLeave={()=>pressEnd("cal-next",setPressedCalArrow,null)}
                     style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedCalArrow==="next"?"scale(1.4)":"scale(1)",transition:pressedCalArrow==="next"?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/></button>
                 </div>
                 </div>
@@ -1801,7 +1815,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   const gridBottom=calGridRef.current?calGridRef.current.offsetTop+calGridRef.current.offsetHeight:0;
                   setCalScrolled(e.currentTarget.scrollTop>gridBottom-140);
                 }}>
-                <div ref={calGridRef}>
+                <div ref={calGridRef} key={`${calYear}-${calMonth}`} style={{animation:calSlideDir===1?"calSlideFromRight 0.25s ease":calSlideDir===-1?"calSlideFromLeft 0.25s ease":"none"}}>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
                   {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=><div key={d} style={{textAlign:"center",color:TEXT3,fontSize:12,fontWeight:700}}>{d}</div>)}
                 </div>
@@ -1897,7 +1911,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <span style={labelSt}>{tr("what_to_do")}</span>
                     <span style={{fontSize:11,color:form.text.length>=form.maxLen?"#f87171":form.text.length>form.maxLen*0.8?"#fbbf24":C(0.3)}}>{form.text.length}/{form.maxLen}</span>
                   </div>
-                  <input ref={taskNameRef} className="std-input" type="text" maxLength={form.maxLen} value={form.text} onChange={e=>{setForm(f=>({...f,text:e.target.value.slice(0,f.maxLen)}));if(e.target.value.trim())setTaskNameError(false);}} placeholder="e.g. wash the sink" style={{...inputSt,border:taskNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/></div>
+                  <input ref={taskNameRef} className={`std-input${taskNameError?" input-error":""}`} type="text" maxLength={form.maxLen} value={form.text} onChange={e=>{setForm(f=>({...f,text:e.target.value.slice(0,f.maxLen)}));if(e.target.value.trim())setTaskNameError(false);}} placeholder="e.g. wash the sink" style={{...inputSt,border:taskNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/></div>
                 <div>
                   <span style={labelSt}>{tr("zone")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
@@ -2044,7 +2058,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onMouseDown={()=>pressStart("addzone",setPressedAddZone,true)} onMouseUp={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");pressEnd("addzone",setPressedAddZone,false);}} onMouseLeave={()=>pressEnd("addzone",setPressedAddZone,false)}
                     style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`1px solid ${S(0.1)}`,pointerEvents:"none"}}/>
-                    <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedAddZone?"scale(1.06)":"scale(1)",transition:pressedAddZone?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,transform:pressedAddZone?"scale(1.06)":"scale(1)",transition:pressedAddZone?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                       <div style={{width:18,height:18,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                       <span style={{color:ACCENT,fontSize:14,fontWeight:500}}>Zone</span>
                     </div>
@@ -2099,9 +2113,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {editing?(
                     <div style={{...CARD,marginBottom:12}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.05)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
                         <input
-                          className="std-input"
+                          className={`std-input${zoneNameError?" input-error":""}`}
                           value={zForm.label}
                           onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                           placeholder="Zone name"
@@ -2815,7 +2829,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           const isNew=zoneExpandId==="__new__";
           const z=isNew?null:zones.find(x=>x.id===zoneExpandId);
           if(!isNew&&!z) return null;
-          const closeZoneScreen=()=>{setZoneExpandId(null);setEmojiPicker(false);};
+          const closeZoneScreen=()=>{
+            setZoneScreenVisible(false);
+            setTimeout(()=>{setZoneExpandId(null);setEmojiPicker(false);},320);
+          };
           const submitZone=()=>{
             if(!zForm.label.trim()){setZoneNameError(true);return;}
             if(isNew){
@@ -2828,7 +2845,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             closeZoneScreen();
           };
           return(
-          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column"}}>
+          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column",transform:`translateX(${zoneScreenVisible?0:100}%)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
               {/* Header with back button, matching Stats */}
               <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",gap:8}}>
                 <button
@@ -2842,9 +2859,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.05)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                   <input
-                    className="std-input"
+                    className={`std-input${zoneNameError?" input-error":""}`}
                     value={zForm.label}
                     onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                     placeholder="Zone name"
@@ -2908,7 +2925,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               <div>
                 <span style={labelSt}>NAME</span>
-                <input className="std-input" value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
+                <input className={`std-input${personNameError?" input-error":""}`} value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
               </div>
               <div>
                 <span style={labelSt}>COLOR</span>
@@ -2956,9 +2973,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{width:34,height:4,background:S(0.18),borderRadius:2,margin:"0 auto"}}/>
               <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>New Zone</div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.05)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <div style={{flex:1}}>
-                  <input className="std-input" value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
+                  <input className={`std-input${zoneNameError?" input-error":""}`} value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
                 </div>
               </div>
               <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Add</button>
@@ -3057,7 +3074,7 @@ function LoginScreen(){
               <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a code to {email}</div>
             </div>
             <input
-              className="std-input"
+              className={`std-input${error?" input-error":""}`}
               type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={10}
               placeholder="Enter the code"
               value={code}
@@ -3084,7 +3101,7 @@ function LoginScreen(){
               placeholder="you@example.com"
               value={email}
               onChange={e=>{setEmail(e.target.value);setError("");}}
-              className="std-input" style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
+              className={`std-input${error?" input-error":""}`} style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
             />
             <input
               type="password"
@@ -3093,7 +3110,7 @@ function LoginScreen(){
               placeholder="Password"
               value={password}
               onChange={e=>{setPassword(e.target.value);setError("");}}
-              className="std-input" style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
+              className={`std-input${error?" input-error":""}`} style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
             />
             <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
@@ -3115,7 +3132,7 @@ function LoginScreen(){
               placeholder="you@example.com"
               value={email}
               onChange={e=>{setEmail(e.target.value);setError("");}}
-              className="std-input" style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
+              className={`std-input${error?" input-error":""}`} style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
             />
             <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
