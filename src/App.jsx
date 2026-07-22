@@ -793,7 +793,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [zoneNameError,setZoneNameError]= useState(false);
   const [assigneeError,setAssigneeError]= useState(false);
 
-  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32,timesPerDay:1,estMinutes:null};
+  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:28,timesPerDay:1,estMinutes:null};
   const [form,setForm]= useState(blankForm);
 
   const prevPct = useRef(0);
@@ -2169,7 +2169,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </div>
                             )}
                             <div style={{flex:1,minWidth:0}}>
-                              <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
+                              <div style={{color:C(0.9),fontSize:18,fontWeight:400,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
                               <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:4,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                                 <span style={{fontSize:13,color:freqColorFor(t),whiteSpace:"nowrap",flexShrink:0}}>{freqLabelFor(t)}{(t.timesPerDay||1)>1?` ×${t.timesPerDay}`:""}</span>
                                 {people.length>1&&(()=>{
@@ -2241,10 +2241,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 </button>}
                                 <button
                                   onTouchStart={e=>{e.preventDefault();pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id);}}
-                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-edit-"+t.id,e)){setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-edit-"+t.id,e)){setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:28,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onTouchCancel={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
                                   onMouseDown={()=>pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id)}
-                                  onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:28,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onMouseLeave={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
                                   style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.55),fontSize:14,fontWeight:600,cursor:"pointer"}}>
                                   <span style={{display:"inline-block",transform:pressedAccAction==="edit-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="edit-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Edit</span>
@@ -2433,7 +2433,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     setNewPassword("");
                   }} disabled={settingPassword} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",width:"100%",opacity:settingPassword?0.6:1}}>{settingPassword?"Saving…":"Set password"}</button>
                 </div>
-                <button onClick={onSignOut} style={{background:"transparent",border:`1px solid ${ACCENT}`,borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:ACCENT,fontSize:16,fontWeight:600,cursor:"pointer",width:"100%",marginBottom:14}}>{tr("sign_out")}</button>
+              </div>
+              )}
+              </div>
+              {settingsView==="account"&&(
+              <div style={{flexShrink:0,padding:"12px 16px",paddingBottom:`calc(12px + ${keyboardInset}px)`}}>
+                <button onClick={onSignOut} style={{background:"transparent",border:`1px solid ${ACCENT}`,borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:ACCENT,fontSize:16,fontWeight:600,cursor:"pointer",width:"100%"}}>{tr("sign_out")}</button>
                 <button onClick={async()=>{
                   if(!window.confirm("Permanently delete your account and login? This removes your profile from this home and cannot be undone.")) return;
                   const personDeleted=await deletePersonRemote(meId);
@@ -2457,7 +2462,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 }} style={{marginTop:12,background:"none",border:"none",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer",padding:"8px",display:"block",width:"100%",textAlign:"center"}}>{tr("delete_account")}</button>
               </div>
               )}
-              </div>
             </div>
           )}
 
