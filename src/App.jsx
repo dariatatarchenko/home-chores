@@ -2853,7 +2853,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <div style={{fontSize:24,flexShrink:0}}>{z.emoji}</div>
                     <div style={{flex:1,color:C(0.9),fontSize:15,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
                     <button onClick={e=>{e.stopPropagation();deleteZone(z.id);}} style={{background:"none",border:"none",width:32,height:32,cursor:"pointer",flexShrink:0,padding:0}}>
-                      <div style={{width:"100%",height:"100%",backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/cross.svg)",maskImage:"url(/icons/cross.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                      <div style={{width:"100%",height:"100%",backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/bin-outline.svg)",maskImage:"url(/icons/bin-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                     </button>
                   </div>
                 ))}
