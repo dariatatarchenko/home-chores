@@ -718,19 +718,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [activityOrder,setActivityOrder]= useState([]); // array of "id|date" keys, most recent action first (either direction)
   const [showStats,setShowStats]= useState(false);
   const [notifsVisible,setNotifsVisible]=useState(false);
-  useEffect(()=>{
-    if(showNotifs){
-      setNotifsVisible(false);
-      const raf=requestAnimationFrame(()=>requestAnimationFrame(()=>setNotifsVisible(true)));
-      return ()=>cancelAnimationFrame(raf);
-    } else {
-      setNotifsVisible(false);
-    }
-  },[showNotifs]);
-  const closeNotifs=()=>{
-    setNotifsVisible(false);
-    setTimeout(()=>setShowNotifs(false),320);
-  };
   const [keyboardInset,setKeyboardInset]=useState(0);
   useEffect(()=>{
     if(!window.visualViewport) return;
@@ -761,6 +748,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   };
   const [celebration,setCelebration]= useState(null);
   const [showNotifs,setShowNotifs]= useState(false);
+  useEffect(()=>{
+    if(showNotifs){
+      setNotifsVisible(false);
+      const raf=requestAnimationFrame(()=>requestAnimationFrame(()=>setNotifsVisible(true)));
+      return ()=>cancelAnimationFrame(raf);
+    } else {
+      setNotifsVisible(false);
+    }
+  },[showNotifs]);
+  const closeNotifs=()=>{
+    setNotifsVisible(false);
+    setTimeout(()=>setShowNotifs(false),320);
+  };
   const [notifs,setNotifs]= useState([]);
   const markNotifsRead=ids=>{
     const toMark=ids.filter(id=>{
