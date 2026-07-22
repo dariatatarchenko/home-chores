@@ -1921,7 +1921,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     {zones.map(z=>{const sel=form.zone===z.id; return (
                       <button key={z.id} onClick={()=>setForm(f=>({...f,zone:z.id}))} style={{position:"relative",display:"flex",alignItems:"center",gap:6,background:sel?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",color:sel?"#fff":TEXT2,fontSize:14}}>
                         <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                        {z.emoji} {z.label}
+                        <div style={{width:22,height:22,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{z.emoji}</div>
+                        <span>{z.label}</span>
                       </button>
                     );})}
                   </div>
@@ -2033,7 +2034,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(cur.includes(p.id)&&cur.length===1) return f; // can't deselect the last remaining person
                         const next=cur.includes(p.id)?cur.filter(id=>id!==p.id):[...cur,p.id];
                         return {...f,personIds:next};
-                      })} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"0 16px 0 8px",cursor:"pointer"}}>
+                      })} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"0 16px",cursor:"pointer"}}>
                         <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?p.color+"90":S(0.1)}`,pointerEvents:"none"}}/>
                         <Avatar person={p} size={22}/>
                         <span style={{color:sel?p.color:TEXT2,fontSize:14}}>{p.name}</span>
@@ -2193,7 +2194,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 {people.map(p=>{
                                   const pIds=t.personIds||[t.personId].filter(Boolean);
                                   const sel=pIds.length===1&&pIds.includes(p.id);
-                                  return <button key={p.id} onClick={()=>{const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"0 16px 0 8px",cursor:"pointer",position:"relative"}}>
+                                  return <button key={p.id} onClick={()=>{const upd={personIds:[p.id],personId:p.id};setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,...upd}));persistTask(t.id,upd);}} style={{display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:"none",borderRadius:20,padding:"0 16px",cursor:"pointer",position:"relative"}}>
                                     <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?p.color+"90":S(0.1)}`,pointerEvents:"none"}}/>
                                     <Avatar person={p} size={22}/>
                                     <span style={{color:sel?p.color:TEXT2,fontSize:14}}>{p.name}</span>
