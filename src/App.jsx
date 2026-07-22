@@ -1463,7 +1463,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
                 <div>
                   <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_hometasks")}</div>
-                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:14,marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
+                  {myStreak>0&&<div style={{color:"#fbbf24",fontSize:16,fontWeight:700,marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:16,height:16,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/streak-fill.svg)",maskImage:"url(/icons/streak-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{myStreak}-day streak!</div>}
                   {myStreak===0&&<div style={{color:TEXT2,fontSize:14,marginTop:4}}>Start your streak today!</div>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -2294,11 +2294,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <div key={p.id} onClick={()=>{if(p.id!==meId)return;flushSync(()=>{setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});});personNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:p.id===meId?"pointer":"default"}}>
                         <Avatar person={p} size={24}/>
                         <div style={{flex:1}}>
-                          <div style={{color:C(0.88),fontSize:16,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{color:C(0.88),fontSize:18,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
                             {p.name}
                             {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:6,padding:"4px 6px"}}>me</span>}
                           </div>
-                          <div style={{color:C(0.55),fontSize:12,marginTop:2}}>{count} task{count!==1?"s":""}</div>
+                          <div style={{color:C(0.55),fontSize:14,marginTop:2}}>{count} task{count!==1?"s":""}</div>
                         </div>
                         {p.id===meId&&<div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>}
                       </div>
@@ -2330,7 +2330,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 {dayStartAccordionOpen&&(
                 <div style={{marginTop:14}}>
-                <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Applies to everyone in this home — late-night tasks still count toward the previous day</div>
+                <div style={{color:C(0.4),fontSize:14,marginBottom:10}}>Applies to everyone in this home — late-night tasks still count toward the previous day</div>
                 {(()=>{
                   const selectDayResetHour=opt=>{
                     const computeEffectiveTodayStr=resetHour=>{
@@ -2366,7 +2366,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     }
                   };
                   return (
-                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                <div style={{display:"flex",gap:8}}>
                   {[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].map(opt=>(
                     <button key={opt.h}
                       onTouchStart={e=>{e.preventDefault();pressStart("dayreset-"+opt.h,setPressedDayReset,opt.h);}}
@@ -2375,7 +2375,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       onMouseDown={()=>pressStart("dayreset-"+opt.h,setPressedDayReset,opt.h)}
                       onMouseUp={()=>{selectDayResetHour(opt);pressEnd("dayreset-"+opt.h,setPressedDayReset,null);}}
                       onMouseLeave={()=>pressEnd("dayreset-"+opt.h,setPressedDayReset,null)}
-                      style={{position:"relative",display:"flex",alignItems:"center",height:40,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"0 16px",cursor:"pointer"}}>
+                      style={{position:"relative",flex:1,display:"flex",alignItems:"center",justifyContent:"center",height:40,boxSizing:"border-box",background:dayResetHour===opt.h?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"0 16px",cursor:"pointer"}}>
                       <div style={{position:"absolute",inset:0,borderRadius:20,border:`${dayResetHour===opt.h?"2px":"1px"} solid ${dayResetHour===opt.h?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
                       <span style={{position:"relative",fontSize:14,fontWeight:dayResetHour===opt.h?700:400,color:dayResetHour===opt.h?"#fff":TEXT2,display:"inline-block",transform:pressedDayReset===opt.h?"scale(1.1)":"scale(1)",transition:pressedDayReset===opt.h?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{opt.label}</span>
                     </button>
