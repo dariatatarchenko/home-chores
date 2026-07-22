@@ -2011,12 +2011,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={labelSt}>{tr("assigned_to")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
                     <button onClick={()=>setForm(f=>({...f,personIds:(f.personIds||[]).length===people.length?[meId]:people.map(p=>p.id)}))} style={{
-                      display:"flex",alignItems:"center",height:34,boxSizing:"border-box",
-                      background:(form.personIds||[]).length===people.length?S(0.15):S(0.05),
-                      border:`2px solid ${(form.personIds||[]).length===people.length?C(0.4):C(0.08)}`,
-                      borderRadius:20,padding:"0 16px",cursor:"pointer",
+                      position:"relative",display:"flex",alignItems:"center",gap:6,
+                      background:(form.personIds||[]).length===people.length?"rgba(129,140,248,0.28)":S(0.05),
+                      border:"none",
+                      borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",
                     }}>
-                      <span style={{color:(form.personIds||[]).length===people.length?C(0.9):C(0.4),fontSize:13,fontWeight:500}}>{tr("all")}</span>
+                      <span style={{color:(form.personIds||[]).length===people.length?"#fff":TEXT2,fontSize:14}}>{tr("all")}</span>
                     </button>
                     {people.map(p=>{
                       const isAll=(form.personIds||[]).length===people.length;
@@ -2032,9 +2032,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         if(cur.includes(p.id)&&cur.length===1) return f; // can't deselect the last remaining person
                         const next=cur.includes(p.id)?cur.filter(id=>id!==p.id):[...cur,p.id];
                         return {...f,personIds:next};
-                      })} style={{display:"flex",alignItems:"center",gap:7,height:34,boxSizing:"border-box",background:sel?p.color+"28":S(0.05),border:`2px solid ${sel?p.color+"90":C(0.08)}`,borderRadius:20,padding:"0 14px 0 6px",cursor:"pointer",position:"relative"}}>
-                        <Avatar person={p} size={20}/>
-                        <span style={{color:sel?p.color:TEXT3,fontSize:13,fontWeight:500}}>{p.name}</span>
+                      })} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,boxSizing:"border-box",background:sel?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"0 16px 0 8px",cursor:"pointer"}}>
+                        <Avatar person={p} size={22}/>
+                        <span style={{color:sel?"#fff":TEXT2,fontSize:14}}>{p.name}</span>
                       </button>;
                     })}
                   </div>
