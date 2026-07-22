@@ -1242,7 +1242,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   };
   const deleteZone=id=>{
     const zone=zones.find(z=>z.id===id);
-    const affectedTasks=tasks.filter(t=>t.zone===id);
+    const affectedTasks=tasks.filter(t=>t.zone===id&&!t.archivedAt);
     const msg=affectedTasks.length>0
       ?`Delete "${zone?.label}"? This will also permanently delete ${affectedTasks.length} task${affectedTasks.length!==1?"s":""} in this zone.`
       :`Delete "${zone?.label}"?`;
@@ -2154,7 +2154,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 })()}
                               </div>
                             </div>
-                            <div style={{width:13,height:13,backgroundColor:C(0.4),WebkitMaskImage:"url(/icons/down.svg)",maskImage:"url(/icons/down.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}/>
+                            <div style={{width:24,height:24,backgroundColor:C(0.4),WebkitMaskImage:"url(/icons/down.svg)",maskImage:"url(/icons/down.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}/>
                           </div>
                           {open&&(
                             <div onClick={e=>e.stopPropagation()} style={{marginTop:6,paddingTop:8}}>
@@ -2817,8 +2817,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           if(!isNew&&!z) return null;
           const closeZoneScreen=()=>{setZoneExpandId(null);setEmojiPicker(false);};
           const submitZone=()=>{
+            if(!zForm.label.trim()){setZoneNameError(true);return;}
             if(isNew){
-              if(!zForm.label.trim()){setZoneNameError(true);return;}
               const nz={id:uid(),label:zForm.label.trim(),emoji:zForm.emoji};
               setZones(zs=>[...zs,nz]);
               insertZone(nz);
