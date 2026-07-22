@@ -2387,16 +2387,23 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 )}
               </div>
 
-              {/* Subscription */}
-              <div onClick={()=>window.alert("Coming soon")} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:"pointer",marginBottom:16}}>
-                <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/crown-fill.svg)",maskImage:"url(/icons/crown-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Subscription</div>
-                <span style={{fontSize:13,color:C(0.4),fontWeight:600,marginRight:4}}>Free</span>
-                <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-              </div>
-
-              {/* Language, Privacy, Terms, About */}
+              {/* Account, Subscription, Privacy, Terms, About */}
               <div style={{...CARD,marginBottom:16}}>
+                <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+                  <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/user-fill.svg)",maskImage:"url(/icons/user-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Account</div>
+                  <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </div>
+                <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
+                <div onClick={()=>window.alert("Coming soon")} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+                  <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/crown-fill.svg)",maskImage:"url(/icons/crown-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Subscription</div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{color:C(0.5),fontSize:16}}>Free</span>
+                    <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                  </div>
+                </div>
+                <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
                 <div onClick={()=>window.open("https://example.com/privacy","_blank")} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
                   <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/shield-fill.svg)",maskImage:"url(/icons/shield-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
                   <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Privacy Policy</div>
@@ -2416,12 +2423,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
               </div>
 
-              {/* Account entry point */}
-              <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
-                <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/user-fill.svg)",maskImage:"url(/icons/user-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Account</div>
-                <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-              </div>
               </>)}
 
               {settingsView==="account"&&(
