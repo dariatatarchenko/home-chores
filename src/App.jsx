@@ -354,13 +354,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   // previous day. Shadows the module-level TODAY/todayStr constants so every
   // existing date computation throughout this file picks it up automatically.
   const [dayResetHour,setDayResetHour]=useState(household.day_reset_hour||0);
-  useEffect(()=>{
-    supabase.from("households").select("day_reset_hour").eq("id",household.id).single()
-      .then(({data,error})=>{
-        if(error){ console.error("fetch day_reset_hour",error); return; }
-        if(data) setDayResetHour(data.day_reset_hour||0);
-      });
-  },[household.id]);
   const TODAY=(()=>{
     const now=new Date();
     if(dayResetHour>0&&now.getHours()<dayResetHour) now.setDate(now.getDate()-1);
@@ -408,8 +401,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
       :"inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.04)",
   });
   const CARD=isDark
-    ? {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"12px"}
-    : {background:"#ffffff",borderRadius:12,padding:"12px"};
+    ? {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"12px",boxSizing:"border-box"}
+    : {background:"#ffffff",border:"1px solid transparent",borderRadius:12,padding:"12px",boxSizing:"border-box"};
   const [codeCopied,setCodeCopied]=useState(false);
   const [customTimeOpen,setCustomTimeOpen]=useState(false);
   const [googleConnected,setGoogleConnected]=useState(null); // null=unknown/loading, true/false once checked
@@ -824,6 +817,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pressedZoneAdd,setPressedZoneAdd]=useState(false);
   const [zoneScreenVisible,setZoneScreenVisible]=useState(false);
   const zoneNameInputRef=useRef(null);
+  const personNameInputRef=useRef(null);
   useEffect(()=>{
     if(zoneExpandId){
       setZoneScreenVisible(false);
@@ -2272,20 +2266,24 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ SETTINGS ══════════════════════════════════════════ */}
           {tab==="settings"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+              {settingsView==="main"?(
               <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",minHeight:40,gap:10}}>
-                <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
-                {settingsView==="account"&&(
-                  <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center"}}><div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
-                )}
-                <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:settingsView==="account"?20:28,lineHeight:settingsView==="account"?"24px":"34px",fontWeight:700}}>{settingsView==="account"?"Account":tr("header_settings")}</span>
-                </div>
-                {settingsView==="main"&&myStreak>0&&(
+                <span style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_settings")}</span>
+                {myStreak>0&&(
                   <div style={{textAlign:"right",flexShrink:0}}>
                     <div style={{color:"#fbbf24",fontSize:16,fontWeight:700,whiteSpace:"nowrap"}}>{myStreak}-day streak!</div>
                     <div style={{color:C(0.35),fontSize:12,marginTop:2,whiteSpace:"nowrap"}}>Keep it up, {me?.name}!</div>
                   </div>
                 )}
               </div>
+              ):(
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",minHeight:40,gap:8}}>
+                <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
+                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </button>
+                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>Account</div>
+              </div>
+              )}
               <div ref={settingsScrollRef} style={{flex:1,overflowY:"auto",padding:"8px 16px 110px"}}>
               {settingsView==="main"&&(<>
               {/* People */}
@@ -2293,7 +2291,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {people.map(p=>{
                     const count=tasks.filter(t=>t.personId===p.id).length;
                     return (
-                      <div key={p.id} onClick={()=>{if(p.id!==meId)return;setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:p.id===meId?"pointer":"default"}}>
+                      <div key={p.id} onClick={()=>{if(p.id!==meId)return;flushSync(()=>{setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});});personNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:p.id===meId?"pointer":"default"}}>
                         <Avatar person={p} size={24}/>
                         <div style={{flex:1}}>
                           <div style={{color:C(0.88),fontSize:16,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
@@ -2323,7 +2321,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div onClick={()=>setDayStartAccordionOpen(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,cursor:"pointer"}}>
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
                     <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:"url(/icons/clock-fill.svg)",maskImage:"url(/icons/clock-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    <span style={{color:C(0.85),fontSize:16,fontWeight:600}}>Day starts at</span>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:600}}>Day start</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{color:C(0.5),fontSize:14}}>{[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].find(o=>o.h===dayResetHour)?.label}</span>
@@ -3038,16 +3036,20 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>{personModal.mode==="new"?"New Person":"Edit Person"}</div>
               </div>
               <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,marginBottom:20}}>
-                  <div style={{position:"relative",cursor:"pointer"}} onClick={()=>setAvatarPicker(v=>!v)}>
-                    <Avatar person={{name:pForm.name||"?",color:pForm.color,avatarEmoji:pForm.avatarEmoji}} size={72}/>
-                  </div>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <button onClick={()=>setAvatarPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>
+                    <Avatar person={{name:pForm.name||"?",color:pForm.color,avatarEmoji:pForm.avatarEmoji}} size={24}/>
+                  </button>
+                  <input
+                    ref={personNameInputRef}
+                    className={`std-input${personNameError?" input-error":""}`}
+                    value={pForm.name}
+                    onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}}
+                    placeholder="Name"
+                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 14px",height:40,boxSizing:"border-box",borderRadius:12}}
+                  />
                 </div>
-                <div style={{marginBottom:16}}>
-                  <span style={labelSt}>NAME</span>
-                  <input className={`std-input${personNameError?" input-error":""}`} value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
-                </div>
-                <div>
+                <div style={{marginTop:16}}>
                   <span style={labelSt}>COLOR</span>
                   <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                   {PALETTE.map(c=>(
