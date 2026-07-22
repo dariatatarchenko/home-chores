@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { flushSync } from "react-dom";
 import { supabase } from "./supabaseClient";
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
@@ -1803,7 +1804,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             return (
               <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
                 <div style={{flexShrink:0,padding:"16px 16px 16px"}}>
-                <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
+                <div style={{display:"flex",alignItems:"flex-start",minHeight:40,marginBottom:16}}>
+                  <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_calendar")}</div>
+                </div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <button
                     onTouchStart={e=>{e.preventDefault();pressStart("cal-prev",setPressedCalArrow,"prev");}} onTouchEnd={e=>{e.preventDefault();setCalSlideDir(-1);const d=new Date(calYear,calMonth-1,1);setCalYear(d.getFullYear());setCalMonth(d.getMonth());pressEnd("cal-prev",setPressedCalArrow,null);}} onTouchCancel={()=>pressEnd("cal-prev",setPressedCalArrow,null)}
@@ -2058,7 +2061,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {tab==="tasks"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
               <div style={{flexShrink:0,padding:"16px 16px 16px"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,minHeight:40}}>
+              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:14,minHeight:40}}>
                 <div style={{color:C(0.88),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700}}>{tr("header_alltasks")}</div>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <button
@@ -2222,8 +2225,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </>
                               )}
                               <div style={{display:"flex",gap:8}}>
-                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,padding:"8px",color:"#f87171",fontSize:12,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:14,padding:"8px",color:C(0.55),fontSize:12,fontWeight:600,cursor:"pointer"}}>Edit</button>
+                                {(!t.createdBy||t.createdBy===meId||(t.personIds||[t.personId]).includes(meId))&&<button onClick={()=>{if(!window.confirm(`Delete "${t.text}"? This can't be undone.`))return;setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}} style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                                <button onClick={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}} style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.55),fontSize:14,fontWeight:600,cursor:"pointer"}}>Edit</button>
                               </div>
                               {t.createdBy&&t.createdBy!==meId&&!(t.personIds||[t.personId]).includes(meId)&&(()=>{const owner=getPerson(t.createdBy);return owner?<div style={{color:C(0.28),fontSize:11,marginTop:6,textAlign:"center"}}>Created by {owner.name}</div>:null;})()}
                             </div>
@@ -2241,7 +2244,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ SETTINGS ══════════════════════════════════════════ */}
           {tab==="settings"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",minHeight:40,gap:10}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"flex-start",minHeight:40,gap:10}}>
                 {settingsView==="account"&&(
                   <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center"}}><div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 )}
@@ -2874,7 +2877,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </button>
                 <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700,flex:1}}>Manage Zones</div>
-                <button onClick={()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");}} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,background:S(0.05),border:"none",borderRadius:20,padding:"0 16px 0 12px",cursor:"pointer"}}>
+                <button onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");});zoneNameInputRef.current?.focus();}} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,background:S(0.05),border:"none",borderRadius:20,padding:"0 16px 0 12px",cursor:"pointer"}}>
                   <div style={{position:"absolute",inset:0,borderRadius:20,border:`1px solid ${S(0.1)}`,pointerEvents:"none"}}/>
                   <div style={{width:18,height:18,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                   <span style={{color:ACCENT,fontSize:14,fontWeight:500}}>Zone</span>
@@ -2887,7 +2890,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <div style={{color:C(0.38),marginTop:10,fontSize:14}}>No zones yet — add one to get started</div>
                   </div>
                 ):zones.map(z=>(
-                  <div key={z.id} onClick={()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);}} style={{...CARD,display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
+                  <div key={z.id} onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);});zoneNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
                     <div style={{fontSize:24,flexShrink:0}}>{z.emoji}</div>
                     <div style={{flex:1,color:C(0.9),fontSize:15,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
                     <button onClick={e=>{e.stopPropagation();deleteZone(z.id);}} style={{background:"none",border:"none",width:24,height:24,cursor:"pointer",flexShrink:0,padding:0}}>
