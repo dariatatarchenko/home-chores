@@ -1340,7 +1340,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     return new Date(d+"T00:00:00").toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
   };
 
-  const inputSt={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"12px 14px",color:C(0.9),fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:`1px solid ${C(0.1)}`};
+  const inputSt={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,boxSizing:"border-box",color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",fontFamily:"inherit",outline:"none",border:`1px solid ${C(0.1)}`};
   const labelSt={color:C(0.6),fontSize:13,fontWeight:600,marginBottom:8,display:"block"};
 
   const TABS=[
@@ -1366,6 +1366,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         html,body{position:fixed;inset:0;width:100%;}
         #root{width:100%;overflow:hidden;}
         body{overflow:hidden;overscroll-behavior:none;}
+        .std-input:focus{border-color:${ACCENT} !important;}
         @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(110px) rotate(720deg);opacity:0}}
         @keyframes celebUp{0%{transform:translateY(100%);opacity:0}20%{transform:translateY(-6px);opacity:1}30%{transform:translateY(0)}100%{transform:translateY(0);opacity:1}}
@@ -1403,7 +1404,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {/* Notifications panel */}
         {showNotifs&&(
           <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column",transform:`translateX(${notifsVisible?0:100}%)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
-              <div style={{flexShrink:0,padding:"16px 16px 12px",display:"flex",alignItems:"center",gap:8}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",gap:8}}>
                 <button onClick={closeNotifs} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
                   <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </button>
@@ -1782,7 +1783,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             const sPct=sTotal===0?0:Math.round(sDone/sTotal*100);
             return (
               <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-                <div style={{flexShrink:0,padding:"16px 16px 8px"}}>
+                <div style={{flexShrink:0,padding:"16px 16px 16px"}}>
                 <div style={{color:TEXT1,fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:28,lineHeight:"34px",fontWeight:700,marginBottom:16}}>{tr("header_calendar")}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                   <button
@@ -1896,7 +1897,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <span style={labelSt}>{tr("what_to_do")}</span>
                     <span style={{fontSize:11,color:form.text.length>=form.maxLen?"#f87171":form.text.length>form.maxLen*0.8?"#fbbf24":C(0.3)}}>{form.text.length}/{form.maxLen}</span>
                   </div>
-                  <input ref={taskNameRef} type="text" maxLength={form.maxLen} value={form.text} onChange={e=>{setForm(f=>({...f,text:e.target.value.slice(0,f.maxLen)}));if(e.target.value.trim())setTaskNameError(false);}} placeholder="e.g. wash the sink" style={{...inputSt,border:taskNameError?"2px solid #f87171":`2px solid ${C(0.1)}`}}/></div>
+                  <input ref={taskNameRef} className="std-input" type="text" maxLength={form.maxLen} value={form.text} onChange={e=>{setForm(f=>({...f,text:e.target.value.slice(0,f.maxLen)}));if(e.target.value.trim())setTaskNameError(false);}} placeholder="e.g. wash the sink" style={{...inputSt,border:taskNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/></div>
                 <div>
                   <span style={labelSt}>{tr("zone")}</span>
                   <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
@@ -1921,7 +1922,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {form.freq==="custom"&&(
                     <div style={{display:"flex",alignItems:"center",gap:10,...G(0.08,20),borderRadius:14,padding:"12px 16px",marginTop:8,border:"1px solid rgba(232,121,249,0.3)"}}>
                       <span style={{color:TEXT2,fontSize:14}}>Every</span>
-                      <input type="number" min="1" max="365" value={form.customDays===0?"":form.customDays} onChange={e=>{const v=e.target.value;setForm(f=>({...f,customDays:v===""?0:Math.max(1,parseInt(v)||1)}));}} onBlur={e=>{if(!form.customDays||form.customDays<1)setForm(f=>({...f,customDays:2}));}} style={{background:"rgba(255,255,255,0.1)",borderRadius:10,border:`1px solid ${C(0.1)}`,padding:"6px 10px",color:C(0.9),fontWeight:700,fontSize:16,width:60,textAlign:"center"}}/>
+                      <input type="number" min="1" max="365" value={form.customDays===0?"":form.customDays} onChange={e=>{const v=e.target.value;setForm(f=>({...f,customDays:v===""?0:Math.max(1,parseInt(v)||1)}));}} onBlur={e=>{if(!form.customDays||form.customDays<1)setForm(f=>({...f,customDays:2}));}} style={{background:"rgba(255,255,255,0.1)",borderRadius:10,border:`1px solid ${C(0.1)}`,padding:"0 10px",height:40,boxSizing:"border-box",color:C(0.9),fontWeight:700,fontSize:16,width:60,textAlign:"center"}}/>
                       <span style={{color:TEXT2,fontSize:14}}>days</span>
                     </div>
                   )}
@@ -1986,7 +1987,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <span style={labelSt}>{tr("start_date")}</span>
                   <input type="date" value={form.startDate} min={todayStr}
                     onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}
-                    style={{...inputSt,colorScheme:"dark",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center"}}/>
+                    className="std-input" style={{...inputSt,colorScheme:"dark",width:"auto",maxWidth:"100%",boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center"}}/>
                 </div>
                 {people.length>1&&(
                 <div>
@@ -2098,14 +2099,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {editing?(
                     <div style={{...CARD,marginBottom:12}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.05)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
                         <input
+                          className="std-input"
                           value={zForm.label}
                           onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                           placeholder="Zone name"
                           maxLength={38}
                           autoFocus
-                          style={{flex:1,background:"rgba(255,255,255,0.1)",border:`2px solid ${zoneNameError?"#f87171":C(0.1)}`,color:C(0.9),fontSize:15,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"10px 12px",boxSizing:"border-box",borderRadius:12}}
+                          style={{flex:1,background:"rgba(255,255,255,0.1)",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 12px",height:40,boxSizing:"border-box",borderRadius:12}}
                         />
                       </div>
                       <div style={{display:"flex",gap:8}}>
@@ -2152,7 +2154,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 })()}
                               </div>
                             </div>
-                            <span style={{color:C(0.18),fontSize:13,display:"inline-block",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}>▼</span>
+                            <div style={{width:13,height:13,backgroundColor:C(0.4),WebkitMaskImage:"url(/icons/down.svg)",maskImage:"url(/icons/down.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transition:"transform 0.2s",transform:open?"rotate(180deg)":"none"}}/>
                           </div>
                           {open&&(
                             <div onClick={e=>e.stopPropagation()} style={{marginTop:6,paddingTop:8}}>
@@ -2198,7 +2200,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           {/* ══ SETTINGS ══════════════════════════════════════════ */}
           {tab==="settings"&&(
             <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-              <div style={{flexShrink:0,padding:"16px 16px 8px",display:"flex",alignItems:"center",gap:10}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",gap:10}}>
                 {settingsView==="account"&&(
                   <button onClick={()=>{setSettingsView("main");setTimeout(()=>{if(settingsScrollRef.current)settingsScrollRef.current.scrollTop=settingsMainScrollPos.current;},0);}} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center"}}><div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 )}
@@ -2327,7 +2329,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     placeholder="New password"
                     value={newPassword}
                     onChange={e=>{setNewPassword(e.target.value);setPasswordMsg("");}}
-                    style={{...inputSt,marginBottom:8}}
+                    className="std-input" style={{...inputSt,marginBottom:8}}
                   />
                   {passwordMsg&&<div style={{color:passwordMsg.startsWith("✓")?"#34d399":"#f87171",fontSize:12,marginBottom:8}}>{passwordMsg}</div>}
                   <button onClick={async()=>{
@@ -2425,7 +2427,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {showStats&&(
           <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column",transform:`translateX(${statsVisible?0:100}%)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
               {/* Header with back button */}
-              <div style={{flexShrink:0,padding:"16px 16px 12px",display:"flex",alignItems:"center",gap:8}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",gap:8}}>
                 <button
                   onTouchStart={e=>{e.preventDefault();pressStart("stats-back",setPressedStatsBack,true);}} onTouchEnd={e=>{e.preventDefault();closeStats();pressEnd("stats-back",setPressedStatsBack,false);}} onTouchCancel={()=>pressEnd("stats-back",setPressedStatsBack,false)}
                   onMouseDown={()=>pressStart("stats-back",setPressedStatsBack,true)} onMouseUp={()=>{closeStats();pressEnd("stats-back",setPressedStatsBack,false);}} onMouseLeave={()=>pressEnd("stats-back",setPressedStatsBack,false)}
@@ -2457,11 +2459,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <span style={{color:"#34d399",fontSize:13,fontWeight:500}}>Dream Team — everyone contributed!</span>
                     </div>}
                     <div style={{color:C(0.4),fontSize:11,marginBottom:10}}>Share of this week's household tasks each person has personally completed</div>
-                    {[...people].sort((a,b)=>getWeekStats(tasks,b.id,weekDates).pct-getWeekStats(tasks,a.id,weekDates).pct).map(p=>{
+                    {[...people].sort((a,b)=>getWeekStats(tasks,b.id,weekDates).pct-getWeekStats(tasks,a.id,weekDates).pct).map((p,i,arr)=>{
                       const ws=getWeekStats(tasks,p.id,weekDates);
                       const rank=getRank(computePts(tasks,p.id));
                       return(
-                        <div key={p.id} style={{marginBottom:14}}>
+                        <div key={p.id} style={{marginBottom:i<arr.length-1?14:0}}>
                           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
                             <Avatar person={p} size={32}/>
                             <div style={{flex:1}}>
@@ -2496,7 +2498,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         const pct=Math.max(6,Math.round(pts/maxPts*100));
                         const medal=["🥇","🥈","🥉"][i];
                         return(
-                          <div key={p.id} style={{marginBottom:16}}>
+                          <div key={p.id} style={{marginBottom:i<ranked.length-1?16:0}}>
                             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                               {medal?<span style={{fontSize:20,width:26,textAlign:"center",flexShrink:0}}>{medal}</span>:<span style={{fontSize:13,width:26,textAlign:"center",flexShrink:0,color:"rgba(255,255,255,0.3)",fontWeight:700}}>{i+1}</span>}
                               <Avatar person={p} size={28}/>
@@ -2567,11 +2569,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {/* Zone achievements */}
                   <div style={{...CARD,marginBottom:12}}>
                     {SL("Zone achievements")}
-                    {[...people].sort((a,b)=>getZoneAch(tasks,b.id).length-getZoneAch(tasks,a.id).length).map(p=>{
+                    {[...people].sort((a,b)=>getZoneAch(tasks,b.id).length-getZoneAch(tasks,a.id).length).map((p,pi,arr)=>{
                       const achs=getZoneAch(tasks,p.id);
                       const LEVELS=[{icon:"🥉",min:10,color:"#fb923c"},{icon:"🥈",min:50,color:"#94a3b8"},{icon:"🥇",min:100,color:"#fbbf24"}];
                       return(
-                        <div key={p.id} style={{marginBottom:20}}>
+                        <div key={p.id} style={{marginBottom:pi<arr.length-1?20:0}}>
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                             <Avatar person={p} size={32}/>
                             <span style={{color:"rgba(255,255,255,0.7)",fontSize:13,fontWeight:600}}>{p.name}</span>
@@ -2828,7 +2830,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           return(
           <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column"}}>
               {/* Header with back button, matching Stats */}
-              <div style={{flexShrink:0,padding:"16px 16px 12px",display:"flex",alignItems:"center",gap:8}}>
+              <div style={{flexShrink:0,padding:"16px 16px 16px",display:"flex",alignItems:"center",gap:8}}>
                 <button
                   onTouchStart={e=>{e.preventDefault();pressStart("zone-back",setPressedZoneBack,true);}} onTouchEnd={e=>{e.preventDefault();closeZoneScreen();pressEnd("zone-back",setPressedZoneBack,false);}} onTouchCancel={()=>pressEnd("zone-back",setPressedZoneBack,false)}
                   onMouseDown={()=>pressStart("zone-back",setPressedZoneBack,true)} onMouseUp={()=>{closeZoneScreen();pressEnd("zone-back",setPressedZoneBack,false);}} onMouseLeave={()=>pressEnd("zone-back",setPressedZoneBack,false)}
@@ -2840,14 +2842,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.05)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                   <input
+                    className="std-input"
                     value={zForm.label}
                     onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                     placeholder="Zone name"
                     maxLength={38}
                     autoFocus
-                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:`2px solid ${zoneNameError?"#f87171":C(0.1)}`,color:C(0.9),fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
+                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 14px",height:40,boxSizing:"border-box",borderRadius:12}}
                   />
                 </div>
                 {!isNew&&<button onClick={()=>{deleteZone(z.id);closeZoneScreen();}} style={{marginTop:16,width:"100%",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete zone</button>}
@@ -2905,7 +2908,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               <div>
                 <span style={labelSt}>NAME</span>
-                <input value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
+                <input className="std-input" value={pForm.name} onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}} placeholder="Name" style={{...inputSt,border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
               </div>
               <div>
                 <span style={labelSt}>COLOR</span>
@@ -2953,9 +2956,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{width:34,height:4,background:S(0.18),borderRadius:2,margin:"0 auto"}}/>
               <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>New Zone</div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.05)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
                 <div style={{flex:1}}>
-                  <input value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"12px 14px",color:C(0.9),fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
+                  <input className="std-input" value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
                 </div>
               </div>
               <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:15,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Add</button>
@@ -2984,7 +2987,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
 const SHELL_STYLE={height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'SF Pro Text',-apple-system,system-ui,sans-serif",overflow:"hidden"};
 const CARD_BG="linear-gradient(160deg,#1a1035 0%,#0d1f3c 45%,#0a2a1f 100%)";
-const AUTH_INPUT={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"13px 16px",color:"#fff",fontSize:15,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:"1px solid rgba(255,255,255,0.1)"};
+const AUTH_INPUT={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 16px",height:40,boxSizing:"border-box",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",fontFamily:"inherit",outline:"none",border:"1px solid rgba(255,255,255,0.1)"};
 const AUTH_BTN={background:"linear-gradient(135deg,#7163F3,#5E51E0)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%"};
 
 function LoginScreen(){
@@ -3054,11 +3057,12 @@ function LoginScreen(){
               <div style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>We sent a code to {email}</div>
             </div>
             <input
+              className="std-input"
               type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={10}
               placeholder="Enter the code"
               value={code}
               onChange={e=>{setCode(e.target.value.replace(/\D/g,""));setError("");}}
-              style={{...AUTH_INPUT,marginBottom:8,textAlign:"center",letterSpacing:3,fontSize:20,border:error?"2px solid #f87171":"2px solid transparent"}}
+              style={{...AUTH_INPUT,marginBottom:8,textAlign:"center",letterSpacing:3,fontSize:20,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
             />
             <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
@@ -3080,7 +3084,7 @@ function LoginScreen(){
               placeholder="you@example.com"
               value={email}
               onChange={e=>{setEmail(e.target.value);setError("");}}
-              style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"2px solid transparent"}}
+              className="std-input" style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
             />
             <input
               type="password"
@@ -3089,7 +3093,7 @@ function LoginScreen(){
               placeholder="Password"
               value={password}
               onChange={e=>{setPassword(e.target.value);setError("");}}
-              style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"2px solid transparent"}}
+              className="std-input" style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
             />
             <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
@@ -3111,7 +3115,7 @@ function LoginScreen(){
               placeholder="you@example.com"
               value={email}
               onChange={e=>{setEmail(e.target.value);setError("");}}
-              style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"2px solid transparent"}}
+              className="std-input" style={{...AUTH_INPUT,marginBottom:8,border:error?"2px solid #f87171":"1px solid rgba(255,255,255,0.1)"}}
             />
             <div style={{minHeight:16,marginBottom:8}}>
               {error&&<div style={{color:"#f87171",fontSize:12}}>{error}</div>}
