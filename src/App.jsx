@@ -717,6 +717,34 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [justLiked,setJustLiked]= useState(null);
   const [activityOrder,setActivityOrder]= useState([]); // array of "id|date" keys, most recent action first (either direction)
   const [showStats,setShowStats]= useState(false);
+  const [notifsVisible,setNotifsVisible]=useState(false);
+  useEffect(()=>{
+    if(showNotifs){
+      setNotifsVisible(false);
+      const raf=requestAnimationFrame(()=>requestAnimationFrame(()=>setNotifsVisible(true)));
+      return ()=>cancelAnimationFrame(raf);
+    } else {
+      setNotifsVisible(false);
+    }
+  },[showNotifs]);
+  const closeNotifs=()=>{
+    setNotifsVisible(false);
+    setTimeout(()=>setShowNotifs(false),320);
+  };
+  const [keyboardInset,setKeyboardInset]=useState(0);
+  useEffect(()=>{
+    if(!window.visualViewport) return;
+    const onResize=()=>{
+      const inset=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+      setKeyboardInset(inset);
+    };
+    window.visualViewport.addEventListener("resize",onResize);
+    window.visualViewport.addEventListener("scroll",onResize);
+    return ()=>{
+      window.visualViewport.removeEventListener("resize",onResize);
+      window.visualViewport.removeEventListener("scroll",onResize);
+    };
+  },[]);
   const [statsVisible,setStatsVisible]=useState(false);
   useEffect(()=>{
     if(showStats){
@@ -1360,23 +1388,30 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Notifications panel */}
         {showNotifs&&(
-          <>
-            <div style={{position:"absolute",inset:0,zIndex:49}} onClick={()=>setShowNotifs(false)}/>
-            <div style={{position:"absolute",top:96,right:12,zIndex:50,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",backdropFilter:"blur(24px) saturate(120%)",WebkitBackdropFilter:"blur(24px) saturate(120%)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:12,padding:12,width:280,maxHeight:"60vh",overflowY:"auto",boxShadow:"0 16px 48px rgba(0,0,0,0.3)",fontFamily:"'SF Pro Text',-apple-system,sans-serif"}}>
-              <div style={{color:TEXT1,fontSize:16,fontWeight:700,marginBottom:12}}>Notifications</div>
-              {notifs.length===0&&<div style={{color:TEXT3,fontSize:13}}>All caught up!</div>}
-              {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
-                <div key={n.id} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"8px",marginBottom:4,borderRadius:12,background:isUnread?`${ACCENT}14`:"transparent",cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);setShowNotifs(false);}}>
-                  <span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:1}}>{n.icon}</span>
-                  <div style={{minWidth:0,flex:1}}>
-                    <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{n.from}</div>
-                    <div style={{color:TEXT3,fontSize:12,marginTop:2}}>{n.text}</div>
+          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column",transform:`translateX(${notifsVisible?0:100}%)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
+              <div style={{flexShrink:0,padding:"16px 16px 12px",display:"flex",alignItems:"center",gap:8}}>
+                <button onClick={closeNotifs} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
+                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </button>
+                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>Notifications</div>
+              </div>
+              <div style={{flex:1,overflowY:"auto",padding:"0 16px 16px"}}>
+                {notifs.length===0&&<div style={{textAlign:"center",padding:"60px 0"}}>
+                  <div style={{fontSize:44}}>🔔</div>
+                  <div style={{color:C(0.38),marginTop:10,fontSize:14}}>All caught up!</div>
+                </div>}
+                {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
+                  <div key={n.id} style={{...CARD,display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,background:isUnread?`${ACCENT}14`:CARD.background,cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);closeNotifs();}}>
+                    <span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:1}}>{n.icon}</span>
+                    <div style={{minWidth:0,flex:1}}>
+                      <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{n.from}</div>
+                      <div style={{color:TEXT3,fontSize:12,marginTop:2}}>{n.text}</div>
+                    </div>
+                    {isUnread&&<div style={{width:8,height:8,borderRadius:"50%",background:ACCENT,flexShrink:0,marginTop:4}}/>}
                   </div>
-                  {isUnread&&<div style={{width:8,height:8,borderRadius:"50%",background:ACCENT,flexShrink:0,marginTop:4}}/>}
-                </div>
-              );})}
-            </div>
-          </>
+                );})}
+              </div>
+          </div>
         )}
 
         {/* Body */}
@@ -1398,7 +1433,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onTouchStart={e=>{e.preventDefault();pressStart("mytasks",setPressedMyTasks,true);}} onTouchEnd={e=>{e.preventDefault();setMyFilter(f=>!f);pressEnd("mytasks",setPressedMyTasks,false);}} onTouchCancel={()=>pressEnd("mytasks",setPressedMyTasks,false)}
                     onMouseDown={()=>pressStart("mytasks",setPressedMyTasks,true)} onMouseUp={()=>{setMyFilter(f=>!f);pressEnd("mytasks",setPressedMyTasks,false);}} onMouseLeave={()=>pressEnd("mytasks",setPressedMyTasks,false)}
                     style={{position:"relative",display:"flex",alignItems:"center",gap:8,height:40,background:myFilter?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,padding:"12px 16px 12px 12px",cursor:"pointer",transition:"background-color 0.2s ease"}}>
-                    <div style={{position:"absolute",inset:0,borderRadius:20,border:`${myFilter?"2px":"1px"} solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none",transition:"border-width 0.2s ease, border-color 0.2s ease"}}/>
+                    <div style={{position:"absolute",inset:0,borderRadius:20,border:`1px solid ${myFilter?ACCENT:S(0.1)}`,pointerEvents:"none",transition:"border-color 0.2s ease"}}/>
                     <div style={{display:"flex",alignItems:"center",gap:8,transform:pressedMyTasks?"scale(1.06)":"scale(1)",transition:pressedMyTasks?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                       <Avatar person={me} size={18}/>
                       <span style={{color:myFilter?"#fff":TEXT2,fontSize:14,fontWeight:500}}>{tr("mine")}</span>
@@ -1407,10 +1442,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   )}
                   {people.length>1&&(
                   <button
-                    onTouchStart={e=>{e.preventDefault();pressStart("bell",setPressedBell,true);}} onTouchEnd={e=>{e.preventDefault();setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));pressEnd("bell",setPressedBell,false);}} onTouchCancel={()=>pressEnd("bell",setPressedBell,false)}
-                    onMouseDown={()=>pressStart("bell",setPressedBell,true)} onMouseUp={()=>{setShowNotifs(v=>!v);markNotifsRead(notifs.map(n=>n.id));pressEnd("bell",setPressedBell,false);}} onMouseLeave={()=>pressEnd("bell",setPressedBell,false)}
+                    onTouchStart={e=>{e.preventDefault();pressStart("bell",setPressedBell,true);}} onTouchEnd={e=>{e.preventDefault();if(showNotifs){closeNotifs();}else{setShowNotifs(true);markNotifsRead(notifs.map(n=>n.id));}pressEnd("bell",setPressedBell,false);}} onTouchCancel={()=>pressEnd("bell",setPressedBell,false)}
+                    onMouseDown={()=>pressStart("bell",setPressedBell,true)} onMouseUp={()=>{if(showNotifs){closeNotifs();}else{setShowNotifs(true);markNotifsRead(notifs.map(n=>n.id));}pressEnd("bell",setPressedBell,false);}} onMouseLeave={()=>pressEnd("bell",setPressedBell,false)}
                     style={{position:"relative",zIndex:55,background:"none",border:"none",width:24,height:24,padding:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",touchAction:"manipulation"}}>
-                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,maskImage:`url(/icons/notifications-${showNotifs?"fill":"outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+                    <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/${showNotifs?"cross":"notifications-outline"}.svg)`,maskImage:`url(/icons/${showNotifs?"cross":"notifications-outline"}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedBell?"scale(1.22)":"scale(1)",transition:pressedBell?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                     {unread>0&&<div style={{position:"absolute",top:4,right:4,width:8,height:8,borderRadius:"50%",background:"#f87171",border:"2px solid #111116"}}/>}
                   </button>
                   )}
@@ -1451,7 +1486,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         }}>
                         {/* Selection indicator: fixed shape, just fades in/out via opacity — never snaps a border-width or swaps a background color directly */}
                         <div style={{position:"absolute",inset:0,borderRadius:12,background:"rgba(129,140,248,0.28)",border:`2px solid ${ACCENT}`,opacity:active?1:0,transition:"opacity 0.2s ease",pointerEvents:"none"}}/>
-                        {isToday&&<div style={{position:"absolute",inset:0,borderRadius:12,border:`2px solid ${ACCENT}`,opacity:active?0:1,transition:"opacity 0.2s ease",pointerEvents:"none"}}/>}
+                        {isToday&&<div style={{position:"absolute",inset:0,borderRadius:12,border:`1px solid ${ACCENT}`,opacity:active?0:1,transition:"opacity 0.2s ease",pointerEvents:"none"}}/>}
                         {!isToday&&<div style={{position:"absolute",inset:0,borderRadius:12,border:`1px solid ${S(0.1)}`,opacity:active?0:1,transition:"opacity 0.2s ease",pointerEvents:"none"}}/>}
                         <div style={{position:"absolute",inset:0,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:2,transform:pressedDay===dStr?"scale(1.1)":"scale(1)",transition:pressedDay===dStr?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
                         <span style={{fontSize:12,fontWeight:500,color:active?"#fff":isToday?"#a5b4fc":TEXT3}}>
@@ -1801,7 +1836,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   :sDayTasks.map((t,ti)=>{
                     const done=isDone(t,selDay),missed=sPast&&!done,isFutureDay=selDay>todayStr,person=getPerson(t.personId),zone=getZone(t.zone);
                     return (
-                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{display:"flex",alignItems:"center",gap:10,padding:ti===sDayTasks.length-1?"8px 0 0":"8px 0",borderBottom:ti<sDayTasks.length-1?`1px solid ${S(0.08)}`:"none",cursor:isFutureDay?"default":"pointer"}}>
+                      <div key={t.id} onClick={()=>{if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{...CARD,padding:"12px",display:"flex",alignItems:"center",gap:10,marginBottom:ti<sDayTasks.length-1?8:0,cursor:isFutureDay?"default":"pointer"}}>
                         <button onClick={e=>{e.stopPropagation();if(isFutureDay)return;toggleDone(t.id,selDay);}} style={{width:18,height:18,borderRadius:"50%",flexShrink:0,padding:0,boxSizing:"border-box",border:(!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1)?"none":`2px solid ${done?"#34d399":missed?"rgba(248,113,113,0.5)":isFutureDay?C(0.08):C(0.15)}`,background:done?"#34d399":missed?"rgba(248,113,113,0.1)":"transparent",cursor:isFutureDay?"not-allowed":"pointer",position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {!done&&!missed&&!isFutureDay&&(t.timesPerDay||1)>1&&(()=>{ const R=8.1,CIRC3=2*Math.PI*R,frac=Math.min(1,doneCountOn(t,selDay)/(t.timesPerDay||1)); return (
                           <svg viewBox="0 0 18 18" style={{position:"absolute",inset:0,width:"100%",height:"100%",transform:"rotate(-90deg)",overflow:"visible"}}>
@@ -2375,16 +2410,16 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {/* ── STATS MODAL ───────────────────────────────────────── */}
 
         {showStats&&(
-          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column",transform:`translateY(${statsVisible?0:1000}px)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
+          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column",transform:`translateX(${statsVisible?0:100}%)`,transition:"transform 0.32s cubic-bezier(0.32,0.72,0,1)"}}>
               {/* Header with back button */}
               <div style={{flexShrink:0,padding:"16px 16px 12px",display:"flex",alignItems:"center",gap:8}}>
                 <button
                   onTouchStart={e=>{e.preventDefault();pressStart("stats-back",setPressedStatsBack,true);}} onTouchEnd={e=>{e.preventDefault();closeStats();pressEnd("stats-back",setPressedStatsBack,false);}} onTouchCancel={()=>pressEnd("stats-back",setPressedStatsBack,false)}
                   onMouseDown={()=>pressStart("stats-back",setPressedStatsBack,true)} onMouseUp={()=>{closeStats();pressEnd("stats-back",setPressedStatsBack,false);}} onMouseLeave={()=>pressEnd("stats-back",setPressedStatsBack,false)}
                   style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
-                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedStatsBack?"scale(1.2)":"scale(1)",transition:pressedStatsBack?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",transform:pressedStatsBack?"scale(1.4)":"scale(1)",transition:pressedStatsBack?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}/>
                 </button>
-                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,fontWeight:700,display:"flex",alignItems:"center",gap:8}}><div style={{width:20,height:20,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-fill.svg)",maskImage:"url(/icons/trophy-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>Stats</div>
+                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>Stats</div>
               </div>
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"0 16px 110px"}}>
@@ -2400,11 +2435,11 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {/* Weekly summary */}
                   <div style={{...CARD,marginBottom:12}}>
                     {SL("This week")}
-                    {mvp&&<div style={{...G(0.12,20),borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(251,191,36,0.3)"}}>
+                    {mvp&&<div style={{background:"rgba(251,191,36,0.12)",borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(251,191,36,0.3)"}}>
                       <span style={{fontSize:20}}>⭐</span>
                       <span style={{color:"#fbbf24",fontSize:13,fontWeight:500}}>Top performer this week: {mvp.name}</span>
                     </div>}
-                    {dreamTeam&&<div style={{...G(0.12,20),borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(52,211,153,0.3)"}}>
+                    {dreamTeam&&<div style={{background:"rgba(52,211,153,0.12)",borderRadius:14,padding:"9px 15px",marginBottom:20,display:"flex",alignItems:"center",gap:8,border:"1px solid rgba(52,211,153,0.3)"}}>
                       <span style={{fontSize:20}}>🤝</span>
                       <span style={{color:"#34d399",fontSize:13,fontWeight:500}}>Dream Team — everyone contributed!</span>
                     </div>}
@@ -2672,17 +2707,17 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
                   {DIV}
                   {/* Household streak + all-time total */}
-                  <div style={{marginBottom:4,display:"flex",gap:12}}>
+                  <div style={{marginBottom:12,display:"flex",gap:12}}>
                     {(()=>{
                       const hStreak=getHouseholdStreak(tasks,ds,TODAY);
                       const allTime=tasks.reduce((s,t)=>s+(t.doneOn||[]).length,0);
                       return (<>
-                        <div style={{flex:1,...G(0.08,20),borderRadius:16,padding:"14px",textAlign:"center"}}>
+                        <div style={{flex:1,...CARD,textAlign:"center"}}>
                           <div style={{fontSize:22}}>{hStreak>0?"🔥":"💤"}</div>
                           <div style={{color:"#fff",fontSize:20,fontWeight:700,marginTop:2}}>{hStreak}</div>
                           <div style={{color:C(0.45),fontSize:11}}>day household streak</div>
                         </div>
-                        <div style={{flex:1,...G(0.08,20),borderRadius:16,padding:"14px",textAlign:"center"}}>
+                        <div style={{flex:1,...CARD,textAlign:"center"}}>
                           <div style={{width:22,height:22,margin:"0 auto",backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/trophy-fill.svg)",maskImage:"url(/icons/trophy-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                           <div style={{color:"#fff",fontSize:20,fontWeight:700,marginTop:2}}>{allTime}</div>
                           <div style={{color:C(0.45),fontSize:11}}>tasks done, all time</div>
@@ -2765,36 +2800,46 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           const isNew=zoneExpandId==="__new__";
           const z=isNew?null:zones.find(x=>x.id===zoneExpandId);
           if(!isNew&&!z) return null;
+          const closeZoneScreen=()=>{setZoneExpandId(null);setEmojiPicker(false);};
+          const submitZone=()=>{
+            if(isNew){
+              if(!zForm.label.trim()){setZoneNameError(true);return;}
+              const nz={id:uid(),label:zForm.label.trim(),emoji:zForm.emoji};
+              setZones(zs=>[...zs,nz]);
+              insertZone(nz);
+            } else {
+              saveZone();
+            }
+            closeZoneScreen();
+          };
           return(
-          <div style={{position:"absolute",inset:0,zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 24px",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)"}} onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}}>
-            <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:340,background:"linear-gradient(160deg,#1a1035,#0d2040)",borderRadius:24,padding:"20px 16px",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:"1px solid rgba(255,255,255,0.1)"}}>
-              <div style={{color:"#fff",fontSize:16,fontWeight:700,marginBottom:16}}>{isNew?"New Zone":"Edit Zone"}</div>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
-                <input
-                  value={zForm.label}
-                  onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
-                  placeholder="Zone name"
-                  maxLength={38}
-                  autoFocus
-                  style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
-                />
+          <div style={{position:"absolute",inset:0,zIndex:300,background:THEME_COLORS[theme].bg,display:"flex",flexDirection:"column"}}>
+              {/* Header with back button, matching Stats */}
+              <div style={{flexShrink:0,padding:"16px 16px 12px",display:"flex",alignItems:"center",gap:8}}>
+                <button onClick={closeZoneScreen} style={{background:"none",border:"none",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0}}>
+                  <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                </button>
+                <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>{isNew?"New Zone":"Edit Zone"}</div>
               </div>
-              <div style={{display:"flex",gap:8}}>
-                {!isNew&&<button onClick={()=>{deleteZone(z.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"13px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>}
-                <button onClick={()=>{
-                  if(isNew){
-                    if(!zForm.label.trim()){setZoneNameError(true);return;}
-                    const nz={id:uid(),label:zForm.label.trim(),emoji:zForm.emoji};
-                    setZones(zs=>[...zs,nz]);
-                    insertZone(nz);
-                  } else {
-                    saveZone();
-                  }
-                  setZoneExpandId(null);
-                }} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:12,padding:"13px",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>{isNew?"Add":"Save"}</button>
+              {/* Scrollable content */}
+              <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
+                <div style={{...CARD,display:"flex",alignItems:"center",gap:12}}>
+                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.9)",border:"none",borderRadius:14,width:52,height:52,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                  <input
+                    value={zForm.label}
+                    onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
+                    placeholder="Zone name"
+                    maxLength={38}
+                    autoFocus
+                    style={{flex:1,background:"rgba(255,255,255,0.9)",border:`2px solid ${zoneNameError?"#f87171":"transparent"}`,color:"#111",fontSize:16,fontWeight:500,fontFamily:"inherit",outline:"none",padding:"12px 14px",boxSizing:"border-box",borderRadius:12}}
+                  />
+                </div>
+                {!isNew&&<button onClick={()=>{deleteZone(z.id);closeZoneScreen();}} style={{marginTop:16,width:"100%",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,padding:"13px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete zone</button>}
               </div>
-            </div>
+              {/* Bottom-pinned Add/Save button, shifts up above keyboard via keyboardInset */}
+              <div style={{flexShrink:0,padding:"12px 16px",paddingBottom:`calc(12px + ${keyboardInset}px)`,transition:"padding-bottom 0.2s ease"}}>
+                <button onClick={submitZone} style={{width:"100%",background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,padding:"15px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}}>{isNew?"Add zone":"Save"}</button>
+              </div>
           </div>
           );
         })()}
