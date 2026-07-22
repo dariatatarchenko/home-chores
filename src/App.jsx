@@ -793,7 +793,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [zoneNameError,setZoneNameError]= useState(false);
   const [assigneeError,setAssigneeError]= useState(false);
 
-  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:26,timesPerDay:1,estMinutes:null};
+  const blankForm = {zone:zones[0]?.id||"",text:"",freq:"daily",personIds:people.map(p=>p.id),customDays:4,startDate:todayStr,maxLen:32,timesPerDay:1,estMinutes:null};
   const [form,setForm]= useState(blankForm);
 
   const prevPct = useRef(0);
@@ -1716,7 +1716,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       )}
                       {/* Text */}
                       <div style={{flex:1,minWidth:0,opacity:done?.4:1,transition:"opacity 0.2s"}}>
-                        <div style={{color:C(0.9),fontSize:18,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
+                        <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.text}</div>
                         <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:4,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                           {people.length>1&&(()=>{
                             const pIds=(t.personIds||[t.personId]).filter(Boolean);
@@ -2169,7 +2169,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                               </div>
                             )}
                             <div style={{flex:1,minWidth:0}}>
-                              <div style={{color:C(0.9),fontSize:18,fontWeight:400,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
+                              <div style={{color:C(0.9),fontSize:16,fontWeight:400,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.text}</div>
                               <div style={{display:"flex",justifyContent:"flex-start",width:"fit-content",maxWidth:"100%",gap:6,marginTop:4,alignItems:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                                 <span style={{fontSize:13,color:freqColorFor(t),whiteSpace:"nowrap",flexShrink:0}}>{freqLabelFor(t)}{(t.timesPerDay||1)>1?` ×${t.timesPerDay}`:""}</span>
                                 {people.length>1&&(()=>{
@@ -2241,10 +2241,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                 </button>}
                                 <button
                                   onTouchStart={e=>{e.preventDefault();pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id);}}
-                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-edit-"+t.id,e)){setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:26,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onTouchEnd={e=>{e.preventDefault();if(!wasScrolled("acc-edit-"+t.id,e)){setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);}pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onTouchCancel={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
                                   onMouseDown={()=>pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id)}
-                                  onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:26,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
+                                  onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onMouseLeave={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
                                   style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.55),fontSize:14,fontWeight:600,cursor:"pointer"}}>
                                   <span style={{display:"inline-block",transform:pressedAccAction==="edit-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="edit-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Edit</span>
@@ -2294,7 +2294,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <div key={p.id} onClick={()=>{if(p.id!==meId)return;flushSync(()=>{setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});});personNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:p.id===meId?"pointer":"default"}}>
                         <Avatar person={p} size={24}/>
                         <div style={{flex:1}}>
-                          <div style={{color:C(0.88),fontSize:18,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{color:C(0.88),fontSize:16,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
                             {p.name}
                             {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:6,padding:"4px 6px"}}>me</span>}
                           </div>
@@ -2311,7 +2311,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
                     <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,maskImage:`url(/icons/${theme==="dark"?"moon":"sun"}-fill.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    <span style={{color:C(0.85),fontSize:18,fontWeight:400}}>{tr("theme")}</span>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:400}}>{tr("theme")}</span>
                   </div>
                   <button onClick={()=>setThemePersisted(theme==="dark"?"light":"dark")} style={{position:"relative",width:52,height:32,borderRadius:16,border:"none",background:theme==="dark"?ACCENT:S(0.15),cursor:"pointer",flexShrink:0,padding:0,transition:"background-color 0.2s"}}>
                     <div style={{position:"absolute",top:2,left:theme==="dark"?22:2,width:28,height:28,borderRadius:"50%",background:"#fff",boxShadow:"0 1px 3px rgba(0,0,0,0.3)",transition:"left 0.2s"}}/>
@@ -2321,7 +2321,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div onClick={()=>setDayStartAccordionOpen(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,cursor:"pointer"}}>
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
                     <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/start-fill.svg)",maskImage:"url(/icons/start-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                    <span style={{color:C(0.85),fontSize:18,fontWeight:400}}>Day Start</span>
+                    <span style={{color:C(0.85),fontSize:16,fontWeight:400}}>Day Start</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{color:C(0.5),fontSize:16}}>{[{h:0,label:"Midnight"},{h:3,label:"3 AM"},{h:5,label:"5 AM"}].find(o=>o.h===dayResetHour)?.label}</span>
@@ -2391,13 +2391,13 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{...CARD,marginBottom:16}}>
                 <div onClick={()=>{if(settingsScrollRef.current)settingsMainScrollPos.current=settingsScrollRef.current.scrollTop;setSettingsView("account");}} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
                   <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/user-fill.svg)",maskImage:"url(/icons/user-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Account</div>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:16,fontWeight:400}}>Account</div>
                   <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </div>
                 <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
                 <div onClick={()=>window.alert("Coming soon")} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
                   <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/crown-fill.svg)",maskImage:"url(/icons/crown-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Subscription</div>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:16,fontWeight:400}}>Subscription</div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{color:C(0.5),fontSize:16}}>Free</span>
                     <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
@@ -2406,19 +2406,19 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
                 <div onClick={()=>window.open("https://example.com/privacy","_blank")} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
                   <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/shield-fill.svg)",maskImage:"url(/icons/shield-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Privacy Policy</div>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:16,fontWeight:400}}>Privacy Policy</div>
                   <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </div>
                 <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
                 <div onClick={()=>window.open("https://example.com/terms","_blank")} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
                   <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/doc-fill.svg)",maskImage:"url(/icons/doc-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>Terms of Service</div>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:16,fontWeight:400}}>Terms of Service</div>
                   <div style={{width:24,height:24,backgroundColor:C(0.2),WebkitMaskImage:"url(/icons/right.svg)",maskImage:"url(/icons/right.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </div>
                 <div style={{height:1,background:S(0.08),margin:"16px 0"}}/>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <div style={{width:24,height:24,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/info-fill.svg)",maskImage:"url(/icons/info-fill.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
-                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:18,fontWeight:400}}>About</div>
+                  <div style={{flex:1,minWidth:0,color:C(0.85),fontSize:16,fontWeight:400}}>About</div>
                   <span style={{fontSize:14,color:C(0.4)}}>v1.0.0</span>
                 </div>
               </div>
