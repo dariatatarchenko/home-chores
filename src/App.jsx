@@ -824,11 +824,6 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const dy=Math.abs(e.changedTouches[0].clientY-start.y);
     return dx>SCROLL_THRESHOLD||dy>SCROLL_THRESHOLD;
   };
-  const pressStart=(key,setter,value)=>{
-    const gen=(pressStartRef.current[key]?.gen||0)+1;
-    pressStartRef.current[key]={time:Date.now(),gen};
-    setter(value);
-  };
   const pressEnd=(key,setter,offValue)=>{
     const entry=pressStartRef.current[key]||{time:0,gen:0};
     const myGen=entry.gen;
