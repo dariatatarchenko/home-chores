@@ -2163,7 +2163,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {editing?(
                     <div style={{...CARD,marginBottom:12}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}><div style={{width:28,height:28,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                         <input
                           className={`std-input${zoneNameError?" input-error":""}`}
                           value={zForm.label}
