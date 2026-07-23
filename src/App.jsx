@@ -109,7 +109,7 @@ const ZONE_ICONS = [
   // Decor & misc
   "zone-house","zone-door","zone-window","zone-candle","zone-trash",
 ];
-const AVATAR_EMOJIS = ["😀","😎","🥳","🦊","🐱","🐶","🐼","🦁","🐰","🐨","🐯","🐸","🌟","🎯","🍀","🔥","💎","🎸","🚀","🌈","⚡","🌸","🍕","🦄"];
+const AVATAR_EMOJIS = ["😀","😎","🥳","🤓","😇","🥷","🧙","👻","👽","🤖","🎃","🦊","🐱","🐶","🐼","🦁","🐰","🐨","🐯","🐸","🦄","🐙","🦉","🐧"];
 const PALETTE = ["#f87171","#fb923c","#fbbf24","#34d399","#38bdf8","#7163F3","#e879f9","#94a3b8"];
 // Public OAuth Client ID (safe to expose client-side) — replace with the real
 // one from Google Cloud Console once created.
@@ -3067,10 +3067,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {emojiPicker&&zoneExpandId&&(
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
-            <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:328,background:isDark?"#2a2a32":"#ffffff",border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,48px)",justifyContent:"space-between",gap:4}}>
-                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,44px)",justifyContent:"space-between",gap:2}}>
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:44,height:44,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
@@ -3145,12 +3145,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         )}
         {personModal&&avatarPicker&&(
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setAvatarPicker(false)}>
-            <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:328,background:isDark?"#2a2a32":"#ffffff",border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,48px)",justifyContent:"space-between",gap:4}}>
-                <button onClick={()=>{setPForm(f=>({...f,avatarEmoji:""}));setAvatarPicker(false);}} style={{background:!pForm.avatarEmoji?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,fontSize:18,fontWeight:700,color:pForm.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{initials(pForm.name)||"?"}</span></button>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,44px)",justifyContent:"space-between",gap:2}}>
+                <button onClick={()=>{setPForm(f=>({...f,avatarEmoji:""}));setAvatarPicker(false);}} style={{background:!pForm.avatarEmoji?S(0.2):"transparent",border:"none",borderRadius:10,width:44,height:44,fontSize:18,fontWeight:700,color:pForm.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{initials(pForm.name)||"?"}</span></button>
                 {AVATAR_EMOJIS.map(e=>(
-                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
+                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:44,height:44,fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
                 ))}
               </div>
             </div>
@@ -3177,7 +3177,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,48px)",justifyContent:"space-between",gap:4}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(5,48px)",justifyContent:"space-between",gap:0}}>
                 {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
