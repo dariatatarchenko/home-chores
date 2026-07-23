@@ -77,7 +77,38 @@ const ZONES_DEFAULT = [
   {id:"hall",     label:"Hallway",     emoji:"🚪"},
   {id:"pets",     label:"Pets",        emoji:"🐾"},
 ];
-const ZONE_ICONS = ["zone-toilet","zone-toiletclean","zone-tools","zone-trash","zone-tv","zone-washer","zone-window","zone-armchair","zone-art","zone-backpack","zone-bath","zone-bear","zone-bed","zone-bigbed","zone-books","zone-box","zone-boxes","zone-bucket","zone-bulb","zone-candle","zone-car","zone-cat","zone-catcomplex","zone-catfood","zone-chair","zone-coffee","zone-computer","zone-couch","zone-curl","zone-cycle","zone-detergent","zone-dishes","zone-dog","zone-door","zone-drawer","zone-faucet","zone-football","zone-fridge","zone-gaming","zone-garage","zone-gym","zone-hat","zone-house","zone-ice","zone-keyes","zone-laundry","zone-luggage","zone-mailbox","zone-mirror","zone-music","zone-nurcery","zone-oven","zone-pet","zone-pickup","zone-plant","zone-plants","zone-pot","zone-power","zone-shower","zone-sink","zone-soap","zone-socks","zone-stack","zone-stove","zone-stroller","zone-sweep"];
+const ZONE_ICONS = [
+  // Kitchen
+  "zone-stove","zone-oven","zone-fridge","zone-dishes","zone-sink","zone-faucet","zone-coffee","zone-pot",
+  // Living room
+  "zone-couch","zone-armchair","zone-chair","zone-tv","zone-books","zone-art","zone-music",
+  // Bedroom
+  "zone-bed","zone-bigbed","zone-mirror","zone-drawer","zone-hat","zone-socks",
+  // Bathroom
+  "zone-bath","zone-shower","zone-toilet","zone-toiletclean","zone-soap","zone-detergent",
+  // Cleaning
+  "zone-bucket","zone-sweep",
+  // Laundry
+  "zone-washer","zone-laundry",
+  // Plants
+  "zone-plant","zone-plants",
+  // Storage
+  "zone-box","zone-boxes","zone-stack","zone-mailbox","zone-luggage","zone-backpack",
+  // Tech
+  "zone-computer","zone-gaming",
+  // Tools & utility
+  "zone-tools","zone-power","zone-bulb","zone-ice","zone-keyes",
+  // Transport
+  "zone-car","zone-cycle","zone-pickup","zone-garage",
+  // Sport & hobby
+  "zone-gym","zone-football","zone-curl",
+  // Pets
+  "zone-pet","zone-cat","zone-catcomplex","zone-catfood","zone-dog",
+  // Kids
+  "zone-nurcery","zone-stroller","zone-bear",
+  // Decor & misc
+  "zone-house","zone-door","zone-window","zone-candle","zone-trash",
+];
 const AVATAR_EMOJIS = ["😀","😎","🥳","🦊","🐱","🐶","🐼","🦁","🐰","🐨","🐯","🐸","🌟","🎯","🍀","🔥","💎","🎸","🚀","🌈","⚡","🌸","🍕","🦄"];
 const PALETTE = ["#f87171","#fb923c","#fbbf24","#34d399","#38bdf8","#7163F3","#e879f9","#94a3b8"];
 // Public OAuth Client ID (safe to expose client-side) — replace with the real
@@ -3039,7 +3070,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
-                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:22,height:22,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:40,height:40,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
@@ -3147,7 +3178,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
-                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:22,height:22,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:40,height:40,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
