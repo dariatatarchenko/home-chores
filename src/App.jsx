@@ -3115,7 +3115,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     value={pForm.name}
                     onChange={e=>{setPForm(f=>({...f,name:e.target.value}));if(e.target.value.trim())setPersonNameError(false);}}
                     placeholder="Name"
-                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 14px",height:40,boxSizing:"border-box",borderRadius:12}}
+                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:personNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 14px",height:48,boxSizing:"border-box",borderRadius:12}}
                   />
                 </div>
                 <div style={{marginTop:16}}>
