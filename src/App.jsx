@@ -2993,7 +2993,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <div style={{color:C(0.38),marginTop:10,fontSize:14}}>No zones yet — add one to get started</div>
                   </div>
                 ):zones.map(z=>(
-                  <div key={z.id} onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);});zoneNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
+                  <div key={z.id} onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);});zoneNameInputRef.current?.focus();}} style={{...CARD,height:48,boxSizing:"border-box",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
                     <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
                     <div style={{flex:1,color:C(0.9),fontSize:16,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
                     <button onClick={e=>{e.stopPropagation();deleteZone(z.id);}} style={{background:"none",border:"none",width:24,height:24,cursor:"pointer",flexShrink:0,padding:0}}>
