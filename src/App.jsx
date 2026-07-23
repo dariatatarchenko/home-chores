@@ -3069,8 +3069,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,40px)",justifyContent:"space-between",gap:4}}>
-                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(5,48px)",justifyContent:"space-between",gap:4}}>
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
@@ -3104,9 +3104,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </button>
                 <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>{personModal.mode==="new"?"New Person":"Edit Person"}</div>
               </div>
-              <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
+              <div style={{flex:1,overflowY:"auto",padding:"0 16px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <button onClick={()=>setAvatarPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>
+                  <button onClick={()=>setAvatarPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:48,height:48,minWidth:48,minHeight:48,boxSizing:"border-box",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>
                     <Avatar person={{name:pForm.name||"?",color:pForm.color,avatarEmoji:pForm.avatarEmoji}} size={24}/>
                   </button>
                   <input
@@ -3147,10 +3147,10 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setAvatarPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,40px)",justifyContent:"space-between",gap:4}}>
-                <button onClick={()=>{setPForm(f=>({...f,avatarEmoji:""}));setAvatarPicker(false);}} style={{background:!pForm.avatarEmoji?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:15,fontWeight:700,color:pForm.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{initials(pForm.name)||"?"}</span></button>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(5,48px)",justifyContent:"space-between",gap:4}}>
+                <button onClick={()=>{setPForm(f=>({...f,avatarEmoji:""}));setAvatarPicker(false);}} style={{background:!pForm.avatarEmoji?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,fontSize:18,fontWeight:700,color:pForm.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{initials(pForm.name)||"?"}</span></button>
                 {AVATAR_EMOJIS.map(e=>(
-                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
+                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
                 ))}
               </div>
             </div>
@@ -3177,8 +3177,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,40px)",justifyContent:"space-between",gap:4}}>
-                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(5,48px)",justifyContent:"space-between",gap:4}}>
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:48,height:48,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
