@@ -1396,7 +1396,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     return new Date(d+"T00:00:00").toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
   };
 
-  const inputSt={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,boxSizing:"border-box",color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",fontFamily:"inherit",outline:"none",border:`1px solid ${C(0.1)}`};
+  const inputSt={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:48,boxSizing:"border-box",color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",fontFamily:"inherit",outline:"none",border:`1px solid ${C(0.1)}`};
   const labelSt={color:C(0.6),fontSize:13,fontWeight:600,marginBottom:8,display:"block"};
 
   const TABS=[
@@ -1984,7 +1984,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {form.freq==="custom"&&(
                     <div style={{display:"flex",alignItems:"center",gap:10,...G(0.08,20),borderRadius:14,padding:"12px 16px",marginTop:8,border:"1px solid rgba(232,121,249,0.3)"}}>
                       <span style={{color:TEXT2,fontSize:14}}>Every</span>
-                      <input type="number" min="1" max="365" value={form.customDays===0?"":form.customDays} onChange={e=>{const v=e.target.value;setForm(f=>({...f,customDays:v===""?0:Math.max(1,parseInt(v)||1)}));}} onBlur={e=>{if(!form.customDays||form.customDays<1)setForm(f=>({...f,customDays:2}));}} style={{background:"rgba(255,255,255,0.1)",borderRadius:10,border:`1px solid ${C(0.1)}`,padding:"0 10px",height:40,boxSizing:"border-box",color:C(0.9),fontWeight:700,fontSize:16,width:60,textAlign:"center"}}/>
+                      <input type="number" min="1" max="365" value={form.customDays===0?"":form.customDays} onChange={e=>{const v=e.target.value;setForm(f=>({...f,customDays:v===""?0:Math.max(1,parseInt(v)||1)}));}} onBlur={e=>{if(!form.customDays||form.customDays<1)setForm(f=>({...f,customDays:2}));}} style={{background:"rgba(255,255,255,0.1)",borderRadius:10,border:`1px solid ${C(0.1)}`,padding:"0 10px",height:48,boxSizing:"border-box",color:C(0.9),fontWeight:700,fontSize:16,width:60,textAlign:"center"}}/>
                       <span style={{color:TEXT2,fontSize:14}}>days</span>
                     </div>
                   )}
@@ -2993,7 +2993,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     <div style={{color:C(0.38),marginTop:10,fontSize:14}}>No zones yet — add one to get started</div>
                   </div>
                 ):zones.map(z=>(
-                  <div key={z.id} onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);});zoneNameInputRef.current?.focus();}} style={{...CARD,height:48,boxSizing:"border-box",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
+                  <div key={z.id} onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);});zoneNameInputRef.current?.focus();}} style={{...CARD,height:52,boxSizing:"border-box",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
                     <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
                     <div style={{flex:1,color:C(0.9),fontSize:16,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
                     <button onClick={e=>{e.stopPropagation();deleteZone(z.id);}} style={{background:"none",border:"none",width:24,height:24,cursor:"pointer",flexShrink:0,padding:0}}>
@@ -3038,7 +3038,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700}}>{isNew?"New Zone":"Edit Zone"}</div>
               </div>
               {/* Scrollable content */}
-              <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
+              <div style={{flex:1,overflowY:"auto",padding:"0 16px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:48,height:48,minWidth:48,minHeight:48,boxSizing:"border-box",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                   <input
@@ -3145,12 +3145,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         )}
         {personModal&&avatarPicker&&(
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setAvatarPicker(false)}>
-            <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(6,40px)",justifyContent:"space-between",gap:4}}>
-                <button onClick={()=>{setPForm(f=>({...f,avatarEmoji:""}));setAvatarPicker(false);}} style={{background:!pForm.avatarEmoji?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:15,fontWeight:700,color:pForm.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{initials(pForm.name)||"?"}</span></button>
+                <button onClick={()=>{setPForm(f=>({...f,avatarEmoji:""}));setAvatarPicker(false);}} style={{background:!pForm.avatarEmoji?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:15,fontWeight:700,color:pForm.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{initials(pForm.name)||"?"}</span></button>
                 {AVATAR_EMOJIS.map(e=>(
-                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
+                  <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
                 ))}
               </div>
             </div>
@@ -3166,7 +3166,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,minWidth:40,minHeight:40,boxSizing:"border-box",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 <div style={{flex:1}}>
-                  <input className={`std-input${zoneNameError?" input-error":""}`} value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
+                  <input className={`std-input${zoneNameError?" input-error":""}`} value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:48,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
                 </div>
               </div>
               <button onClick={saveZone} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Add</button>
@@ -3195,7 +3195,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
 const SHELL_STYLE={height:"100%",background:"#08080f",display:"flex",justifyContent:"center",alignItems:"stretch",fontFamily:"'SF Pro Text',-apple-system,system-ui,sans-serif",overflow:"hidden"};
 const CARD_BG="linear-gradient(160deg,#1a1035 0%,#0d1f3c 45%,#0a2a1f 100%)";
-const AUTH_INPUT={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 16px",height:40,boxSizing:"border-box",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",fontFamily:"inherit",outline:"none",border:"1px solid rgba(255,255,255,0.1)"};
+const AUTH_INPUT={background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 16px",height:48,boxSizing:"border-box",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",fontFamily:"inherit",outline:"none",border:"1px solid rgba(255,255,255,0.1)"};
 const AUTH_BTN={background:"linear-gradient(135deg,#7163F3,#5E51E0)",border:"none",borderRadius:16,padding:"14px",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%"};
 
 function LoginScreen(){
