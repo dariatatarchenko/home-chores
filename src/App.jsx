@@ -1625,7 +1625,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onMouseLeave={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
                     style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:weekZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
-                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transform:pressedFilter==="wf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="wf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}><div style={{width:14,height:14,backgroundColor:"currentColor",WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{z.label}</span>
+                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transform:pressedFilter==="wf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="wf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}><div style={{width:16,height:16,backgroundColor:"currentColor",WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{z.label}</span>
                   </button>
                 ))}
               </div>
@@ -2145,7 +2145,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onMouseLeave={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
                     style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:taskZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
-                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transform:pressedFilter==="tf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="tf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}><div style={{width:14,height:14,backgroundColor:"currentColor",WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{z.label}</span>
+                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transform:pressedFilter==="tf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="tf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}><div style={{width:16,height:16,backgroundColor:"currentColor",WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{z.label}</span>
                   </button>
                 ))}
                 </div>
@@ -2163,7 +2163,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {editing?(
                     <div style={{...CARD,marginBottom:12}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}><div style={{width:20,height:20,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                         <input
                           className={`std-input${zoneNameError?" input-error":""}`}
                           value={zForm.label}
@@ -3040,7 +3040,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:20,height:20,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                   <input
                     ref={zoneNameInputRef}
                     className={`std-input${zoneNameError?" input-error":""}`}
@@ -3069,8 +3069,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8}}>
-                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:40,height:40,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,40px)",justifyContent:"space-between",gap:4}}>
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
@@ -3147,7 +3147,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setAvatarPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose avatar</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,40px)",justifyContent:"space-between",gap:4}}>
                 <button onClick={()=>{setPForm(f=>({...f,avatarEmoji:""}));setAvatarPicker(false);}} style={{background:!pForm.avatarEmoji?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:15,fontWeight:700,color:pForm.color,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{initials(pForm.name)||"?"}</span></button>
                 {AVATAR_EMOJIS.map(e=>(
                   <button key={e} onClick={()=>{setPForm(f=>({...f,avatarEmoji:e}));setAvatarPicker(false);}} style={{background:pForm.avatarEmoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>
@@ -3164,7 +3164,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{width:34,height:4,background:S(0.18),borderRadius:2,margin:"0 auto"}}/>
               <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>New Zone</div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:20,height:20,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 <div style={{flex:1}}>
                   <input className={`std-input${zoneNameError?" input-error":""}`} value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
                 </div>
@@ -3177,8 +3177,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
           <div style={{position:"absolute",inset:0,background:"rgba(10,10,14,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:350}} onClick={()=>setEmojiPicker(false)}>
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8}}>
-                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:40,height:40,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,40px)",justifyContent:"space-between",gap:4}}>
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:24,height:24,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
