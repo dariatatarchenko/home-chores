@@ -77,7 +77,7 @@ const ZONES_DEFAULT = [
   {id:"hall",     label:"Hallway",     emoji:"🚪"},
   {id:"pets",     label:"Pets",        emoji:"🐾"},
 ];
-const ZONE_EMOJIS = ["🍳","🚿","🛋️","🛏️","🚪","📦","🌿","🪟","🧹","🧺","🪣","🛁","🚽","🧴","🪴","🖥️","📚","🎮","🧸","🐶","🚗","🏋️","🎨","🎵","🏠","🏡","🚙","🍽️","☕","🧽","🧼","🗑️","🔌","💡","🪑","🚲","🧵","🎒","🧦","👕","🌱","🔧","🛠️","📮","🗄️","🖼️","🪞","🕯️","🧊","🌡️","📺","🎹","⚽"];
+const ZONE_ICONS = ["zone-toilet","zone-toiletclean","zone-tools","zone-trash","zone-tv","zone-washer","zone-window","zone-armchair","zone-art","zone-backpack","zone-bath","zone-bear","zone-bed","zone-bigbed","zone-books","zone-box","zone-boxes","zone-bucket","zone-bulb","zone-candle","zone-car","zone-cat","zone-catcomplex","zone-catfood","zone-chair","zone-coffee","zone-computer","zone-couch","zone-curl","zone-cycle","zone-detergent","zone-dishes","zone-dog","zone-door","zone-drawer","zone-faucet","zone-football","zone-fridge","zone-gaming","zone-garage","zone-gym","zone-hat","zone-house","zone-ice","zone-keyes","zone-laundry","zone-luggage","zone-mailbox","zone-mirror","zone-music","zone-nurcery","zone-oven","zone-pet","zone-pickup","zone-plant","zone-plants","zone-pot","zone-power","zone-shower","zone-sink","zone-soap","zone-socks","zone-stack","zone-stove","zone-stroller","zone-sweep"];
 const AVATAR_EMOJIS = ["😀","😎","🥳","🦊","🐱","🐶","🐼","🦁","🐰","🐨","🐯","🐸","🌟","🎯","🍀","🔥","💎","🎸","🚀","🌈","⚡","🌸","🍕","🦄"];
 const PALETTE = ["#f87171","#fb923c","#fbbf24","#34d399","#38bdf8","#7163F3","#e879f9","#94a3b8"];
 // Public OAuth Client ID (safe to expose client-side) — replace with the real
@@ -786,7 +786,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
   const [pForm,setPForm]= useState({name:"",color:PALETTE[0],avatarEmoji:""});
   const [avatarPicker,setAvatarPicker]= useState(false);
   const [zoneModal,setZoneModal]= useState(null);
-  const [zForm,setZForm]= useState({label:"",emoji:"🏠"});
+  const [zForm,setZForm]= useState({label:"",emoji:"zone-house"});
   const [emojiPicker,setEmojiPicker]= useState(false);
   const [taskNameError,setTaskNameError]= useState(false);
   const [personNameError,setPersonNameError]= useState(false);
@@ -1594,7 +1594,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onMouseLeave={()=>pressEnd("wf"+z.id,setPressedFilter,null)}
                     style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:weekZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
-                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-block",transform:pressedFilter==="wf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="wf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{z.emoji} {z.label}</span>
+                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:weekZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transform:pressedFilter==="wf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="wf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}><div style={{width:14,height:14,backgroundColor:"currentColor",WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{z.label}</span>
                   </button>
                 ))}
               </div>
@@ -1934,7 +1934,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     {zones.map(z=>{const sel=form.zone===z.id; return (
                       <button key={z.id} onClick={()=>setForm(f=>({...f,zone:z.id}))} style={{position:"relative",display:"flex",alignItems:"center",gap:6,background:sel?"rgba(129,140,248,0.28)":S(0.05),border:"none",borderRadius:20,height:40,boxSizing:"border-box",padding:"0 16px",cursor:"pointer",color:sel?"#fff":TEXT2,fontSize:14}}>
                         <div style={{position:"absolute",inset:0,borderRadius:20,border:`${sel?"2px":"1px"} solid ${sel?ACCENT:S(0.1)}`,pointerEvents:"none"}}/>
-                        <span style={{fontSize:18}}>{z.emoji}</span>
+                        <div style={{width:18,height:18,backgroundColor:"currentColor",WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                         <span>{z.label}</span>
                       </button>
                     );})}
@@ -2057,7 +2057,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>
                 )}
                 <button onClick={saveTask} disabled={savingTask} style={{background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:savingTask?"default":"pointer",marginTop:4,opacity:savingTask?0.6:1}}>{savingTask?(lang==="ru"?"Сохранение…":"Saving…"):editTaskId?tr("save_changes"):tr("add_task")}</button>
-                <button onClick={closeTaskForm} style={{background:"none",border:"none",color:C(0.3),fontSize:14,cursor:"pointer",padding:"6px"}}>Cancel</button>
+                <button onClick={closeTaskForm} style={{background:"none",border:"none",color:C(0.3),fontSize:16,fontWeight:600,cursor:"pointer",padding:"6px"}}>Cancel</button>
               </div>
               </div>
             </div>
@@ -2114,7 +2114,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onMouseLeave={()=>pressEnd("tf"+z.id,setPressedFilter,null)}
                     style={{position:"relative",flexShrink:0,height:36,border:"none",padding:"0 16px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:"transparent"}}>
                     <div style={{position:"absolute",inset:0,borderRadius:18,background:"rgba(129,140,248,0.28)",border:`1.5px solid ${ACCENT}`,opacity:taskZoneFilter===z.id?1:0,transition:"opacity 0.2s ease"}}/>
-                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-block",transform:pressedFilter==="tf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="tf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{z.emoji} {z.label}</span>
+                    <span style={{position:"relative",fontSize:14,fontWeight:500,color:taskZoneFilter===z.id?"#fff":TEXT2,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:6,transform:pressedFilter==="tf"+z.id?"scale(1.1)":"scale(1)",transition:pressedFilter==="tf"+z.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}><div style={{width:14,height:14,backgroundColor:"currentColor",WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>{z.label}</span>
                   </button>
                 ))}
                 </div>
@@ -2132,7 +2132,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   {editing?(
                     <div style={{...CARD,marginBottom:12}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}>{zForm.emoji}</button>
+                        <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0}}><div style={{width:20,height:20,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                         <input
                           className={`std-input${zoneNameError?" input-error":""}`}
                           value={zForm.label}
@@ -2144,8 +2144,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         />
                       </div>
                       <div style={{display:"flex",gap:8}}>
-                        <button onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"10px",color:C(0.5),fontSize:13,fontWeight:600,cursor:"pointer"}}>Cancel</button>
-                        <button onClick={()=>{deleteZone(zone.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"10px",color:"#f87171",fontSize:13,fontWeight:600,cursor:"pointer"}}>Delete</button>
+                        <button onClick={()=>{setZoneExpandId(null);setEmojiPicker(false);}} style={{flex:1,background:S(0.06),border:"none",borderRadius:12,padding:"10px",color:C(0.5),fontSize:16,fontWeight:600,cursor:"pointer"}}>Cancel</button>
+                        <button onClick={()=>{deleteZone(zone.id);setZoneExpandId(null);}} style={{flex:1,background:"rgba(248,113,113,0.1)",border:"none",borderRadius:12,padding:"10px",color:"#f87171",fontSize:16,fontWeight:600,cursor:"pointer"}}>Delete</button>
                         <button onClick={()=>{saveZone();setZoneExpandId(null);}} style={{flex:1,background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>Save</button>
                       </div>
                     </div>
@@ -2240,7 +2240,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                   onMouseDown={()=>pressStart("acc-del-"+t.id,setPressedAccAction,"del-"+t.id)}
                                   onMouseUp={()=>{if(window.confirm(`Delete "${t.text}"? This can't be undone.`)){setTasks(ts=>ts.map(x=>x.id!==t.id?x:{...x,archivedAt:new Date().toISOString()}));deleteTaskRemote(t.id);setExpandId(null);}pressEnd("acc-del-"+t.id,setPressedAccAction,null);}}
                                   onMouseLeave={()=>pressEnd("acc-del-"+t.id,setPressedAccAction,null)}
-                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(248,113,113,0.1)",border:"none",borderRadius:14,color:"#f87171",fontSize:16,fontWeight:600,cursor:"pointer"}}>
                                   <span style={{display:"inline-block",transform:pressedAccAction==="del-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="del-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Delete</span>
                                 </button>}
                                 <button
@@ -2250,7 +2250,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                                   onMouseDown={()=>pressStart("acc-edit-"+t.id,setPressedAccAction,"edit-"+t.id)}
                                   onMouseUp={()=>{setTaskNameError(false);setEditTaskId(t.id);setForm({zone:t.zone,text:t.text,freq:t.freq,personIds:t.personIds||[t.personId].filter(Boolean),customDays:t.customDays||4,startDate:t.scheduledDates?.[0]||todayStr,maxLen:32,timesPerDay:t.timesPerDay||1,estMinutes:t.estMinutes??null});setCustomTimeOpen(!![null,5,10,15,30,45,60].includes(t.estMinutes??null)?false:true);setExpandId(null);setTaskFormVisible(false);setTaskFormOpen(true);pressEnd("acc-edit-"+t.id,setPressedAccAction,null);}}
                                   onMouseLeave={()=>pressEnd("acc-edit-"+t.id,setPressedAccAction,null)}
-                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.85),fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                                  style={{flex:1,height:40,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",background:S(0.06),border:"none",borderRadius:14,color:C(0.85),fontSize:16,fontWeight:600,cursor:"pointer"}}>
                                   <span style={{display:"inline-block",transform:pressedAccAction==="edit-"+t.id?"scale(1.06)":"scale(1)",transition:pressedAccAction==="edit-"+t.id?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>Edit</span>
                                 </button>
                               </div>
@@ -2298,7 +2298,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                       <div key={p.id} onClick={()=>{if(p.id!==meId)return;flushSync(()=>{setPersonNameError(false);setPForm({name:p.name,color:p.color,avatarEmoji:p.avatarEmoji||""});setAvatarPicker(false);setPersonModal({mode:"edit",id:p.id});});personNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,cursor:p.id===meId?"pointer":"default"}}>
                         <Avatar person={p} size={24}/>
                         <div style={{flex:1}}>
-                          <div style={{color:C(0.88),fontSize:16,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{color:p.color,fontSize:16,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
                             {p.name}
                             {meId===p.id&&<span style={{fontSize:11,color:ACCENT,background:"rgba(129,140,248,0.15)",border:"1px solid rgba(129,140,248,0.3)",borderRadius:6,padding:"4px 6px"}}>me</span>}
                           </div>
@@ -2493,7 +2493,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     window.alert("Something went wrong deleting your account fully. You've been signed out, but please try again or contact support.");
                   }
                   onSignOut();
-                }} style={{marginTop:12,background:"none",border:"none",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer",padding:"8px",display:"block",width:"100%",textAlign:"center"}}>{tr("delete_account")}</button>
+                }} style={{marginTop:12,background:"none",border:"none",color:"#f87171",fontSize:16,fontWeight:600,cursor:"pointer",padding:"8px",display:"block",width:"100%",textAlign:"center"}}>{tr("delete_account")}</button>
               </div>
               )}
             </div>
@@ -2949,7 +2949,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{width:24,height:24,backgroundColor:TEXT2,WebkitMaskImage:"url(/icons/left.svg)",maskImage:"url(/icons/left.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                 </button>
                 <div style={{color:C(0.9),fontFamily:"'SF Pro Display',-apple-system,sans-serif",fontSize:20,lineHeight:"24px",fontWeight:700,flex:1}}>Manage Zones</div>
-                <button onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:"",emoji:"🏠"});setEmojiPicker(false);setZoneExpandId("__new__");});zoneNameInputRef.current?.focus();}} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,background:S(0.05),border:"none",borderRadius:20,padding:"0 16px 0 12px",cursor:"pointer"}}>
+                <button onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:"",emoji:"zone-house"});setEmojiPicker(false);setZoneExpandId("__new__");});zoneNameInputRef.current?.focus();}} style={{position:"relative",display:"flex",alignItems:"center",gap:6,height:40,background:S(0.05),border:"none",borderRadius:20,padding:"0 16px 0 12px",cursor:"pointer"}}>
                   <div style={{position:"absolute",inset:0,borderRadius:20,border:`1px solid ${S(0.1)}`,pointerEvents:"none"}}/>
                   <div style={{width:18,height:18,backgroundColor:ACCENT,WebkitMaskImage:"url(/icons/plus-outline.svg)",maskImage:"url(/icons/plus-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                   <span style={{color:ACCENT,fontSize:14,fontWeight:500}}>Zone</span>
@@ -2963,8 +2963,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   </div>
                 ):zones.map(z=>(
                   <div key={z.id} onClick={()=>{flushSync(()=>{setZoneNameError(false);setZForm({label:z.label,emoji:z.emoji});setEmojiPicker(false);setZoneExpandId(z.id);});zoneNameInputRef.current?.focus();}} style={{...CARD,display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
-                    <div style={{fontSize:24,flexShrink:0}}>{z.emoji}</div>
-                    <div style={{flex:1,color:C(0.9),fontSize:15,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
+                    <div style={{width:24,height:24,backgroundColor:C(0.6),WebkitMaskImage:`url(/icons/${z.emoji}.svg)`,maskImage:`url(/icons/${z.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center",flexShrink:0}}/>
+                    <div style={{flex:1,color:C(0.9),fontSize:16,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{z.label}</div>
                     <button onClick={e=>{e.stopPropagation();deleteZone(z.id);}} style={{background:"none",border:"none",width:24,height:24,cursor:"pointer",flexShrink:0,padding:0}}>
                       <div style={{width:"100%",height:"100%",backgroundColor:C(0.35),WebkitMaskImage:"url(/icons/bin-outline.svg)",maskImage:"url(/icons/bin-outline.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                     </button>
@@ -3009,7 +3009,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:20,height:20,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                   <input
                     ref={zoneNameInputRef}
                     className={`std-input${zoneNameError?" input-error":""}`}
@@ -3027,8 +3027,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   onTouchStart={e=>{e.preventDefault();pressStart("zone-add",setPressedZoneAdd,true);}} onTouchEnd={e=>{e.preventDefault();submitZone();pressEnd("zone-add",setPressedZoneAdd,false);}} onTouchCancel={()=>pressEnd("zone-add",setPressedZoneAdd,false)}
                   onMouseDown={()=>pressStart("zone-add",setPressedZoneAdd,true)} onMouseUp={()=>{submitZone();pressEnd("zone-add",setPressedZoneAdd,false);}} onMouseLeave={()=>pressEnd("zone-add",setPressedZoneAdd,false)}
                   style={{width:"100%",height:50,boxSizing:"border-box",background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer",transform:pressedZoneAdd?"scale(1.03)":"scale(1)",transition:pressedZoneAdd?"transform 0.1s ease-out":"transform 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{isNew?"Add zone":"Save"}</button>
-                {isNew&&<button onClick={closeZoneScreen} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:TEXT2,fontSize:14,fontWeight:600,cursor:"pointer"}}>Cancel</button>}
-                {!isNew&&<button onClick={()=>{deleteZone(z.id);closeZoneScreen();}} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:"#f87171",fontSize:14,fontWeight:600,cursor:"pointer"}}>Delete</button>}
+                {isNew&&<button onClick={closeZoneScreen} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:TEXT2,fontSize:16,fontWeight:600,cursor:"pointer"}}>Cancel</button>}
+                {!isNew&&<button onClick={()=>{deleteZone(z.id);closeZoneScreen();}} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:"#f87171",fontSize:16,fontWeight:600,cursor:"pointer"}}>Delete</button>}
               </div>
           </div>
           );
@@ -3039,7 +3039,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div onClick={e=>e.stopPropagation()} style={{width:328,...CARD,border:"none",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
-                {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>)}
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:22,height:22,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
@@ -3108,7 +3108,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               <div style={{flexShrink:0,padding:"12px 16px",paddingBottom:`calc(12px + ${keyboardInset}px)`,transition:"padding-bottom 0.2s ease"}}>
                 <button onClick={savePerson} style={{width:"100%",background:`linear-gradient(135deg,${ACCENT},${ACCENT2})`,border:"none",borderRadius:14,height:50,boxSizing:"border-box",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16,lineHeight:"18px",fontWeight:600,cursor:"pointer"}}>{personModal.mode==="new"?"Add":"Save"}</button>
-                <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:TEXT2,fontSize:14,fontWeight:600,cursor:"pointer"}}>Cancel</button>
+                <button onClick={()=>{setPersonModal(null);setAvatarPicker(false);}} style={{marginTop:12,width:"100%",background:"none",border:"none",padding:"8px",color:TEXT2,fontSize:16,fontWeight:600,cursor:"pointer"}}>Cancel</button>
               </div>
           </div>
         )}
@@ -3133,7 +3133,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               <div style={{width:34,height:4,background:S(0.18),borderRadius:2,margin:"0 auto"}}/>
               <div style={{color:C(0.9),fontSize:18,fontWeight:700}}>New Zone</div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{zForm.emoji}</button>
+                <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:20,height:20,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                 <div style={{flex:1}}>
                   <input className={`std-input${zoneNameError?" input-error":""}`} value={zForm.label} onChange={e=>{setZForm(f=>({...f,label:e.target.value}));if(e.target.value.trim())setZoneNameError(false);}} placeholder="Zone name" style={{background:"rgba(255,255,255,0.1)",borderRadius:14,padding:"0 14px",height:40,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,width:"100%",boxSizing:"border-box",fontFamily:"inherit",outline:"none",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`}}/>
                 </div>
@@ -3147,7 +3147,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div onClick={e=>e.stopPropagation()} style={{width:328,background:"#26262c",borderRadius:20,padding:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",border:`1px solid ${C(0.12)}`}}>
               <div style={{color:C(0.85),fontSize:15,fontWeight:600,marginBottom:12}}>Choose icon</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
-                {ZONE_EMOJIS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}><span style={{transform:"translateY(-1px)"}}>{e}</span></button>)}
+                {ZONE_ICONS.map(e=><button key={e} onClick={()=>{setZForm(f=>({...f,emoji:e}));setEmojiPicker(false);}} style={{background:zForm.emoji===e?S(0.2):"transparent",border:"none",borderRadius:10,width:"100%",aspectRatio:"1",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}><div style={{width:22,height:22,backgroundColor:zForm.emoji===e?ACCENT:C(0.6),WebkitMaskImage:`url(/icons/${e}.svg)`,maskImage:`url(/icons/${e}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>)}
               </div>
             </div>
           </div>
