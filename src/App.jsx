@@ -3040,7 +3040,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Scrollable content */}
               <div style={{flex:1,overflowY:"auto",padding:"8px 16px 16px"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:40,height:40,minWidth:40,minHeight:40,boxSizing:"border-box",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
+                  <button onClick={()=>setEmojiPicker(v=>!v)} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:12,width:48,height:48,minWidth:48,minHeight:48,boxSizing:"border-box",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{width:24,height:24,backgroundColor:C(0.85),WebkitMaskImage:`url(/icons/${zForm.emoji}.svg)`,maskImage:`url(/icons/${zForm.emoji}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/></button>
                   <input
                     ref={zoneNameInputRef}
                     className={`std-input${zoneNameError?" input-error":""}`}
@@ -3048,7 +3048,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                     onChange={e=>{setZForm(f=>({...f,label:e.target.value.slice(0,38)}));if(e.target.value.trim())setZoneNameError(false);}}
                     placeholder="Zone name"
                     maxLength={38}
-                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 14px",height:40,boxSizing:"border-box",borderRadius:12}}
+                    style={{flex:1,background:"rgba(255,255,255,0.1)",border:zoneNameError?"2px solid #f87171":`1px solid ${C(0.1)}`,color:C(0.9),fontSize:16,lineHeight:"18px",fontWeight:400,fontFamily:"inherit",outline:"none",padding:"0 14px",height:48,boxSizing:"border-box",borderRadius:12}}
                   />
                 </div>
               </div>
