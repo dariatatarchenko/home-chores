@@ -1450,9 +1450,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Toast */}
         {toast&&(
-          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 16px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
+          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,background:isDark?"#2a2a32":"#ffffff",border:"1px solid rgba(96,165,250,0.18)",borderRadius:20,padding:"14px 16px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
             {toast.icon?.startsWith?.("notif-")
-              ?<div style={{width:24,height:24,flexShrink:0,backgroundColor:"#fbbf24",WebkitMaskImage:`url(/icons/${toast.icon}.svg)`,maskImage:`url(/icons/${toast.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+              ?<div style={{width:24,height:24,flexShrink:0,backgroundColor:"#60a5fa",WebkitMaskImage:`url(/icons/${toast.icon}.svg)`,maskImage:`url(/icons/${toast.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               :<span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>}
             <div style={{minWidth:0,flex:1}}>
               <div style={{color:C(0.9),fontSize:14,fontWeight:700}}>{toast.assignedPersonId?notifTitle(toast):toast.from}</div>
@@ -1479,7 +1479,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
                   <div key={n.id} style={{...CARD,display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,background:isUnread?`${ACCENT}14`:CARD.background,cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);closeNotifs();}}>
                     {n.icon?.startsWith?.("notif-")
-                      ?<div style={{width:20,height:20,flexShrink:0,marginTop:2,backgroundColor:"#fbbf24",WebkitMaskImage:`url(/icons/${n.icon}.svg)`,maskImage:`url(/icons/${n.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                      ?<div style={{width:20,height:20,flexShrink:0,marginTop:2,backgroundColor:"#60a5fa",WebkitMaskImage:`url(/icons/${n.icon}.svg)`,maskImage:`url(/icons/${n.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                       :<span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:2}}>{n.icon}</span>}
                     <div style={{minWidth:0,flex:1}}>
                       <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{notifTitle(n)}</div>
@@ -1637,12 +1637,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Move incomplete tasks forward — only for yesterday; older days are past the point of moving them */}
               {(()=>{const y=new Date(TODAY);y.setDate(y.getDate()-1);return selDay===ds(y);})()&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
-                <div style={{flexShrink:0,margin:"0 16px 16px",background:"rgba(96,165,250,0.1)",border:"1px solid rgba(96,165,250,0.25)",borderRadius:12,padding:12,boxSizing:"border-box",display:"flex",alignItems:"center",gap:10}}>
+                <div style={{flexShrink:0,margin:"0 16px 16px",background:"rgba(96,165,250,0.1)",border:"1px solid rgba(96,165,250,0.18)",borderRadius:12,padding:12,boxSizing:"border-box",display:"flex",alignItems:"center",gap:10}}>
                   <div style={{width:24,height:24,backgroundColor:"#60a5fa",flexShrink:0,WebkitMaskImage:"url(/icons/notif-ifmove.svg)",maskImage:"url(/icons/notif-ifmove.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                   <div style={{flex:1,color:C(0.7),fontSize:14,lineHeight:1.4}}>
                     {dayAllTasks.length-dayAllDone} unfinished task{dayAllTasks.length-dayAllDone!==1?"s":""} from this day — move to the next day?
                   </div>
-                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(96,165,250,0.15)",border:"1px solid rgba(96,165,250,0.35)",borderRadius:12,padding:"8px 12px",color:"#60a5fa",fontSize:14,fontWeight:700,cursor:"pointer"}}>Move</button>
+                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(96,165,250,0.22)",border:"1px solid rgba(96,165,250,0.45)",borderRadius:12,padding:"8px 12px",color:"#60a5fa",fontSize:16,fontWeight:600,cursor:"pointer"}}>Move</button>
                 </div>
               )}
 
