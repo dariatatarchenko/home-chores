@@ -475,7 +475,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const params=new URLSearchParams(window.location.search);
     if(params.get("google_calendar_connected")){
       setGoogleConnected(true);
-      setToast({icon:"📅",from:"Google Calendar connected",text:"Your tasks will now sync automatically"});
+      setToast({icon:"notif-google",from:"Google Calendar connected",text:"Your tasks will now sync automatically"});
       setTimeout(()=>setToast(null),3000);
       window.history.replaceState({},"",window.location.pathname);
     } else if(params.get("google_calendar_error")){
@@ -1071,7 +1071,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         const from=`${liker?.name||"Someone"} liked your task`;
         const bodyText=`${t.text} — ${m.text}`;
         supabase.from("notifications").insert({
-          household_id:household.id,actor_person_id:meId,icon:m.icon,title:from,body:bodyText,
+          household_id:household.id,actor_person_id:meId,icon:"notif-like",title:from,body:bodyText,
         }).then(({error})=>{ if(error) console.error("insert notification",error); });
       }
     }
@@ -1174,7 +1174,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         }
         setSelDay(fromDay);
       };
-      setToast({icon:"➡️",from:`${movedIds.length} task${movedIds.length!==1?"s":""} moved`,text:`Moved to tomorrow`,onUndo:undoMove});
+      setToast({icon:"notif-transfer",from:`${movedIds.length} task${movedIds.length!==1?"s":""} moved`,text:`Moved to tomorrow`,onUndo:undoMove});
       setTimeout(()=>setToast(null),6000);
     }
   };
@@ -1227,7 +1227,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         const assignedIds=(newTask.personIds||[]).filter(Boolean);
         const soleAssignee=assignedIds.length===1&&assignedIds[0]!==meId?assignedIds[0]:null;
         supabase.from("notifications").insert({
-          household_id:household.id,actor_person_id:meId,icon:"🆕",
+          household_id:household.id,actor_person_id:meId,icon:"notif-newtask",
           title:`${creator?.name||"Someone"} added a new task`,body:newTask.text,
           assigned_person_id:soleAssignee,
         }).then(({error})=>{ if(error) console.error("insert new-task notification",error); });
@@ -1235,7 +1235,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     }
     setForm(blankForm);
     setSavingTask(false);
-    setToast({icon:wasEditing?"✏️":"✅",from:wasEditing?"Task updated":"Task added",text:form.text.trim()});
+    setToast({icon:"notif-ok",from:wasEditing?"Task updated":"Task added",text:form.text.trim()});
     setTimeout(()=>setToast(null),2800);
     if(tab==="week"&&dates[0]){
       setSelDay(dates[0]);
@@ -1451,7 +1451,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         {/* Toast */}
         {toast&&(
           <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,...G(0.25,30),borderRadius:20,padding:"14px 16px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
-            <span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>
+            {toast.icon?.startsWith?.("notif-")
+              ?<div style={{width:24,height:24,flexShrink:0,backgroundColor:"#fbbf24",WebkitMaskImage:`url(/icons/${toast.icon}.svg)`,maskImage:`url(/icons/${toast.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+              :<span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>}
             <div style={{minWidth:0,flex:1}}>
               <div style={{color:C(0.9),fontSize:14,fontWeight:700}}>{toast.assignedPersonId?notifTitle(toast):toast.from}</div>
               <div style={{color:C(0.6),fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{toast.text}</div>
@@ -1476,7 +1478,9 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                 </div>}
                 {notifs.map(n=>{const isUnread=!n.readBy.includes(meId); return (
                   <div key={n.id} style={{...CARD,display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,background:isUnread?`${ACCENT}14`:CARD.background,cursor:"pointer"}} onClick={()=>{markNotifsRead([n.id]);closeNotifs();}}>
-                    <span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:2}}>{n.icon}</span>
+                    {n.icon?.startsWith?.("notif-")
+                      ?<div style={{width:20,height:20,flexShrink:0,marginTop:2,backgroundColor:"#fbbf24",WebkitMaskImage:`url(/icons/${n.icon}.svg)`,maskImage:`url(/icons/${n.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                      :<span style={{fontSize:20,flexShrink:0,lineHeight:1,marginTop:2}}>{n.icon}</span>}
                     <div style={{minWidth:0,flex:1}}>
                       <div style={{color:TEXT1,fontSize:13,fontWeight:600}}>{notifTitle(n)}</div>
                       <div style={{color:TEXT3,fontSize:12,marginTop:2}}>{n.text}</div>
@@ -1634,7 +1638,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               {/* Move incomplete tasks forward — only for yesterday; older days are past the point of moving them */}
               {(()=>{const y=new Date(TODAY);y.setDate(y.getDate()-1);return selDay===ds(y);})()&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
                 <div style={{flexShrink:0,margin:`0 16px ${SPACE_MD}px`,...G(0.08,20),border:"1px solid rgba(251,191,36,0.25)",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:18}}>⏭️</span>
+                  <div style={{width:18,height:18,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/notif-ifmove.svg)",maskImage:"url(/icons/notif-ifmove.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
                   <div style={{flex:1,color:C(0.7),fontSize:12,lineHeight:1.4}}>
                     {dayAllTasks.length-dayAllDone} unfinished task{dayAllTasks.length-dayAllDone!==1?"s":""} from this day — move to the next day?
                   </div>
@@ -1948,7 +1952,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             <div style={{display:"flex",flexDirection:"column",flex:1,minHeight:0}}>
               {editTaskId&&(()=>{const et=tasks.find(x=>x.id===editTaskId);return et?.rescheduledFrom?(
                 <div style={{margin:"0 20px 8px",color:"#fbbf24",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
-                  <span>⏭️</span><span>Moved from {new Date(et.rescheduledFrom+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
+                  <div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/notif-ifmove.svg)",maskImage:"url(/icons/notif-ifmove.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/><span>Moved from {new Date(et.rescheduledFrom+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
                 </div>
               ):null;})()}
               <div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"8px 16px 110px"}}>
@@ -2395,7 +2399,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                         persistTask(t.id,newFields);
                       });
                       if(affected.length>0){
-                        setToast({icon:"↩️",from:`${affected.length} task${affected.length!==1?"s":""} moved back`,text:"There's still time to finish them today"});
+                        setToast({icon:"notif-stilltime",from:`${affected.length} task${affected.length!==1?"s":""} moved back`,text:"There's still time to finish them today"});
                         setTimeout(()=>setToast(null),4000);
                       }
                     }
@@ -3390,7 +3394,7 @@ function HouseholdGate({session,onReady}){
       }).single());
       if(hErr){setBusy(false);setError(hErr.message.includes("not found")?"Invite code not found":hErr.message);return;}
       supabase.from("notifications").insert({
-        household_id:household.id,actor_person_id:personId,icon:"👋",
+        household_id:household.id,actor_person_id:personId,icon:"notif-newperson",
         title:`${name.trim()} joined the home!`,body:"Say hi and split up the chores 🎉",
       }).then(({error})=>{ if(error) console.error("insert join notification",error); });
       onReady({household,me:{id:personId,name:name.trim(),color,avatarEmoji}});
