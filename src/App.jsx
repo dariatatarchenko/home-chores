@@ -1205,7 +1205,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
     const dates=days?base.filter((_,i)=>i%days===0):[form.startDate||selDay];
     const wasEditing=!!editTaskId;
     if(editTaskId){
-      const updated={...form,personId:form.personIds[0]||null,scheduledDates:dates};
+      const updated={...form,personId:form.personIds[0]||null,scheduledDates:dates,excludedDates:[],rescheduledFrom:null};
       setTasks(ts=>ts.map(t=>t.id!==editTaskId?t:{...t,...updated}));
       persistTask(editTaskId,updated);
       const editedTask=tasks.find(t=>t.id===editTaskId);
@@ -1607,7 +1607,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
-                <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(65,67,85,0.5)":"rgba(240,240,244,0.6)",border:isDark?"1px solid rgba(148,155,178,0.3)":"1px solid rgba(255,255,255,0.7)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+                <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(255,255,255,0.05)":"#ffffff",border:isDark?"1px solid rgba(255,255,255,0.1)":"1px solid transparent",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button
                   onTouchStart={e=>{pressStart("wf-all",setPressedFilter,"wf-all",e);}}
                   onTouchEnd={e=>{if(!wasScrolled("wf-all",e)){e.preventDefault();setWeekZoneFilter(null);}pressEnd("wf-all",setPressedFilter,null);}}
@@ -1951,8 +1951,8 @@ function MainApp({household, me:initialMe, email, onSignOut}){
             </div>
             <div style={{display:"flex",flexDirection:"column",flex:1,minHeight:0}}>
               {editTaskId&&(()=>{const et=tasks.find(x=>x.id===editTaskId);return et?.rescheduledFrom?(
-                <div style={{margin:"0 20px 8px",color:"#fbbf24",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
-                  <div style={{width:14,height:14,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/notif-ifmove.svg)",maskImage:"url(/icons/notif-ifmove.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/><span>Moved from {new Date(et.rescheduledFrom+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
+                <div style={{margin:"0 20px 8px",color:TEXT2,fontSize:14,display:"flex",alignItems:"center",gap:6}}>
+                  <div style={{width:18,height:18,backgroundColor:TEXT2,flexShrink:0,WebkitMaskImage:"url(/icons/notif-ifmove.svg)",maskImage:"url(/icons/notif-ifmove.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/><span>Moved from {new Date(et.rescheduledFrom+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
                 </div>
               ):null;})()}
               <div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"8px 16px 110px"}}>
@@ -2127,7 +2127,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               </div>
               <div style={{flexShrink:0,padding:"0 16px 24px"}}>
-              <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(65,67,85,0.5)":"rgba(240,240,244,0.6)",border:isDark?"1px solid rgba(148,155,178,0.3)":"1px solid rgba(255,255,255,0.7)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+              <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(255,255,255,0.05)":"#ffffff",border:isDark?"1px solid rgba(255,255,255,0.1)":"1px solid transparent",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button
                   onTouchStart={e=>{pressStart("tf-all",setPressedFilter,"tf-all",e);}}
                   onTouchEnd={e=>{if(!wasScrolled("tf-all",e)){e.preventDefault();setTaskZoneFilter(null);}pressEnd("tf-all",setPressedFilter,null);}}
