@@ -1637,12 +1637,12 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Move incomplete tasks forward — only for yesterday; older days are past the point of moving them */}
               {(()=>{const y=new Date(TODAY);y.setDate(y.getDate()-1);return selDay===ds(y);})()&&dayAllTasks.length>0&&dayAllDone<dayAllTasks.length&&(
-                <div style={{flexShrink:0,margin:`0 16px ${SPACE_MD}px`,...G(0.08,20),border:"1px solid rgba(251,191,36,0.25)",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{width:18,height:18,backgroundColor:"#fbbf24",WebkitMaskImage:"url(/icons/notif-ifmove.svg)",maskImage:"url(/icons/notif-ifmove.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
-                  <div style={{flex:1,color:C(0.7),fontSize:12,lineHeight:1.4}}>
+                <div style={{flexShrink:0,margin:12,background:"rgba(96,165,250,0.1)",border:"1px solid rgba(96,165,250,0.25)",borderRadius:12,padding:12,boxSizing:"border-box",display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:24,height:24,backgroundColor:"#60a5fa",flexShrink:0,WebkitMaskImage:"url(/icons/notif-ifmove.svg)",maskImage:"url(/icons/notif-ifmove.svg)",WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
+                  <div style={{flex:1,color:C(0.7),fontSize:14,lineHeight:1.4}}>
                     {dayAllTasks.length-dayAllDone} unfinished task{dayAllTasks.length-dayAllDone!==1?"s":""} from this day — move to the next day?
                   </div>
-                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(251,191,36,0.15)",border:"1px solid rgba(251,191,36,0.35)",borderRadius:12,padding:"8px 12px",color:"#fbbf24",fontSize:12,fontWeight:700,cursor:"pointer"}}>Move</button>
+                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(96,165,250,0.15)",border:"1px solid rgba(96,165,250,0.35)",borderRadius:12,padding:"8px 12px",color:"#60a5fa",fontSize:14,fontWeight:700,cursor:"pointer"}}>Move</button>
                 </div>
               )}
 
