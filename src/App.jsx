@@ -1450,7 +1450,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Toast */}
         {toast&&(
-          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:20,right:20,zIndex:999,background:"rgba(96,165,250,0.1)",border:"1px solid rgba(96,165,250,0.18)",borderRadius:12,padding:12,boxSizing:"border-box",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,maxWidth:340,margin:"0 auto",animation:"slideDown 0.3s ease",cursor:"pointer"}}>
+          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:20,right:20,zIndex:999,background:isDark?"rgba(30,42,61,0.85)":"rgba(234,242,255,0.85)",border:"1px solid rgba(96,165,250,0.3)",borderRadius:12,padding:12,boxSizing:"border-box",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,maxWidth:340,margin:"0 auto",animation:"slideDown 0.3s ease",cursor:"pointer"}}>
             {toast.icon?.startsWith?.("notif-")
               ?<div style={{width:24,height:24,flexShrink:0,backgroundColor:"#60a5fa",WebkitMaskImage:`url(/icons/${toast.icon}.svg)`,maskImage:`url(/icons/${toast.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               :<span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>}
@@ -1607,7 +1607,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
               {/* Filter bar */}
               <div style={{flexShrink:0,padding:`0 16px ${SPACE_MD}px`}}>
-                <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+                <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(50,50,62,0.5)":"rgba(240,240,244,0.6)",border:isDark?"1px solid rgba(148,155,178,0.3)":"1px solid rgba(255,255,255,0.7)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button
                   onTouchStart={e=>{pressStart("wf-all",setPressedFilter,"wf-all",e);}}
                   onTouchEnd={e=>{if(!wasScrolled("wf-all",e)){e.preventDefault();setWeekZoneFilter(null);}pressEnd("wf-all",setPressedFilter,null);}}
@@ -2127,7 +2127,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
               </div>
               </div>
               <div style={{flexShrink:0,padding:"0 16px 24px"}}>
-              <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(78,82,135,0.5)":"rgba(255,255,255,0.6)",border:isDark?"1px solid #494D68":"1px solid rgba(255,255,255,1)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
+              <div style={{display:"flex",gap:0,padding:2,background:isDark?"rgba(50,50,62,0.5)":"rgba(240,240,244,0.6)",border:isDark?"1px solid rgba(148,155,178,0.3)":"1px solid rgba(255,255,255,0.7)",borderRadius:22,overflowX:"auto",msOverflowStyle:"none",scrollbarWidth:"none"}}>
                 <button
                   onTouchStart={e=>{pressStart("tf-all",setPressedFilter,"tf-all",e);}}
                   onTouchEnd={e=>{if(!wasScrolled("tf-all",e)){e.preventDefault();setTaskZoneFilter(null);}pressEnd("tf-all",setPressedFilter,null);}}
