@@ -1424,7 +1424,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
         body{overflow:hidden;overscroll-behavior:none;}
         .std-input:focus:not(.input-error){border-color:${ACCENT} !important;}
         .std-input::placeholder{color:${TEXT4} !important;opacity:1;}
-        @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(110px) rotate(720deg);opacity:0}}
         @keyframes celebUp{0%{transform:translateY(100%);opacity:0}20%{transform:translateY(-6px);opacity:1}30%{transform:translateY(0)}100%{transform:translateY(0);opacity:1}}
         @keyframes calSlideFromRight{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
@@ -1450,15 +1450,15 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Toast */}
         {toast&&(
-          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:"50%",transform:"translateX(-50%)",zIndex:999,background:isDark?"#2a2a32":"#ffffff",border:"1px solid rgba(96,165,250,0.18)",borderRadius:20,padding:"14px 16px",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,width:"calc(100% - 72px)",maxWidth:340,animation:"slideDown 0.3s ease",cursor:"pointer"}}>
+          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:20,right:20,zIndex:999,background:"rgba(96,165,250,0.1)",border:"1px solid rgba(96,165,250,0.18)",borderRadius:12,padding:12,boxSizing:"border-box",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,maxWidth:340,margin:"0 auto",animation:"slideDown 0.3s ease",cursor:"pointer"}}>
             {toast.icon?.startsWith?.("notif-")
               ?<div style={{width:24,height:24,flexShrink:0,backgroundColor:"#60a5fa",WebkitMaskImage:`url(/icons/${toast.icon}.svg)`,maskImage:`url(/icons/${toast.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               :<span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>}
             <div style={{minWidth:0,flex:1}}>
-              <div style={{color:C(0.9),fontSize:14,fontWeight:700}}>{toast.assignedPersonId?notifTitle(toast):toast.from}</div>
-              <div style={{color:C(0.6),fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{toast.text}</div>
+              <div style={{color:C(0.9),fontSize:16,fontWeight:700}}>{toast.assignedPersonId?notifTitle(toast):toast.from}</div>
+              <div style={{color:C(0.6),fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{toast.text}</div>
             </div>
-            {toast.onUndo&&<button onClick={e=>{e.stopPropagation();toast.onUndo();setToast(null);}} style={{flexShrink:0,background:"none",border:"none",color:ACCENT,fontSize:13,fontWeight:700,cursor:"pointer",padding:"6px 8px"}}>Undo</button>}
+            {toast.onUndo&&<button onClick={e=>{e.stopPropagation();toast.onUndo();setToast(null);}} style={{flexShrink:0,background:"none",border:"none",color:"#60a5fa",fontSize:16,fontWeight:600,cursor:"pointer",padding:"6px 8px"}}>Undo</button>}
           </div>
         )}
 
@@ -1642,7 +1642,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
                   <div style={{flex:1,color:C(0.7),fontSize:14,lineHeight:1.4}}>
                     {dayAllTasks.length-dayAllDone} unfinished task{dayAllTasks.length-dayAllDone!==1?"s":""} from this day — move to the next day?
                   </div>
-                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(96,165,250,0.22)",border:"1px solid rgba(96,165,250,0.45)",borderRadius:12,padding:"8px 12px",color:"#60a5fa",fontSize:16,fontWeight:600,cursor:"pointer"}}>Move</button>
+                  <button onClick={()=>moveIncompleteToNextDay(selDay)} style={{flexShrink:0,background:"rgba(96,165,250,0.22)",border:"1px solid rgba(96,165,250,0.45)",borderRadius:8,padding:"8px 12px",color:"#60a5fa",fontSize:16,fontWeight:600,cursor:"pointer"}}>Move</button>
                 </div>
               )}
 
