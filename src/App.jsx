@@ -1450,7 +1450,7 @@ function MainApp({household, me:initialMe, email, onSignOut}){
 
         {/* Toast */}
         {toast&&(
-          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:20,right:20,zIndex:999,background:isDark?"rgba(30,42,61,0.95)":"rgba(234,242,255,0.95)",border:"1px solid rgba(96,165,250,0.3)",borderRadius:12,padding:12,boxSizing:"border-box",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,maxWidth:340,margin:"0 auto",animation:"slideDown 0.3s ease",cursor:"pointer"}}>
+          <div onClick={()=>setToast(null)} style={{position:"absolute",bottom:110,left:20,right:20,zIndex:999,background:isDark?"rgb(30,42,61)":"rgb(234,242,255)",border:"1px solid rgba(96,165,250,0.3)",borderRadius:12,padding:12,boxSizing:"border-box",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",display:"flex",alignItems:"center",gap:12,maxWidth:340,margin:"0 auto",animation:"slideDown 0.3s ease",cursor:"pointer"}}>
             {toast.icon?.startsWith?.("notif-")
               ?<div style={{width:24,height:24,flexShrink:0,backgroundColor:"#60a5fa",WebkitMaskImage:`url(/icons/${toast.icon}.svg)`,maskImage:`url(/icons/${toast.icon}.svg)`,WebkitMaskSize:"contain",maskSize:"contain",WebkitMaskRepeat:"no-repeat",maskRepeat:"no-repeat",WebkitMaskPosition:"center",maskPosition:"center"}}/>
               :<span style={{fontSize:24,flexShrink:0}}>{toast.icon}</span>}
